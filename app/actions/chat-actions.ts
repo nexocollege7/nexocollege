@@ -84,3 +84,32 @@ export async function getMyTeachers() {
 
   return data || []
 }
+
+export async function getMyStudents() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  // Busca mensagens recebidas pelo professor, agrupadas por aluno + curso
+  const { data } = await supabase
+    .from('messages')
+    .select(`
+      course_id,
+      sender_id,
+      sender:users!messages_sender_id_fkey ( id, full_name ),
+      courses ( id, title )
+    `)
+    .eq('receiver_id', user.id)
+    .order('sent_at', { ascending: false })
+
+  if (!data) return []
+
+  // Remove duplicatas — um item por aluno+curso
+  const seen = new Set<string>()
+  return data.filter((msg) => {
+    const key = `${msg.sender_id}-${msg.course_id}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
