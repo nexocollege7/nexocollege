@@ -1,7 +1,7 @@
-import { AdminLayout } from '@/components/layout/admin-layout'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
+import { AdminLayout } from '@/components/layout/admin-layout'
 
 export default async function DashboardLayout({
   children,
@@ -31,6 +31,7 @@ export default async function DashboardLayout({
 
   const role = profile?.role || 'student'
 
+  // Aluno acessando /dashboard vai para /meus-cursos
   return (
     <AdminLayout
       user={{
