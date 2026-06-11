@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { getMySchool, updateSchool, createSchool } from '@/app/actions/school-actions'
+import { getMySchool, updateSchool, createSchool, saveMpToken, getMpTokenStatus } from '@/app/actions/school-actions'
 
 type School = {
   id: string
@@ -22,6 +22,11 @@ export default function EscolaPage() {
   const [description, setDescription] = useState('')
   const [primaryColor, setPrimaryColor] = useState('#22c55e')
 
+  const [mpToken, setMpToken] = useState('')
+  const [hasToken, setHasToken] = useState(false)
+  const [savingToken, setSavingToken] = useState(false)
+  const [tokenMessage, setTokenMessage] = useState('')
+
   useEffect(() => {
     async function load() {
       const data = await getMySchool()
@@ -31,6 +36,8 @@ export default function EscolaPage() {
         setDescription(data.description || '')
         setPrimaryColor(data.primary_color || '#22c55e')
       }
+      const status = await getMpTokenStatus()
+      setHasToken(status.hasToken)
       setLoading(false)
     }
     load()
@@ -52,6 +59,23 @@ export default function EscolaPage() {
       if (updated) setSchool(updated)
     }
     setSaving(false)
+  }
+
+  async function handleSaveToken() {
+    if (!mpToken.trim()) return
+    setSavingToken(true)
+    setTokenMessage('')
+
+    const result = await saveMpToken(mpToken.trim())
+
+    if (result?.error) {
+      setTokenMessage(`Erro: ${result.error}`)
+    } else {
+      setTokenMessage('✅ Token salvo com sucesso!')
+      setHasToken(true)
+      setMpToken('')
+    }
+    setSavingToken(false)
   }
 
   if (loading) {
@@ -139,6 +163,66 @@ export default function EscolaPage() {
 
         </CardContent>
       </Card>
+
+      {school && (
+        <Card className="bg-gray-800 border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-white">💳 Pagamentos — Mercado Pago</CardTitle>
+            <CardDescription className="text-gray-400">
+              Configure sua conta do Mercado Pago para receber pagamentos dos seus alunos diretamente.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+
+            {hasToken && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-green-900/30 border border-green-700 rounded-lg">
+                <span className="text-green-400 text-sm">✅ Token configurado</span>
+                <span className="text-gray-500 text-xs ml-auto">Para trocar, cole um novo token abaixo</span>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">
+                Access Token do Mercado Pago
+              </label>
+              <input
+                type="password"
+                value={mpToken}
+                onChange={(e) => setMpToken(e.target.value)}
+                placeholder={hasToken ? 'Cole aqui para substituir o token atual' : 'APP_USR-xxxx ou TEST-xxxx'}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+              />
+              <p className="text-xs text-gray-500">
+                Encontre seu token em{' '}
+                <a
+                  href="https://www.mercadopago.com.br/developers/panel/app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:underline"
+                >
+                  mercadopago.com.br/developers
+                </a>
+                {' '}→ Suas aplicações → Credenciais
+              </p>
+            </div>
+
+            {tokenMessage && (
+              <p className={`text-sm ${tokenMessage.startsWith('Erro') ? 'text-red-400' : 'text-green-400'}`}>
+                {tokenMessage}
+              </p>
+            )}
+
+            <button
+              onClick={handleSaveToken}
+              disabled={savingToken || !mpToken.trim()}
+              className="w-full py-2.5 px-4 bg-green-700 hover:bg-green-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+            >
+              {savingToken ? 'Salvando...' : 'Salvar Token'}
+            </button>
+
+          </CardContent>
+        </Card>
+      )}
 
       {school && (
         <Card className="bg-gray-800 border-gray-700">

@@ -71,3 +71,33 @@ export async function createSchool(formData: {
   revalidatePath('/dashboard/escola')
   return { success: true }
 }
+
+export async function saveMpToken(token: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const { error } = await supabase
+    .from('schools')
+    .update({ mp_access_token: token })
+    .eq('owner_id', user.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/dashboard/escola')
+  return { success: true }
+}
+
+export async function getMpTokenStatus() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { hasToken: false }
+
+  const { data } = await supabase
+    .from('schools')
+    .select('mp_access_token')
+    .eq('owner_id', user.id)
+    .single()
+
+  return { hasToken: !!(data?.mp_access_token) }
+}
