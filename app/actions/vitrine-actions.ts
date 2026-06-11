@@ -8,7 +8,6 @@ export async function getSchoolBySlug(slug: string) {
     .from('schools')
     .select('*')
     .eq('slug', slug)
-    .eq('is_active', true)
     .single()
   return data
 }
@@ -17,11 +16,24 @@ export async function getPublishedCourses(schoolId: string) {
   const supabase = await createClient()
   const { data } = await supabase
     .from('courses')
-    .select('*')
+    .select('id, title, description, price, is_free, slug, status, thumbnail_url, created_at')
     .eq('school_id', schoolId)
     .eq('status', 'published')
     .order('created_at', { ascending: false })
-  return data || []
+  
+  if (!data) return []
+
+  const coursesWithLessons = await Promise.all(
+    data.map(async (course) => {
+      const { count } = await supabase
+        .from('lessons')
+        .select('*', { count: 'exact', head: true })
+        .eq('course_id', course.id)
+      return { ...course, total_lessons: count || 0 }
+    })
+  )
+
+  return coursesWithLessons
 }
 
 export async function getCourseBySlug(courseSlug: string, schoolId: string) {

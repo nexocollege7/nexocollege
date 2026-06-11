@@ -1,7 +1,6 @@
 import { getSchoolBySlug, getPublishedCourses } from '@/app/actions/vitrine-actions'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { BookOpen, GraduationCap } from 'lucide-react'
 
 export default async function VitrinePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -9,84 +8,225 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
   if (!school) notFound()
 
   const courses = await getPublishedCourses(school.id)
+  const destaque = courses[0] || null
+  const cor = school.primary_color || '#AEEA00'
 
   return (
-    <div className="min-h-screen bg-gray-950">
-      <header className="border-b border-gray-800 bg-gray-900">
-        <div className="max-w-5xl mx-auto px-6 py-5 flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ backgroundColor: school.primary_color || '#22c55e' }}
-          >
-            <GraduationCap className="w-6 h-6 text-white" />
+    <div style={{ minHeight: '100vh', backgroundColor: '#0D0D0D', fontFamily: 'sans-serif' }}>
+
+      <style>{`
+        .curso-card {
+          background-color: #1A1A1A;
+          border-radius: 12px;
+          overflow: hidden;
+          border: 1px solid #2A2A2A;
+          cursor: pointer;
+          transition: transform 0.2s ease, border-color 0.2s ease;
+          text-decoration: none;
+          display: block;
+        }
+        .curso-card:hover {
+          transform: scale(1.03);
+          border-color: ${cor};
+        }
+        .header-fixo {
+          position: fixed;
+          top: 0; left: 0; right: 0;
+          z-index: 100;
+          background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, transparent 100%);
+          padding: 16px 48px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+      `}</style>
+
+      {/* Header */}
+      <header className="header-fixo">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{
+            width: '36px', height: '36px', borderRadius: '8px',
+            backgroundColor: cor,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '16px', fontWeight: '700', color: '#0D0D0D',
+          }}>
+            {school.name.charAt(0).toUpperCase()}
           </div>
-          <div>
-            <h1 className="text-white font-bold text-lg">{school.name}</h1>
-            {school.description && (
-              <p className="text-gray-400 text-sm">{school.description}</p>
-            )}
-          </div>
+          <span style={{ fontSize: '18px', fontWeight: '700', color: '#F0F0F0' }}>
+            {school.name}
+          </span>
         </div>
+        <Link href="/login" style={{
+          padding: '8px 20px', borderRadius: '8px',
+          backgroundColor: cor, color: '#0D0D0D',
+          fontWeight: '700', fontSize: '14px', textDecoration: 'none',
+        }}>
+          Entrar
+        </Link>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-10">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white">Cursos disponíveis</h2>
-          <p className="text-gray-400 mt-1">{courses.length} curso{courses.length !== 1 ? 's' : ''} publicado{courses.length !== 1 ? 's' : ''}</p>
-        </div>
+      {/* Hero Banner */}
+      {destaque ? (
+        <div style={{
+          position: 'relative', height: '85vh', minHeight: '500px',
+          display: 'flex', alignItems: 'flex-end',
+          backgroundColor: '#111111',
+          overflow: 'hidden',
+        }}>
+          {/* Imagem de fundo */}
+          {destaque.thumbnail_url && (
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 0,
+              backgroundImage: `url(${destaque.thumbnail_url})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }} />
+          )}
 
-        {courses.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-gray-700 rounded-xl">
-            <BookOpen className="w-10 h-10 text-gray-600 mb-3" />
-            <p className="text-gray-400">Nenhum curso disponível ainda</p>
+          {/* Gradiente sobre a imagem */}
+          <div style={{
+            position: 'absolute', inset: 0, zIndex: 1,
+            background: `linear-gradient(to right, rgba(0,0,0,0.92) 40%, rgba(0,0,0,0.4) 100%),
+                         linear-gradient(to top, rgba(0,0,0,0.95) 0%, transparent 60%),
+                         radial-gradient(ellipse at 70% 50%, ${cor}22 0%, transparent 60%)`,
+          }} />
+
+          {/* Conteúdo */}
+          <div style={{ position: 'relative', zIndex: 2, padding: '0 48px 80px', maxWidth: '600px' }}>
+            <div style={{
+              display: 'inline-block', fontSize: '11px', fontWeight: '700',
+              color: cor, textTransform: 'uppercase', letterSpacing: '0.12em',
+              marginBottom: '12px',
+            }}>
+              EM DESTAQUE
+            </div>
+            <h1 style={{
+              fontSize: '52px', fontWeight: '800', color: '#F0F0F0',
+              lineHeight: '1.1', margin: '0 0 16px',
+              textShadow: '0 2px 20px rgba(0,0,0,0.8)',
+            }}>
+              {destaque.title}
+            </h1>
+            {destaque.description && (
+              <p style={{
+                fontSize: '16px', color: '#BBBBBB', lineHeight: '1.6',
+                margin: '0 0 32px', maxWidth: '480px',
+              }}>
+                {destaque.description}
+              </p>
+            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <Link href={`/vitrine/${slug}/${destaque.slug}`} style={{
+                padding: '14px 32px', borderRadius: '8px',
+                backgroundColor: cor, color: '#0D0D0D',
+                fontWeight: '800', fontSize: '15px',
+                textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px',
+              }}>
+                ▶ Ver curso
+              </Link>
+              <div style={{
+                padding: '14px 24px', borderRadius: '8px',
+                backgroundColor: 'rgba(255,255,255,0.15)',
+                color: '#F0F0F0', fontWeight: '700', fontSize: '15px',
+              }}>
+                {destaque.is_free ? '🎁 Gratuito' : `R$ ${Number(destaque.price).toFixed(2)}`}
+              </div>
+              <div style={{
+                padding: '14px 24px', borderRadius: '8px',
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                color: '#BBBBBB', fontSize: '14px',
+              }}>
+                {destaque.total_lessons} aulas
+              </div>
+            </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        </div>
+      ) : (
+        <div style={{
+          height: '85vh', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', flexDirection: 'column', gap: '16px',
+        }}>
+          <p style={{ fontSize: '48px' }}>📚</p>
+          <p style={{ color: '#888888', fontSize: '18px' }}>Nenhum curso disponível ainda</p>
+        </div>
+      )}
+
+      {/* Grid de Cursos */}
+      {courses.length > 0 && (
+        <div style={{ padding: '48px 48px 80px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#F0F0F0', margin: '0 0 24px' }}>
+            Todos os cursos
+            <span style={{ color: '#555555', fontSize: '15px', fontWeight: '400', marginLeft: '12px' }}>
+              {courses.length} disponível{courses.length !== 1 ? 'is' : ''}
+            </span>
+          </h2>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+            gap: '20px',
+          }}>
             {courses.map((course) => (
-              <Link
-                key={course.id}
-                href={`/vitrine/${slug}/${course.slug}`}
-                className="group bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-gray-600 transition-all hover:-translate-y-0.5"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                    style={{ backgroundColor: school.primary_color || '#22c55e' }}
-                  >
-                    <BookOpen className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="text-xs font-medium px-2 py-1 rounded-full bg-green-900 text-green-300">
-                    Publicado
-                  </span>
+              <Link key={course.id} href={`/vitrine/${slug}/${course.slug}`} className="curso-card">
+                {/* Capa */}
+                <div style={{
+                  height: '160px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  backgroundImage: course.thumbnail_url ? `url(${course.thumbnail_url})` : undefined,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  background: course.thumbnail_url
+                    ? undefined
+                    : `linear-gradient(135deg, ${cor}33, ${cor}11)`,
+                  borderBottom: `3px solid ${cor}`,
+                }}>
+                  {!course.thumbnail_url && <span style={{ fontSize: '48px' }}>📖</span>}
                 </div>
-                <h3 className="text-white font-semibold mt-3 group-hover:text-green-400 transition-colors">
-                  {course.title}
-                </h3>
-                {course.description && (
-                  <p className="text-gray-400 text-sm mt-2 line-clamp-2">{course.description}</p>
-                )}
-                <div className="mt-4 pt-4 border-t border-gray-800 flex items-center justify-between">
-                  <span className="text-sm text-gray-400">{course.total_lessons} aulas</span>
-                  <span className="font-bold text-white">
-                    {course.is_free ? (
-                      <span className="text-green-400">Gratuito</span>
-                    ) : (
-                      `R$ ${Number(course.price).toFixed(2)}`
-                    )}
-                  </span>
+
+                {/* Info */}
+                <div style={{ padding: '16px' }}>
+                  <h3 style={{
+                    color: '#F0F0F0', fontWeight: '600', fontSize: '15px',
+                    margin: '0 0 8px', lineHeight: '1.3',
+                  }}>
+                    {course.title}
+                  </h3>
+                  {course.description && (
+                    <p style={{
+                      color: '#888888', fontSize: '13px', margin: '0 0 16px',
+                      lineHeight: '1.5', overflow: 'hidden',
+                      display: '-webkit-box', WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                    }}>
+                      {course.description}
+                    </p>
+                  )}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    paddingTop: '12px', borderTop: '1px solid #2A2A2A',
+                  }}>
+                    <span style={{ color: '#555555', fontSize: '12px' }}>
+                      {course.total_lessons} aulas
+                    </span>
+                    <span style={{
+                      fontWeight: '800', fontSize: '16px',
+                      color: course.is_free ? cor : '#F0F0F0',
+                    }}>
+                      {course.is_free ? 'Gratuito' : `R$ ${Number(course.price).toFixed(2)}`}
+                    </span>
+                  </div>
                 </div>
               </Link>
             ))}
           </div>
-        )}
-      </main>
-
-      <footer className="border-t border-gray-800 mt-20">
-        <div className="max-w-5xl mx-auto px-6 py-6 text-center">
-          <p className="text-gray-600 text-sm">
-            Powered by <span className="text-gray-400 font-medium">NexoCollege</span>
-          </p>
         </div>
+      )}
+
+      {/* Footer */}
+      <footer style={{ borderTop: '1px solid #1A1A1A', padding: '24px 48px', textAlign: 'center' }}>
+        <p style={{ color: '#333333', fontSize: '13px' }}>
+          Powered by <span style={{ color: '#555555', fontWeight: '600' }}>NexoCollege</span>
+        </p>
       </footer>
     </div>
   )
