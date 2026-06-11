@@ -70,7 +70,7 @@ export async function criarEscola(formData: {
     id: userId,
     email: formData.email,
     full_name: formData.nome,
-    role: 'school_owner',
+    role: 'admin',
   })
 
   // 3. Criar a escola
