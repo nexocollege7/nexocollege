@@ -1,6 +1,7 @@
 import { getSchoolBySlug, getPublishedCourses } from '@/app/actions/vitrine-actions'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import BannerRotativo from './banner-rotativo'
 
 export default async function VitrinePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -8,7 +9,6 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
   if (!school) notFound()
 
   const courses = await getPublishedCourses(school.id)
-  const destaque = courses[0] || null
   const cor = school.primary_color || '#AEEA00'
 
   return (
@@ -65,82 +65,9 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
         </Link>
       </header>
 
-      {/* Hero Banner */}
-      {destaque ? (
-        <div style={{
-          position: 'relative', height: '85vh', minHeight: '500px',
-          display: 'flex', alignItems: 'flex-end',
-          backgroundColor: '#111111',
-          overflow: 'hidden',
-        }}>
-          {/* Imagem de fundo */}
-          {destaque.thumbnail_url && (
-            <div style={{
-              position: 'absolute', inset: 0, zIndex: 0,
-              backgroundImage: `url(${destaque.thumbnail_url})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }} />
-          )}
-
-          {/* Gradiente sobre a imagem */}
-          <div style={{
-            position: 'absolute', inset: 0, zIndex: 1,
-            background: `linear-gradient(to right, rgba(0,0,0,0.92) 40%, rgba(0,0,0,0.4) 100%),
-                         linear-gradient(to top, rgba(0,0,0,0.95) 0%, transparent 60%),
-                         radial-gradient(ellipse at 70% 50%, ${cor}22 0%, transparent 60%)`,
-          }} />
-
-          {/* Conteúdo */}
-          <div style={{ position: 'relative', zIndex: 2, padding: '0 48px 80px', maxWidth: '600px' }}>
-            <div style={{
-              display: 'inline-block', fontSize: '11px', fontWeight: '700',
-              color: cor, textTransform: 'uppercase', letterSpacing: '0.12em',
-              marginBottom: '12px',
-            }}>
-              EM DESTAQUE
-            </div>
-            <h1 style={{
-              fontSize: '52px', fontWeight: '800', color: '#F0F0F0',
-              lineHeight: '1.1', margin: '0 0 16px',
-              textShadow: '0 2px 20px rgba(0,0,0,0.8)',
-            }}>
-              {destaque.title}
-            </h1>
-            {destaque.description && (
-              <p style={{
-                fontSize: '16px', color: '#BBBBBB', lineHeight: '1.6',
-                margin: '0 0 32px', maxWidth: '480px',
-              }}>
-                {destaque.description}
-              </p>
-            )}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-              <Link href={`/vitrine/${slug}/${destaque.slug}`} style={{
-                padding: '14px 32px', borderRadius: '8px',
-                backgroundColor: cor, color: '#0D0D0D',
-                fontWeight: '800', fontSize: '15px',
-                textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px',
-              }}>
-                ▶ Ver curso
-              </Link>
-              <div style={{
-                padding: '14px 24px', borderRadius: '8px',
-                backgroundColor: 'rgba(255,255,255,0.15)',
-                color: '#F0F0F0', fontWeight: '700', fontSize: '15px',
-              }}>
-                {destaque.is_free ? '🎁 Gratuito' : `R$ ${Number(destaque.price).toFixed(2)}`}
-              </div>
-              <div style={{
-                padding: '14px 24px', borderRadius: '8px',
-                backgroundColor: 'rgba(255,255,255,0.1)',
-                color: '#BBBBBB', fontSize: '14px',
-              }}>
-                {destaque.total_lessons} aulas
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Hero Banner Rotativo */}
+      {courses.length > 0 ? (
+        <BannerRotativo courses={courses} slug={slug} cor={cor} />
       ) : (
         <div style={{
           height: '85vh', display: 'flex', alignItems: 'center',
@@ -168,7 +95,6 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
           }}>
             {courses.map((course) => (
               <Link key={course.id} href={`/vitrine/${slug}/${course.slug}`} className="curso-card">
-                {/* Capa */}
                 <div style={{
                   height: '160px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -183,7 +109,6 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
                   {!course.thumbnail_url && <span style={{ fontSize: '48px' }}>📖</span>}
                 </div>
 
-                {/* Info */}
                 <div style={{ padding: '16px' }}>
                   <h3 style={{
                     color: '#F0F0F0', fontWeight: '600', fontSize: '15px',
