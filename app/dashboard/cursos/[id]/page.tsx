@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation'
 import { getCourse, updateCourse } from '@/app/actions/course-actions'
 import { getModulos, criarModulo, deletarModulo } from '@/app/actions/modulo-actions'
 import { criarAula, deletarAula } from '@/app/actions/aula-actions'
-import { uploadThumbnail } from '@/app/actions/upload-actions'
 
 export default function EditarCursoPage() {
   const params = useParams()
@@ -51,11 +50,22 @@ export default function EditarCursoPage() {
     const file = e.target.files?.[0]
     if (!file) return
     setUploadando(true)
-    const formData = new FormData()
-    formData.append('thumbnail', file)
-    const result = await uploadThumbnail(id, formData)
-    if (result.url) {
-      setCurso({ ...curso, thumbnail_url: result.url })
+    try {
+      const formData = new FormData()
+      formData.append('thumbnail', file)
+      formData.append('courseId', id)
+      const res = await fetch('/api/upload-thumbnail', {
+        method: 'POST',
+        body: formData,
+      })
+      const result = await res.json()
+      if (result.url) {
+        setCurso({ ...curso, thumbnail_url: result.url })
+      } else {
+        alert('Erro no upload: ' + (result.error || 'Tente novamente'))
+      }
+    } catch (err) {
+      alert('Erro ao enviar imagem. Tente novamente.')
     }
     setUploadando(false)
   }
@@ -128,7 +138,6 @@ export default function EditarCursoPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '800px' }}>
 
-      {/* Cabeçalho */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <button onClick={() => router.push('/dashboard/cursos')}
           style={{ background: 'none', border: 'none', color: '#888888', fontSize: '20px', cursor: 'pointer' }}>
@@ -140,7 +149,6 @@ export default function EditarCursoPage() {
         </div>
       </div>
 
-      {/* Informações do Curso */}
       {curso && (
         <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '24px' }}>
           <h2 style={{ color: '#F0F0F0', fontSize: '16px', fontWeight: '600', margin: '0 0 20px' }}>
@@ -148,13 +156,11 @@ export default function EditarCursoPage() {
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-            {/* Thumbnail */}
             <div>
               <label style={{ color: '#888888', fontSize: '13px', display: 'block', marginBottom: '8px' }}>
                 Imagem de Capa
               </label>
               <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                {/* Preview */}
                 <div
                   onClick={() => fileInputRef.current?.click()}
                   style={{
@@ -237,12 +243,10 @@ export default function EditarCursoPage() {
         </div>
       )}
 
-      {/* Módulos e Aulas */}
       <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '24px' }}>
         <h2 style={{ color: '#F0F0F0', fontSize: '16px', fontWeight: '600', margin: '0 0 20px' }}>
           Módulos e Aulas
         </h2>
-
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
           {modulos.length === 0 && (
             <p style={{ color: '#555555', fontSize: '14px', textAlign: 'center', padding: '24px 0' }}>
@@ -264,7 +268,6 @@ export default function EditarCursoPage() {
                 </div>
                 <button onClick={() => handleDeletarModulo(modulo.id)} style={btnPerigo}>Deletar módulo</button>
               </div>
-
               <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {(modulo.lessons || [])
                   .sort((a: any, b: any) => a.position - b.position)
@@ -281,7 +284,6 @@ export default function EditarCursoPage() {
                       <button onClick={() => handleDeletarAula(modulo.id, aula.id)} style={btnPerigo}>✕</button>
                     </div>
                   ))}
-
                 <div style={{
                   display: 'flex', gap: '8px', alignItems: 'center',
                   padding: '8px', backgroundColor: '#111111',
@@ -305,7 +307,6 @@ export default function EditarCursoPage() {
             </div>
           ))}
         </div>
-
         <div style={{
           display: 'flex', gap: '8px', alignItems: 'center',
           padding: '16px', backgroundColor: '#111111',
