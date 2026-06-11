@@ -6,13 +6,10 @@ import { getAulasDoAluno, marcarAulaConcluida } from '@/app/actions/aula-actions
 
 function getEmbedUrl(url: string): string {
   if (!url) return ''
-  // YouTube
   const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)
   if (yt) return `https://www.youtube.com/embed/${yt[1]}?autoplay=1`
-  // Vimeo
   const vm = url.match(/vimeo\.com\/(\d+)/)
   if (vm) return `https://player.vimeo.com/video/${vm[1]}?autoplay=1`
-  // Panda Video
   if (url.includes('pandavideo')) return url
   return url
 }
@@ -29,7 +26,6 @@ export default function AprenderPage() {
     async function load() {
       const data = await getAulasDoAluno(id)
       setModulos(data)
-      // Selecionar primeira aula automaticamente
       const primeiraAula = data?.[0]?.lessons?.[0]
       if (primeiraAula) setAulaAtual(primeiraAula)
       setLoading(false)
@@ -37,7 +33,23 @@ export default function AprenderPage() {
     load()
   }, [id])
 
+  // Monta lista plana de todas as aulas em ordem
+  function getTodasAulas() {
+    return modulos.flatMap((m) =>
+      [...(m.lessons || [])].sort((a: any, b: any) => a.position - b.position)
+    )
+  }
+
+  // Uma aula está liberada se for a primeira OU se a anterior estiver concluída
+  function aulaLiberada(aula: any): boolean {
+    const todas = getTodasAulas()
+    const index = todas.findIndex((l) => l.id === aula.id)
+    if (index === 0) return true
+    return todas[index - 1]?.completed === true
+  }
+
   async function handleSelecionarAula(aula: any) {
+    if (!aulaLiberada(aula)) return
     setAulaAtual(aula)
   }
 
@@ -110,7 +122,8 @@ export default function AprenderPage() {
                   padding: '8px 20px', borderRadius: '8px', border: 'none',
                   backgroundColor: aulaAtual.completed ? '#1A2E00' : '#AEEA00',
                   color: aulaAtual.completed ? '#AEEA00' : '#0D0D0D',
-                  fontWeight: '700', fontSize: '13px', cursor: aulaAtual.completed ? 'default' : 'pointer',
+                  fontWeight: '700', fontSize: '13px',
+                  cursor: aulaAtual.completed ? 'default' : 'pointer',
                   fontFamily: 'inherit',
                 }}
               >
@@ -158,7 +171,6 @@ export default function AprenderPage() {
         ) : (
           modulos.map((modulo, mIndex) => (
             <div key={modulo.id}>
-              {/* Header do módulo */}
               <div style={{
                 padding: '12px 20px',
                 backgroundColor: '#1A1A1A',
@@ -173,11 +185,11 @@ export default function AprenderPage() {
                 </p>
               </div>
 
-              {/* Aulas */}
               {(modulo.lessons || [])
                 .sort((a: any, b: any) => a.position - b.position)
                 .map((aula: any, aIndex: number) => {
                   const isAtiva = aulaAtual?.id === aula.id
+                  const liberada = aulaLiberada(aula)
                   return (
                     <button
                       key={aula.id}
@@ -189,20 +201,21 @@ export default function AprenderPage() {
                         borderBottom: '1px solid #1A1A1A',
                         border: 'none',
                         borderLeft: isAtiva ? '3px solid #AEEA00' : '3px solid transparent',
-                        cursor: 'pointer',
+                        cursor: liberada ? 'pointer' : 'not-allowed',
                         display: 'flex', alignItems: 'center', gap: '10px',
                         fontFamily: 'inherit',
+                        opacity: liberada ? 1 : 0.4,
                       }}
                     >
                       <span style={{
                         fontSize: '14px',
-                        color: aula.completed ? '#AEEA00' : '#555555',
+                        color: aula.completed ? '#AEEA00' : liberada ? '#888888' : '#555555',
                       }}>
-                        {aula.completed ? '✓' : '▶'}
+                        {aula.completed ? '✓' : liberada ? '▶' : '🔒'}
                       </span>
                       <span style={{
                         fontSize: '13px',
-                        color: isAtiva ? '#AEEA00' : aula.completed ? '#888888' : '#F0F0F0',
+                        color: isAtiva ? '#AEEA00' : aula.completed ? '#888888' : liberada ? '#F0F0F0' : '#555555',
                         lineHeight: '1.4',
                       }}>
                         {aIndex + 1}. {aula.title}
