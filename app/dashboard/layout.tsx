@@ -1,5 +1,6 @@
 import { AdminLayout } from '@/components/layout/admin-layout'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 
 export default async function DashboardLayout({
@@ -8,18 +9,33 @@ export default async function DashboardLayout({
   children: React.ReactNode
 }) {
   const supabase = await createClient()
-
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
     redirect('/login')
   }
 
+  // Master vai direto para /master
+  const masterEmail = process.env.NEXT_PUBLIC_MASTER_EMAIL
+  if (user.email === masterEmail) {
+    redirect('/master')
+  }
+
+  // Busca o perfil real do banco
+  const adminClient = createAdminClient()
+  const { data: profile } = await adminClient
+    .from('users')
+    .select('role, full_name')
+    .eq('id', user.id)
+    .single()
+
+  const role = profile?.role || 'student'
+
   return (
     <AdminLayout
       user={{
         email: user.email ?? '',
-        role: 'admin',
+        role: role,
       }}
     >
       {children}
