@@ -2,6 +2,7 @@ import { getSchoolBySlug, getPublishedCourses } from '@/app/actions/vitrine-acti
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import BannerRotativo from './banner-rotativo'
+import HeaderVitrine from './header-vitrine'
 
 export default async function VitrinePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -29,41 +30,9 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
           transform: scale(1.03);
           border-color: ${cor};
         }
-        .header-fixo {
-          position: fixed;
-          top: 0; left: 0; right: 0;
-          z-index: 100;
-          background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, transparent 100%);
-          padding: 16px 48px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
       `}</style>
 
-      {/* Header */}
-      <header className="header-fixo">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{
-            width: '36px', height: '36px', borderRadius: '8px',
-            backgroundColor: cor,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '16px', fontWeight: '700', color: '#0D0D0D',
-          }}>
-            {school.name.charAt(0).toUpperCase()}
-          </div>
-          <span style={{ fontSize: '18px', fontWeight: '700', color: '#F0F0F0' }}>
-            {school.name}
-          </span>
-        </div>
-        <Link href={`/vitrine/${slug}/login`} style={{
-          padding: '8px 20px', borderRadius: '8px',
-          backgroundColor: cor, color: '#0D0D0D',
-          fontWeight: '700', fontSize: '14px', textDecoration: 'none',
-        }}>
-          Entrar
-        </Link>
-      </header>
+      <HeaderVitrine slug={slug} cor={cor} nomeEscola={school.name} />
 
       {/* Hero Banner Rotativo */}
       {courses.length > 0 ? (

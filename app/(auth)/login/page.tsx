@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createAdminClient } from '@/lib/supabase/admin'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -26,7 +25,6 @@ export default function LoginPage() {
       return
     }
 
-    // Busca o role do usuário via API
     const res = await fetch('/api/me')
     const profile = await res.json()
 
@@ -34,6 +32,19 @@ export default function LoginPage() {
     if (data.user?.email === masterEmail) {
       router.push('/master')
     } else if (profile.role === 'student') {
+      // Busca o slug da escola do aluno
+      if (profile.school_id) {
+        const { data: school } = await supabase
+          .from('schools')
+          .select('slug')
+          .eq('id', profile.school_id)
+          .single()
+        if (school?.slug) {
+          router.push(`/vitrine/${school.slug}`)
+          router.refresh()
+          return
+        }
+      }
       router.push('/dashboard/meus-cursos')
     } else {
       router.push('/dashboard')
