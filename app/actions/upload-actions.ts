@@ -1,9 +1,11 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function uploadThumbnail(courseId: string, formData: FormData) {
   const supabase = await createClient()
+  const adminClient = createAdminClient()
   const file = formData.get('thumbnail') as File
 
   if (!file || file.size === 0) return { error: 'Nenhum arquivo selecionado' }
@@ -21,7 +23,7 @@ export async function uploadThumbnail(courseId: string, formData: FormData) {
     .from('course-thumbnails')
     .getPublicUrl(fileName)
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await adminClient
     .from('courses')
     .update({ thumbnail_url: data.publicUrl })
     .eq('id', courseId)
