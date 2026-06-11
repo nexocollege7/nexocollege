@@ -12,7 +12,7 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children, user, title }: AdminLayoutProps) {
   return (
-    <div className="flex min-h-screen bg-gray-950">
+    <div className="flex min-h-screen" style={{ backgroundColor: '#0D0D0D' }}>
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Header user={user} title={title} />

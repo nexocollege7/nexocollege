@@ -19,73 +19,88 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-gray-400">Carregando dashboard...</p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '256px' }}>
+        <p style={{ color: '#888888' }}>Carregando dashboard...</p>
       </div>
     )
   }
 
   if (!stats) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <p className="text-white font-semibold">Bem-vindo ao NexoCollege!</p>
-          <p className="text-gray-400 text-sm mt-1">Configure sua escola para começar.</p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '256px' }}>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ color: '#F0F0F0', fontWeight: '600' }}>Bem-vindo ao NexoCollege!</p>
+          <p style={{ color: '#888888', fontSize: '14px', marginTop: '4px' }}>Configure sua escola para começar.</p>
         </div>
       </div>
     )
   }
 
   const cards = [
-    { label: 'Alunos Ativos', value: stats.totalAlunos, icon: Users, color: 'text-blue-400', bg: 'bg-blue-900' },
-    { label: 'Cursos', value: stats.totalCursos, icon: BookOpen, color: 'text-green-400', bg: 'bg-green-900' },
-    { label: 'Certificados', value: stats.totalCertificados, icon: Award, color: 'text-yellow-400', bg: 'bg-yellow-900' },
-    { label: 'Receita Total', value: `R$ ${stats.receita.toFixed(2)}`, icon: DollarSign, color: 'text-purple-400', bg: 'bg-purple-900' },
+    { label: 'Alunos Ativos', value: stats.totalAlunos, icon: Users, iconColor: '#60A5FA', iconBg: '#1E3A5F' },
+    { label: 'Cursos', value: stats.totalCursos, icon: BookOpen, iconColor: '#AEEA00', iconBg: '#1A2E00' },
+    { label: 'Certificados', value: stats.totalCertificados, icon: Award, iconColor: '#FACC15', iconBg: '#2E2100' },
+    { label: 'Receita Total', value: `R$ ${stats.receita.toFixed(2)}`, icon: DollarSign, iconColor: '#7C4DFF', iconBg: '#1E0E3F' },
   ]
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-gray-400 mt-1">Visão geral da sua escola</p>
+        <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#F0F0F0', margin: 0 }}>Dashboard</h1>
+        <p style={{ color: '#888888', marginTop: '4px', fontSize: '14px' }}>Visão geral da sua escola</p>
       </div>
 
       {/* Cards de métricas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
         {cards.map((card) => {
           const Icon = card.icon
           return (
-            <div key={card.label} className="bg-gray-800 border border-gray-700 rounded-xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-gray-400 text-sm">{card.label}</p>
-                <div className={`w-9 h-9 ${card.bg} rounded-lg flex items-center justify-center`}>
-                  <Icon className={`w-4 h-4 ${card.color}`} />
+            <div key={card.label} style={{
+              backgroundColor: '#1A1A1A',
+              border: '1px solid #2A2A2A',
+              borderRadius: '12px',
+              padding: '20px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <p style={{ color: '#888888', fontSize: '13px', margin: 0 }}>{card.label}</p>
+                <div style={{
+                  width: '36px', height: '36px',
+                  backgroundColor: card.iconBg,
+                  borderRadius: '8px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Icon size={16} color={card.iconColor} />
                 </div>
               </div>
-              <p className="text-2xl font-bold text-white">{card.value}</p>
+              <p style={{ fontSize: '28px', fontWeight: '700', color: '#F0F0F0', margin: 0 }}>{card.value}</p>
             </div>
           )
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
         {/* Matrículas recentes */}
-        <div className="bg-gray-800 border border-gray-700 rounded-xl p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-4 h-4 text-green-400" />
-            <h2 className="text-white font-semibold text-sm">Matrículas Recentes</h2>
+        <div style={{
+          backgroundColor: '#1A1A1A',
+          border: '1px solid #2A2A2A',
+          borderRadius: '12px',
+          padding: '20px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <TrendingUp size={16} color="#AEEA00" />
+            <h2 style={{ color: '#F0F0F0', fontWeight: '600', fontSize: '14px', margin: 0 }}>Matrículas Recentes</h2>
           </div>
           {stats.matriculasRecentes.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center py-4">Nenhuma matrícula ainda</p>
+            <p style={{ color: '#555555', fontSize: '14px', textAlign: 'center', padding: '16px 0' }}>Nenhuma matrícula ainda</p>
           ) : (
-            <div className="space-y-3">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {stats.matriculasRecentes.map((m: any, i: number) => (
-                <div key={i} className="flex items-center justify-between">
+                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
-                    <p className="text-white text-sm font-medium">{m.users?.full_name || 'Aluno'}</p>
-                    <p className="text-gray-400 text-xs">{m.courses?.title}</p>
+                    <p style={{ color: '#F0F0F0', fontSize: '14px', fontWeight: '500', margin: 0 }}>{m.users?.full_name || 'Aluno'}</p>
+                    <p style={{ color: '#888888', fontSize: '12px', margin: 0 }}>{m.courses?.title}</p>
                   </div>
-                  <p className="text-gray-500 text-xs">
+                  <p style={{ color: '#555555', fontSize: '12px' }}>
                     {new Date(m.enrolled_at).toLocaleDateString('pt-BR')}
                   </p>
                 </div>
@@ -95,24 +110,29 @@ export default function DashboardPage() {
         </div>
 
         {/* Últimos pagamentos */}
-        <div className="bg-gray-800 border border-gray-700 rounded-xl p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <DollarSign className="w-4 h-4 text-purple-400" />
-            <h2 className="text-white font-semibold text-sm">Últimos Pagamentos</h2>
+        <div style={{
+          backgroundColor: '#1A1A1A',
+          border: '1px solid #2A2A2A',
+          borderRadius: '12px',
+          padding: '20px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <DollarSign size={16} color="#7C4DFF" />
+            <h2 style={{ color: '#F0F0F0', fontWeight: '600', fontSize: '14px', margin: 0 }}>Últimos Pagamentos</h2>
           </div>
           {stats.pagamentos.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center py-4">Nenhum pagamento ainda</p>
+            <p style={{ color: '#555555', fontSize: '14px', textAlign: 'center', padding: '16px 0' }}>Nenhum pagamento ainda</p>
           ) : (
-            <div className="space-y-3">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {stats.pagamentos.map((p: any, i: number) => (
-                <div key={i} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full" />
-                    <p className="text-white text-sm">Aprovado</p>
+                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '8px', height: '8px', backgroundColor: '#AEEA00', borderRadius: '50%' }} />
+                    <p style={{ color: '#F0F0F0', fontSize: '14px', margin: 0 }}>Aprovado</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-white text-sm font-medium">R$ {Number(p.amount).toFixed(2)}</p>
-                    <p className="text-gray-500 text-xs">
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ color: '#F0F0F0', fontSize: '14px', fontWeight: '500', margin: 0 }}>R$ {Number(p.amount).toFixed(2)}</p>
+                    <p style={{ color: '#555555', fontSize: '12px', margin: 0 }}>
                       {p.paid_at ? new Date(p.paid_at).toLocaleDateString('pt-BR') : '-'}
                     </p>
                   </div>
