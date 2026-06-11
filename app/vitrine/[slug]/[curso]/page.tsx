@@ -6,17 +6,17 @@ import { ArrowLeft, BookOpen, GraduationCap, Clock, Users } from 'lucide-react'
 export default async function CursoDetalhePage({
   params
 }: {
-  params: { slug: string; curso: string }
+  params: Promise<{ slug: string; curso: string }>
 }) {
-  const school = await getSchoolBySlug(params.slug)
+  const { slug, curso } = await params
+  const school = await getSchoolBySlug(slug)
   if (!school) notFound()
 
-  const course = await getCourseBySlug(params.curso, school.id)
+  const course = await getCourseBySlug(curso, school.id)
   if (!course) notFound()
 
   return (
     <div className="min-h-screen bg-gray-950">
-      {/* Header */}
       <header className="border-b border-gray-800 bg-gray-900">
         <div className="max-w-5xl mx-auto px-6 py-5 flex items-center gap-3">
           <div
@@ -35,9 +35,8 @@ export default async function CursoDetalhePage({
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-10">
-        {/* Voltar */}
         <Link
-          href={`/vitrine/${params.slug}`}
+          href={`/vitrine/${slug}`}
           className="inline-flex items-center gap-2 text-gray-400 hover:text-white text-sm mb-8 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -45,7 +44,6 @@ export default async function CursoDetalhePage({
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Info principal */}
           <div className="lg:col-span-2 space-y-6">
             <div>
               <div className="flex items-center gap-2 mb-3">
@@ -61,7 +59,6 @@ export default async function CursoDetalhePage({
               )}
             </div>
 
-            {/* Stats */}
             <div className="flex items-center gap-6 py-4 border-t border-b border-gray-800">
               <div className="flex items-center gap-2 text-gray-400">
                 <BookOpen className="w-4 h-4" />
@@ -78,7 +75,6 @@ export default async function CursoDetalhePage({
             </div>
           </div>
 
-          {/* Card de compra */}
           <div className="lg:col-span-1">
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 sticky top-6">
               <div
@@ -102,7 +98,7 @@ export default async function CursoDetalhePage({
               </div>
 
               <button
-                className="w-full py-3 px-4 rounded-xl font-semibold text-white transition-all hover:opacity-90 hover:-translate-y-0.5"
+                className="w-full py-3 px-4 rounded-xl font-semibold text-white transition-all hover:opacity-90"
                 style={{ backgroundColor: school.primary_color || '#22c55e' }}
               >
                 {course.is_free ? 'Acessar gratuitamente' : 'Matricular agora'}

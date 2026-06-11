@@ -3,15 +3,15 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { BookOpen, GraduationCap } from 'lucide-react'
 
-export default async function VitrinePage({ params }: { params: { slug: string } }) {
-  const school = await getSchoolBySlug(params.slug)
+export default async function VitrinePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const school = await getSchoolBySlug(slug)
   if (!school) notFound()
 
   const courses = await getPublishedCourses(school.id)
 
   return (
     <div className="min-h-screen bg-gray-950">
-      {/* Header da escola */}
       <header className="border-b border-gray-800 bg-gray-900">
         <div className="max-w-5xl mx-auto px-6 py-5 flex items-center gap-3">
           <div
@@ -29,7 +29,6 @@ export default async function VitrinePage({ params }: { params: { slug: string }
         </div>
       </header>
 
-      {/* Conteúdo */}
       <main className="max-w-5xl mx-auto px-6 py-10">
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-white">Cursos disponíveis</h2>
@@ -46,7 +45,7 @@ export default async function VitrinePage({ params }: { params: { slug: string }
             {courses.map((course) => (
               <Link
                 key={course.id}
-                href={`/vitrine/${params.slug}/${course.slug}`}
+                href={`/vitrine/${slug}/${course.slug}`}
                 className="group bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-gray-600 transition-all hover:-translate-y-0.5"
               >
                 <div className="flex items-start justify-between mb-3">
@@ -82,7 +81,6 @@ export default async function VitrinePage({ params }: { params: { slug: string }
         )}
       </main>
 
-      {/* Footer */}
       <footer className="border-t border-gray-800 mt-20">
         <div className="max-w-5xl mx-auto px-6 py-6 text-center">
           <p className="text-gray-600 text-sm">
