@@ -56,7 +56,7 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
             {school.name}
           </span>
         </div>
-        <Link href="/login" style={{
+        <Link href={`/vitrine/${slug}/login`} style={{
           padding: '8px 20px', borderRadius: '8px',
           backgroundColor: cor, color: '#0D0D0D',
           fontWeight: '700', fontSize: '14px', textDecoration: 'none',
