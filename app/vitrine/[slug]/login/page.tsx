@@ -1,16 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { getSchoolBySlug } from '@/app/actions/vitrine-actions'
-import { useEffect } from 'react'
 
 export default function LoginEscolaPage() {
   const params = useParams()
   const slug = params.slug as string
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get('redirect') || '/dashboard/meus-cursos'
   const supabase = createClient()
 
   const [school, setSchool] = useState<any>(null)
@@ -19,6 +20,8 @@ export default function LoginEscolaPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [loadingSchool, setLoadingSchool] = useState(true)
+  const [modo, setModo] = useState<'login' | 'cadastro'>('login')
+  const [nome, setNome] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -41,7 +44,52 @@ export default function LoginEscolaPage() {
       return
     }
 
-    router.push('/dashboard/meus-cursos')
+    router.push(redirect)
+    router.refresh()
+  }
+
+  async function handleCadastro() {
+    setLoading(true)
+    setError('')
+
+    if (!nome.trim()) {
+      setError('Preencha seu nome.')
+      setLoading(false)
+      return
+    }
+
+    const schoolId = school?.id
+    if (!schoolId) {
+      setError('Escola não encontrada.')
+      setLoading(false)
+      return
+    }
+
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: nome }
+      }
+    })
+
+    if (signUpError) {
+      setError(signUpError.message)
+      setLoading(false)
+      return
+    }
+
+    if (data.user) {
+      await supabase.from('users').upsert({
+        id: data.user.id,
+        email,
+        full_name: nome,
+        role: 'student',
+        school_id: schoolId,
+      })
+    }
+
+    router.push(redirect)
     router.refresh()
   }
 
@@ -54,7 +102,7 @@ export default function LoginEscolaPage() {
   }
 
   const cor = school?.primary_color || '#AEEA00'
-  const nome = school?.name || 'NexoCollege'
+  const nomeEscola = school?.name || 'NexoCollege'
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#0D0D0D', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', fontFamily: 'sans-serif' }}>
@@ -68,21 +116,38 @@ export default function LoginEscolaPage() {
             justifyContent: 'center', margin: '0 auto 16px',
             fontSize: '28px', fontWeight: '800', color: '#0D0D0D',
           }}>
-            {nome.charAt(0).toUpperCase()}
+            {nomeEscola.charAt(0).toUpperCase()}
           </div>
           <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#F0F0F0', margin: '0 0 4px' }}>
-            {nome}
+            {nomeEscola}
           </h1>
           <p style={{ color: '#888888', fontSize: '14px', margin: 0 }}>
-            Entre na sua conta para acessar os cursos
+            {modo === 'login' ? 'Entre na sua conta para acessar os cursos' : 'Crie sua conta gratuita'}
           </p>
         </div>
 
-        {/* Card de login */}
-        <div style={{
-          backgroundColor: '#1A1A1A', borderRadius: '16px',
-          padding: '32px', border: '1px solid #2A2A2A',
-        }}>
+        {/* Abas login / cadastro */}
+        <div style={{ display: 'flex', marginBottom: '24px', borderRadius: '10px', backgroundColor: '#1A1A1A', padding: '4px' }}>
+          {(['login', 'cadastro'] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => { setModo(m); setError('') }}
+              style={{
+                flex: 1, padding: '10px', borderRadius: '8px', border: 'none',
+                backgroundColor: modo === m ? cor : 'transparent',
+                color: modo === m ? '#0D0D0D' : '#888888',
+                fontWeight: '700', fontSize: '14px', cursor: 'pointer',
+                fontFamily: 'inherit', transition: 'all 0.2s',
+                textTransform: 'capitalize',
+              }}
+            >
+              {m === 'login' ? 'Entrar' : 'Criar conta'}
+            </button>
+          ))}
+        </div>
+
+        {/* Card */}
+        <div style={{ backgroundColor: '#1A1A1A', borderRadius: '16px', padding: '32px', border: '1px solid #2A2A2A' }}>
 
           {error && (
             <div style={{
@@ -94,6 +159,25 @@ export default function LoginEscolaPage() {
           )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+            {modo === 'cadastro' && (
+              <div>
+                <label style={{ color: '#888888', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Nome completo</label>
+                <input
+                  type="text"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  placeholder="Seu nome"
+                  style={{
+                    width: '100%', padding: '12px 14px', borderRadius: '8px',
+                    border: '1px solid #2A2A2A', backgroundColor: '#0D0D0D',
+                    color: '#F0F0F0', fontSize: '14px', outline: 'none',
+                    fontFamily: 'inherit', boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            )}
+
             <div>
               <label style={{ color: '#888888', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Email</label>
               <input
@@ -109,6 +193,7 @@ export default function LoginEscolaPage() {
                 }}
               />
             </div>
+
             <div>
               <label style={{ color: '#888888', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Senha</label>
               <input
@@ -122,11 +207,12 @@ export default function LoginEscolaPage() {
                   color: '#F0F0F0', fontSize: '14px', outline: 'none',
                   fontFamily: 'inherit', boxSizing: 'border-box',
                 }}
-                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                onKeyDown={(e) => e.key === 'Enter' && (modo === 'login' ? handleLogin() : handleCadastro())}
               />
             </div>
+
             <button
-              onClick={handleLogin}
+              onClick={modo === 'login' ? handleLogin : handleCadastro}
               disabled={loading}
               style={{
                 width: '100%', padding: '12px', borderRadius: '8px',
@@ -135,17 +221,11 @@ export default function LoginEscolaPage() {
                 opacity: loading ? 0.6 : 1, fontFamily: 'inherit',
               }}
             >
-              {loading ? 'Entrando...' : 'Entrar'}
+              {loading ? 'Aguarde...' : modo === 'login' ? 'Entrar' : 'Criar conta'}
             </button>
           </div>
 
           <div style={{ marginTop: '24px', textAlign: 'center' }}>
-            <p style={{ color: '#888888', fontSize: '13px', margin: '0 0 8px' }}>
-              Não tem conta?{' '}
-              <Link href="/cadastro" style={{ color: cor, fontWeight: '600', textDecoration: 'none' }}>
-                Criar conta gratuita
-              </Link>
-            </p>
             <Link href={`/vitrine/${slug}`} style={{ color: '#555555', fontSize: '12px', textDecoration: 'none' }}>
               ← Voltar para a vitrine
             </Link>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 type Props = {
   courseId: string
@@ -16,15 +17,48 @@ type Props = {
 export function PayButton({ courseId, courseTitle, price, isFree, schoolSlug, courseSlug, primaryColor }: Props) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const supabase = createClient()
 
   async function handlePay() {
     setLoading(true)
 
-    if (isFree) {
-      router.push('/dashboard/meus-cursos')
+    // Verifica se está logado
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      // Não está logado — redireciona para login com redirect de volta ao curso
+      const redirect = encodeURIComponent(`/vitrine/${schoolSlug}/${courseSlug}`)
+      router.push(`/vitrine/${schoolSlug}/login?redirect=${redirect}`)
       return
     }
 
+    // Curso gratuito — matricula direto
+    if (isFree) {
+      try {
+        const response = await fetch('/api/matricula-gratuita', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ courseId }),
+        })
+
+        const data = await response.json()
+
+        if (data.error) {
+          alert(`Erro: ${data.error}`)
+          setLoading(false)
+          return
+        }
+
+        router.push('/dashboard/meus-cursos')
+        return
+      } catch {
+        alert('Erro ao processar matrícula. Tente novamente.')
+        setLoading(false)
+        return
+      }
+    }
+
+    // Curso pago — redireciona para Mercado Pago
     try {
       const response = await fetch('/api/pagamento', {
         method: 'POST',
@@ -46,9 +80,8 @@ export function PayButton({ courseId, courseTitle, price, isFree, schoolSlug, co
         return
       }
 
-      // Redireciona para o checkout do Mercado Pago
       window.location.href = data.url
-    } catch (error) {
+    } catch {
       alert('Erro ao processar pagamento. Tente novamente.')
       setLoading(false)
     }
@@ -64,7 +97,7 @@ export function PayButton({ courseId, courseTitle, price, isFree, schoolSlug, co
       {loading
         ? 'Processando...'
         : isFree
-        ? 'Acessar gratuitamente'
+        ? '🎁 Acessar gratuitamente'
         : 'Matricular agora'}
     </button>
   )
