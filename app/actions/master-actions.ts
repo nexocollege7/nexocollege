@@ -81,7 +81,7 @@ export async function criarEscola(formData: {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
 
-  const { data: escola, error: escolaError } = await supabase
+  const { data: escola, error: escolaError } = await adminClient
     .from('schools')
     .insert({
       owner_id: userId,
