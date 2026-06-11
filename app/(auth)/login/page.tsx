@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -17,10 +18,7 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
       setError('Email ou senha incorretos. Tente novamente.')
@@ -28,32 +26,38 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/dashboard')
+    // Busca o role do usuário via API
+    const res = await fetch('/api/me')
+    const profile = await res.json()
+
+    const masterEmail = process.env.NEXT_PUBLIC_MASTER_EMAIL
+    if (data.user?.email === masterEmail) {
+      router.push('/master')
+    } else if (profile.role === 'student') {
+      router.push('/dashboard/meus-cursos')
+    } else {
+      router.push('/dashboard')
+    }
+
     router.refresh()
   }
 
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white">NexoCollege</h1>
           <p className="text-gray-400 mt-2">Entre na sua conta</p>
         </div>
-
         <div className="bg-gray-900 rounded-2xl p-8 border border-gray-800">
-
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg p-3 mb-6 text-sm">
               {error}
             </div>
           )}
-
           <div className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Email
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
               <input
                 type="email"
                 value={email}
@@ -62,11 +66,8 @@ export default function LoginPage() {
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Senha
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Senha</label>
               <input
                 type="password"
                 value={password}
@@ -76,7 +77,6 @@ export default function LoginPage() {
                 onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
               />
             </div>
-
             <button
               onClick={handleLogin}
               disabled={loading}
@@ -85,7 +85,6 @@ export default function LoginPage() {
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </div>
-
           <div className="mt-6 text-center">
             <p className="text-gray-400 text-sm">
               Não tem conta?{' '}
@@ -94,7 +93,6 @@ export default function LoginPage() {
               </Link>
             </p>
           </div>
-
         </div>
       </div>
     </div>
