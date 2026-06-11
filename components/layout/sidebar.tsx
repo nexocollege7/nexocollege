@@ -2,14 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, BookOpen, Users, Settings, GraduationCap, BarChart3, LogOut, School } from 'lucide-react'
+import { LayoutDashboard, BookOpen, Users, Settings, GraduationCap, BarChart3, LogOut, School, BookMarked } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard/meus-cursos', label: 'Meus Cursos', icon: BookMarked },
   { href: '/dashboard/escola', label: 'Minha Escola', icon: School },
-  { href: '/dashboard/cursos', label: 'Cursos', icon: BookOpen },
+  { href: '/dashboard/cursos', label: 'Gerenciar Cursos', icon: BookOpen },
   { href: '/dashboard/alunos', label: 'Alunos', icon: Users },
   { href: '/dashboard/relatorios', label: 'Relatórios', icon: BarChart3 },
   { href: '/dashboard/configuracoes', label: 'Configurações', icon: Settings },
