@@ -34,6 +34,24 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/auth/') ||
     request.nextUrl.pathname.startsWith('/vitrine/')
 
+  const isMasterRoute = request.nextUrl.pathname.startsWith('/master')
+
+  // Rota master — só o email master tem acesso
+  if (isMasterRoute) {
+    if (!user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      return NextResponse.redirect(url)
+    }
+    const masterEmail = process.env.NEXT_PUBLIC_MASTER_EMAIL
+    if (user.email !== masterEmail) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/dashboard'
+      return NextResponse.redirect(url)
+    }
+  }
+
+  // Rotas privadas normais
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
