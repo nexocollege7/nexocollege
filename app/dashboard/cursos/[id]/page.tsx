@@ -38,7 +38,7 @@ export default function EditarCursoPage() {
     await updateCourse(id, {
       title: curso.title,
       description: curso.description,
-      price: curso.price,
+      price: curso.is_free ? 0 : curso.price,
       is_free: curso.is_free,
       status: curso.status,
     })
@@ -64,7 +64,7 @@ export default function EditarCursoPage() {
       } else {
         alert('Erro no upload: ' + (result.error || 'Tente novamente'))
       }
-    } catch (err) {
+    } catch {
       alert('Erro ao enviar imagem. Tente novamente.')
     }
     setUploadando(false)
@@ -212,26 +212,69 @@ export default function EditarCursoPage() {
               <input style={input} value={curso.title}
                 onChange={(e) => setCurso({ ...curso, title: e.target.value })} />
             </div>
+
             <div>
               <label style={{ color: '#888888', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Descrição</label>
               <textarea style={{ ...input, minHeight: '100px', resize: 'vertical' }} value={curso.description || ''}
                 onChange={(e) => setCurso({ ...curso, description: e.target.value })} />
             </div>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ color: '#888888', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Preço (R$)</label>
-                <input style={input} type="number" value={curso.price || 0}
-                  onChange={(e) => setCurso({ ...curso, price: parseFloat(e.target.value) })} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <label style={{ color: '#888888', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Status</label>
-                <select style={input} value={curso.status}
-                  onChange={(e) => setCurso({ ...curso, status: e.target.value })}>
-                  <option value="draft">Rascunho</option>
-                  <option value="published">Publicado</option>
-                </select>
+
+            {/* Toggle Gratuito / Pago */}
+            <div>
+              <label style={{ color: '#888888', fontSize: '13px', display: 'block', marginBottom: '10px' }}>
+                Tipo de acesso
+              </label>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => setCurso({ ...curso, is_free: true, price: 0 })}
+                  style={{
+                    padding: '10px 20px', borderRadius: '8px', border: 'none',
+                    backgroundColor: curso.is_free ? '#1A2E00' : '#1A1A1A',
+                    color: curso.is_free ? '#AEEA00' : '#888888',
+                    fontWeight: curso.is_free ? '700' : '400',
+                    fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit',
+                    border: `1px solid ${curso.is_free ? '#AEEA00' : '#2A2A2A'}`,
+                  }}
+                >
+                  🎁 Gratuito
+                </button>
+                <button
+                  onClick={() => setCurso({ ...curso, is_free: false })}
+                  style={{
+                    padding: '10px 20px', borderRadius: '8px',
+                    backgroundColor: !curso.is_free ? '#1E0E3F' : '#1A1A1A',
+                    color: !curso.is_free ? '#7C4DFF' : '#888888',
+                    fontWeight: !curso.is_free ? '700' : '400',
+                    fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit',
+                    border: `1px solid ${!curso.is_free ? '#7C4DFF' : '#2A2A2A'}`,
+                  }}
+                >
+                  💳 Pago
+                </button>
               </div>
             </div>
+
+            {/* Preço — só aparece se for pago */}
+            {!curso.is_free && (
+              <div>
+                <label style={{ color: '#888888', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
+                  Preço (R$)
+                </label>
+                <input style={{ ...input, maxWidth: '200px' }} type="number" value={curso.price || 0}
+                  onChange={(e) => setCurso({ ...curso, price: parseFloat(e.target.value) })} />
+              </div>
+            )}
+
+            <div>
+              <label style={{ color: '#888888', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Status</label>
+              <select style={{ ...input, maxWidth: '200px' }} value={curso.status}
+                onChange={(e) => setCurso({ ...curso, status: e.target.value })}>
+                <option value="draft">Rascunho</option>
+                <option value="published">Publicado</option>
+                <option value="archived">Arquivado</option>
+              </select>
+            </div>
+
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', paddingTop: '8px' }}>
               <button onClick={() => router.push('/dashboard/cursos')}
                 style={{ ...btnPerigo, padding: '10px 20px' }}>Voltar</button>
