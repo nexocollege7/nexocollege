@@ -2,6 +2,7 @@ import { getSchoolBySlug, getCourseBySlug } from '@/app/actions/vitrine-actions'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, BookOpen, GraduationCap, Clock, Users } from 'lucide-react'
+import { PayButton } from './pay-button'
 
 export default async function CursoDetalhePage({
   params
@@ -97,15 +98,18 @@ export default async function CursoDetalhePage({
                 )}
               </div>
 
-              <button
-                className="w-full py-3 px-4 rounded-xl font-semibold text-white transition-all hover:opacity-90"
-                style={{ backgroundColor: school.primary_color || '#22c55e' }}
-              >
-                {course.is_free ? 'Acessar gratuitamente' : 'Matricular agora'}
-              </button>
+              <PayButton
+                courseId={course.id}
+                courseTitle={course.title}
+                price={course.price}
+                isFree={course.is_free}
+                schoolSlug={slug}
+                courseSlug={course.slug}
+                primaryColor={school.primary_color || '#22c55e'}
+              />
 
               <p className="text-gray-500 text-xs text-center mt-3">
-                {course.is_free ? 'Sem necessidade de cartão' : 'Pagamento seguro'}
+                {course.is_free ? 'Sem necessidade de cartão' : 'Pagamento seguro via Mercado Pago'}
               </p>
             </div>
           </div>
