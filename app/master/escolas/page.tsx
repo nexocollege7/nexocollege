@@ -1,12 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getEscolas, toggleEscolaStatus } from '@/app/actions/master-actions'
+import { getEscolas, toggleEscolaStatus, alterarPlanoEscola } from '@/app/actions/master-actions'
 import Link from 'next/link'
 
 export default function EscolasPage() {
   const [escolas, setEscolas] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [salvando, setSalvando] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -22,6 +23,15 @@ export default function EscolasPage() {
     setEscolas(escolas.map((e) =>
       e.id === escolaId ? { ...e, is_active: !isActive } : e
     ))
+  }
+
+  async function handlePlano(escolaId: string, plano: string) {
+    setSalvando(escolaId)
+    await alterarPlanoEscola(escolaId, plano as 'starter' | 'pro' | 'enterprise')
+    setEscolas(escolas.map((e) =>
+      e.id === escolaId ? { ...e, plan: plano } : e
+    ))
+    setSalvando(null)
   }
 
   if (loading) return (
@@ -84,7 +94,6 @@ export default function EscolasPage() {
               justifyContent: 'space-between',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                {/* Avatar */}
                 <div style={{
                   width: '48px', height: '48px', borderRadius: '10px',
                   backgroundColor: escola.is_active ? '#1A2E00' : '#2A1A1A',
@@ -107,14 +116,6 @@ export default function EscolasPage() {
                     }}>
                       {escola.is_active ? 'Ativa' : 'Suspensa'}
                     </span>
-                    {escola.plan && (
-                      <span style={{
-                        fontSize: '11px', fontWeight: '700', padding: '2px 8px',
-                        borderRadius: '20px', backgroundColor: '#1E0E3F', color: '#7C4DFF',
-                      }}>
-                        {escola.plan}
-                      </span>
-                    )}
                   </div>
                   <p style={{ color: '#888888', fontSize: '13px', margin: '2px 0 0' }}>
                     {escola.description || 'Sem descrição'} • slug: {escola.slug}
@@ -128,6 +129,31 @@ export default function EscolasPage() {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {/* Dropdown de plano */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                  <label style={{ color: '#555555', fontSize: '11px' }}>Plano</label>
+                  <select
+                    value={escola.plan ?? 'starter'}
+                    disabled={salvando === escola.id}
+                    onChange={(e) => handlePlano(escola.id, e.target.value)}
+                    style={{
+                      padding: '6px 10px', borderRadius: '8px',
+                      border: '1px solid #2A2A2A',
+                      backgroundColor: '#0D0D0D', color: '#7C4DFF',
+                      fontSize: '13px', fontWeight: '700', cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      opacity: salvando === escola.id ? 0.5 : 1,
+                    }}
+                  >
+                    <option value="starter">Starter</option>
+                    <option value="pro">Pro</option>
+                    <option value="enterprise">Enterprise</option>
+                  </select>
+                  {salvando === escola.id && (
+                    <span style={{ color: '#AEEA00', fontSize: '11px' }}>Salvando...</span>
+                  )}
+                </div>
+
                 <Link
                   href={`/vitrine/${escola.slug}`}
                   target="_blank"

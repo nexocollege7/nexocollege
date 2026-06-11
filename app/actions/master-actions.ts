@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { revalidatePath } from 'next/cache'
 
 export async function getMasterStats() {
   const supabase = await createClient()
@@ -106,5 +107,18 @@ export async function toggleEscolaStatus(escolaId: string, isActive: boolean) {
     .update({ is_active: isActive })
     .eq('id', escolaId)
   if (error) return { error: error.message }
+  return { success: true }
+}
+export async function alterarPlanoEscola(escolaId: string, plano: 'starter' | 'pro' | 'enterprise') {
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('schools')
+    .update({ plan: plano })
+    .eq('id', escolaId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/master/escolas')
   return { success: true }
 }

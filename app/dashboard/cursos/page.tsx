@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { getMyCourses, deleteCourse } from '@/app/actions/course-actions'
-import { BookOpen, Plus, Pencil, Trash2, Eye, EyeOff } from 'lucide-react'
+import { getMySchool } from '@/app/actions/school-actions'
+import { BookOpen, Plus, Pencil, Trash2, Lock } from 'lucide-react'
 
 type Course = {
   id: string
@@ -16,13 +17,42 @@ type Course = {
   created_at: string
 }
 
+type PlanoInfo = {
+  plano: string
+  usados: number
+  limite: number
+  permitido: boolean
+}
+
+function getLimitePorPlano(plan: string): number {
+  if (plan === 'pro') return 10
+  if (plan === 'enterprise') return Infinity
+  return 1
+}
+
 export default function CursosPage() {
   const [courses, setCourses] = useState<Course[]>([])
+  const [planoInfo, setPlanoInfo] = useState<PlanoInfo | null>(null)
   const [loading, setLoading] = useState(true)
 
   async function load() {
-    const data = await getMyCourses()
+    const [data, school] = await Promise.all([
+      getMyCourses(),
+      getMySchool(),
+    ])
     setCourses(data)
+
+    if (school) {
+      const limite = getLimitePorPlano(school.plan ?? 'starter')
+      const usados = data.length
+      setPlanoInfo({
+        plano: school.plan ?? 'starter',
+        usados,
+        limite,
+        permitido: usados < limite,
+      })
+    }
+
     setLoading(false)
   }
 
@@ -42,21 +72,62 @@ export default function CursosPage() {
     )
   }
 
+  const podeCriar = planoInfo?.permitido ?? true
+  const labelPlano = planoInfo
+    ? `Plano ${planoInfo.plano.charAt(0).toUpperCase() + planoInfo.plano.slice(1)} — ${planoInfo.usados}/${planoInfo.limite === Infinity ? '∞' : planoInfo.limite} curso${planoInfo.limite !== 1 ? 's' : ''}`
+    : ''
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Cursos</h1>
-          <p className="text-gray-400 mt-1">{courses.length} curso{courses.length !== 1 ? 's' : ''} criado{courses.length !== 1 ? 's' : ''}</p>
+          <div className="flex items-center gap-3 mt-1">
+            <p className="text-gray-400 text-sm">{courses.length} curso{courses.length !== 1 ? 's' : ''} criado{courses.length !== 1 ? 's' : ''}</p>
+            {planoInfo && (
+              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                podeCriar ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'
+              }`}>
+                {labelPlano}
+              </span>
+            )}
+          </div>
         </div>
-        <Link
-          href="/dashboard/cursos/novo"
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Novo Curso
-        </Link>
+
+        {podeCriar ? (
+          <Link
+            href="/dashboard/cursos/novo"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Novo Curso
+          </Link>
+        ) : (
+          <div className="flex flex-col items-end gap-1">
+            <button
+              disabled
+              className="flex items-center gap-2 px-4 py-2 bg-gray-700 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed"
+            >
+              <Lock className="w-4 h-4" />
+              Novo Curso
+            </button>
+            <p className="text-xs text-red-400">Limite do plano atingido</p>
+          </div>
+        )}
       </div>
+
+      {!podeCriar && (
+        <div className="bg-red-950 border border-red-800 rounded-xl p-4 flex items-start gap-3">
+          <Lock className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-red-300 font-medium text-sm">Limite de cursos atingido</p>
+            <p className="text-red-400 text-xs mt-1">
+              Seu plano <strong>{planoInfo?.plano}</strong> permite no máximo <strong>{planoInfo?.limite} curso{planoInfo?.limite !== 1 ? 's' : ''}</strong>. 
+              Entre em contato com o suporte para fazer upgrade.
+            </p>
+          </div>
+        </div>
+      )}
 
       {courses.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-gray-700 rounded-xl">
