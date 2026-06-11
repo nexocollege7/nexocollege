@@ -26,19 +26,13 @@ export async function POST(request: NextRequest) {
             currency_id: 'BRL',
           }
         ],
-        back_urls: {
-          success: `${process.env.NEXT_PUBLIC_APP_URL}/pagamento/sucesso?course=${courseId}`,
-          failure: `${process.env.NEXT_PUBLIC_APP_URL}/vitrine/${schoolSlug}/${courseSlug}`,
-          pending: `${process.env.NEXT_PUBLIC_APP_URL}/pagamento/pendente`,
-        },
-        auto_return: 'approved',
         external_reference: `${courseId}|${user?.id || 'guest'}`,
-        notification_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/pagamento/webhook`,
       }
     })
 
     return NextResponse.json({ url: result.init_point })
   } catch (error: any) {
+    console.error('MP Error:', JSON.stringify(error))
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
