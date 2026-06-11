@@ -1,79 +1,66 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { CheckCircle, BookOpen, Award } from 'lucide-react'
 
-export default function PagamentoSucessoPage() {
+function PagamentoSucessoConteudo() {
   const searchParams = useSearchParams()
-  const courseId = searchParams.get('course')
-  const [countdown, setCountdown] = useState(5)
-
-  useEffect(() => {
-    if (countdown <= 0) return
-    const timer = setTimeout(() => setCountdown(c => c - 1), 1000)
-    return () => clearTimeout(timer)
-  }, [countdown])
+  const status = searchParams.get('status')
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-6">
-      <div className="max-w-md w-full text-center space-y-6">
-
-        <div className="flex justify-center">
-          <div className="w-20 h-20 bg-green-900 rounded-full flex items-center justify-center">
-            <CheckCircle className="w-10 h-10 text-green-400" />
-          </div>
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#0D0D0D',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <div style={{
+        backgroundColor: '#1A1A1A',
+        border: '1px solid #2A2A2A',
+        borderRadius: '16px',
+        padding: '48px',
+        textAlign: 'center',
+        maxWidth: '480px',
+        width: '100%',
+      }}>
+        <div style={{ fontSize: '48px', marginBottom: '24px' }}>
+          {status === 'approved' ? '✅' : '⏳'}
         </div>
-
-        <div>
-          <h1 className="text-3xl font-bold text-white">Pagamento aprovado!</h1>
-          <p className="text-gray-400 mt-2">
-            Sua matrícula foi confirmada. Você já pode acessar o curso.
-          </p>
-        </div>
-
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-4">
-          <div className="flex items-center gap-3 text-left">
-            <div className="w-10 h-10 bg-green-900 rounded-lg flex items-center justify-center shrink-0">
-              <BookOpen className="w-5 h-5 text-green-400" />
-            </div>
-            <div>
-              <p className="text-white font-medium text-sm">Acesso ao curso</p>
-              <p className="text-gray-400 text-xs">Disponível imediatamente</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 text-left">
-            <div className="w-10 h-10 bg-green-900 rounded-lg flex items-center justify-center shrink-0">
-              <Award className="w-5 h-5 text-green-400" />
-            </div>
-            <div>
-              <p className="text-white font-medium text-sm">Certificado</p>
-              <p className="text-gray-400 text-xs">Disponível ao concluir o curso</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <Link
-            href="/dashboard/meus-cursos"
-            className="block w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors"
-          >
-            Ir para Meus Cursos
-          </Link>
-          <Link
-            href="/dashboard"
-            className="block w-full py-3 px-4 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-xl transition-colors text-sm"
-          >
-            Voltar ao Dashboard
-          </Link>
-        </div>
-
-        <p className="text-gray-600 text-xs">
-          Redirecionando para seus cursos em {countdown}s...
+        <h1 style={{ color: '#AEEA00', fontSize: '24px', fontWeight: '700', margin: '0 0 12px' }}>
+          {status === 'approved' ? 'Pagamento aprovado!' : 'Pagamento em processamento'}
+        </h1>
+        <p style={{ color: '#888888', fontSize: '15px', lineHeight: '1.6', margin: '0 0 32px' }}>
+          {status === 'approved'
+            ? 'Sua matrícula foi confirmada. Você já pode acessar o curso.'
+            : 'Assim que o pagamento for confirmado, sua matrícula será ativada.'}
         </p>
-
+        <Link href="/dashboard/meus-cursos" style={{
+          display: 'inline-block',
+          backgroundColor: '#AEEA00',
+          color: '#0D0D0D',
+          fontWeight: '700',
+          fontSize: '14px',
+          padding: '12px 28px',
+          borderRadius: '8px',
+          textDecoration: 'none',
+        }}>
+          Acessar meus cursos
+        </Link>
       </div>
     </div>
+  )
+}
+
+export default function PagamentoSucessoPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', backgroundColor: '#0D0D0D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: '#888888' }}>Carregando...</p>
+      </div>
+    }>
+      <PagamentoSucessoConteudo />
+    </Suspense>
   )
 }
