@@ -10,6 +10,7 @@ const menuMaster = [
   { href: '/master/escolas', label: 'Escolas', icon: '🏫' },
   { href: '/master/nova-escola', label: 'Nova Escola', icon: '➕' },
   { href: '/master/financeiro', label: 'Financeiro', icon: '💰' },
+  { href: '/master/planos', label: 'Planos', icon: '⭐' },
 ]
 
 export function MasterSidebar() {
