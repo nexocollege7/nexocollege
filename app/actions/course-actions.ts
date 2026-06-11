@@ -3,23 +3,29 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
+async function getSchoolId(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
+  const { data, error } = await supabase
+    .from('schools')
+    .select('id')
+    .eq('owner_id', userId)
+    .single()
+
+  if (error) console.error('getSchoolId error:', error.message)
+  return data?.id || null
+}
+
 export async function getMyCourses() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
 
-  const { data: school } = await supabase
-    .from('schools')
-    .select('id')
-    .eq('owner_id', user.id)
-    .single()
-
-  if (!school) return []
+  const schoolId = await getSchoolId(supabase, user.id)
+  if (!schoolId) return []
 
   const { data } = await supabase
     .from('courses')
     .select('*')
-    .eq('school_id', school.id)
+    .eq('school_id', schoolId)
     .order('created_at', { ascending: false })
 
   return data || []
@@ -45,13 +51,12 @@ export async function createCourse(formData: {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autenticado' }
 
-  const { data: school } = await supabase
-    .from('schools')
-    .select('id')
-    .eq('owner_id', user.id)
-    .single()
+  console.log('userId:', user.id)
 
-  if (!school) return { error: 'Escola não encontrada. Crie sua escola primeiro.' }
+  const schoolId = await getSchoolId(supabase, user.id)
+  console.log('schoolId:', schoolId)
+
+  if (!schoolId) return { error: 'Escola não encontrada. Crie sua escola primeiro.' }
 
   const slug = formData.title
     .toLowerCase()
@@ -63,7 +68,7 @@ export async function createCourse(formData: {
   const { data, error } = await supabase
     .from('courses')
     .insert({
-      school_id: school.id,
+      school_id: schoolId,
       teacher_id: user.id,
       title: formData.title,
       description: formData.description,
