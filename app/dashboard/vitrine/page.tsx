@@ -68,13 +68,11 @@ export default function VitrinePage() {
       {/* Link da vitrine */}
       <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '20px 24px' }}>
         <p style={{ color: '#888888', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 8px' }}>Link da sua vitrine</p>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-          <p style={{ color: '#AEEA00', fontSize: '15px', fontWeight: '600', margin: 0 }}>{linkVitrine}</p>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <a href={linkVitrine} target="_blank" rel="noreferrer" style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #2A2A2A', color: '#888888', fontSize: '13px', textDecoration: 'none' }}>
-              Ver vitrine
-            </a>
-          </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <p style={{ color: '#AEEA00', fontSize: '14px', fontWeight: '600', margin: 0, wordBreak: 'break-all' }}>{linkVitrine}</p>
+          <a href={linkVitrine} target="_blank" rel="noreferrer" style={{ display: 'inline-block', padding: '8px 16px', borderRadius: '8px', border: '1px solid #2A2A2A', color: '#888888', fontSize: '13px', textDecoration: 'none', alignSelf: 'flex-start' }}>
+            Ver vitrine →
+          </a>
         </div>
       </div>
 

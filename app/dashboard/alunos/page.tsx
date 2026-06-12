@@ -73,7 +73,7 @@ export default function AlunosPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="email"
               value={email}
@@ -84,7 +84,7 @@ export default function AlunosPage() {
             <select
               value={courseId}
               onChange={(e) => setCourseId(e.target.value)}
-              className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="w-full sm:w-auto px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             >
               {courses.map(c => (
                 <option key={c.id} value={c.id}>{c.title}</option>
@@ -93,7 +93,7 @@ export default function AlunosPage() {
             <button
               onClick={handleEnroll}
               disabled={saving}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
+              className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
             >
               {saving ? 'Matriculando...' : 'Matricular'}
             </button>

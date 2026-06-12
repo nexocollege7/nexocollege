@@ -97,13 +97,13 @@ export default function CursosPage() {
         {podeCriar ? (
           <Link
             href="/dashboard/cursos/novo"
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shrink-0"
           >
             <Plus className="w-4 h-4" />
             Novo Curso
           </Link>
         ) : (
-          <div className="flex flex-col items-end gap-1">
+          <div className="flex flex-col items-end gap-1 shrink-0">
             <button
               disabled
               className="flex items-center gap-2 px-4 py-2 bg-gray-700 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed"
@@ -111,7 +111,7 @@ export default function CursosPage() {
               <Lock className="w-4 h-4" />
               Novo Curso
             </button>
-            <p className="text-xs text-red-400">Limite do plano atingido</p>
+            <p className="text-xs text-red-400 text-right">Limite do plano atingido</p>
           </div>
         )}
       </div>

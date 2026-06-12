@@ -114,7 +114,7 @@ export default function MensagensPage() {
 
   return (
     <div className="flex gap-4 h-[calc(100vh-120px)]">
-      <div className="w-64 shrink-0 bg-gray-800 border border-gray-700 rounded-xl overflow-y-auto">
+      <div className={`${selected ? 'hidden md:flex' : 'flex'} w-full md:w-64 shrink-0 bg-gray-800 border border-gray-700 rounded-xl overflow-y-auto flex-col`}>
         <div className="p-4 border-b border-gray-700">
           <h2 className="text-white font-semibold text-sm">Mensagens</h2>
           <p className="text-gray-500 text-xs mt-0.5">
@@ -124,7 +124,7 @@ export default function MensagensPage() {
         {renderConversations()}
       </div>
 
-      <div className="flex-1 flex flex-col bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
+      <div className={`${selected ? 'flex' : 'hidden md:flex'} flex-1 flex-col bg-gray-800 border border-gray-700 rounded-xl overflow-hidden`}>
         {!selected ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
@@ -134,9 +134,14 @@ export default function MensagensPage() {
           </div>
         ) : (
           <>
-            <div className="p-4 border-b border-gray-700">
-              <p className="text-white font-semibold text-sm">{selected.otherName}</p>
-              <p className="text-gray-400 text-xs">{selected.courseTitle}</p>
+            <div className="p-4 border-b border-gray-700 flex items-center gap-3">
+              <button onClick={() => setSelected(null)} className="md:hidden text-gray-400 hover:text-white">
+                ← 
+              </button>
+              <div>
+                <p className="text-white font-semibold text-sm">{selected.otherName}</p>
+                <p className="text-gray-400 text-xs">{selected.courseTitle}</p>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-3">

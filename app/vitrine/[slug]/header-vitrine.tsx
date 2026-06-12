@@ -43,20 +43,27 @@ export default function HeaderVitrine({ slug, cor, nomeEscola }: Props) {
     <header style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
       background: 'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, transparent 100%)',
-      padding: '16px 48px',
+      padding: '12px 16px',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      gap: '8px',
     }}>
+      <style>{`
+        @media (min-width: 640px) {
+          .vitrine-header { padding: 16px 48px !important; }
+          .vitrine-nome { font-size: 18px !important; }
+        }
+      `}</style>
       {/* Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
         <div style={{
-          width: '36px', height: '36px', borderRadius: '8px',
+          width: '32px', height: '32px', borderRadius: '8px', flexShrink: 0,
           backgroundColor: cor,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '16px', fontWeight: '700', color: '#0D0D0D',
+          fontSize: '14px', fontWeight: '700', color: '#0D0D0D',
         }}>
           {nomeEscola.charAt(0).toUpperCase()}
         </div>
-        <span style={{ fontSize: '18px', fontWeight: '700', color: '#F0F0F0' }}>
+        <span className="vitrine-nome" style={{ fontSize: '14px', fontWeight: '700', color: '#F0F0F0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {nomeEscola}
         </span>
       </div>
@@ -67,21 +74,21 @@ export default function HeaderVitrine({ slug, cor, nomeEscola }: Props) {
           <button
             onClick={() => setMenuAberto(!menuAberto)}
             style={{
-              display: 'flex', alignItems: 'center', gap: '10px',
-              padding: '8px 16px', borderRadius: '8px',
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '6px 10px', borderRadius: '8px',
               backgroundColor: 'rgba(255,255,255,0.1)',
-              border: `1px solid rgba(255,255,255,0.15)`,
-              cursor: 'pointer', color: '#F0F0F0',
+              border: '1px solid rgba(255,255,255,0.15)',
+              cursor: 'pointer', color: '#F0F0F0', flexShrink: 0,
             }}
           >
             <div style={{
-              width: '28px', height: '28px', borderRadius: '50%',
+              width: '26px', height: '26px', borderRadius: '50%',
               backgroundColor: cor, display: 'flex', alignItems: 'center',
-              justifyContent: 'center', fontSize: '13px', fontWeight: '700', color: '#0D0D0D',
+              justifyContent: 'center', fontSize: '12px', fontWeight: '700', color: '#0D0D0D',
             }}>
               {user.nome.charAt(0).toUpperCase()}
             </div>
-            <span style={{ fontSize: '14px', fontWeight: '500' }}>
+            <span style={{ fontSize: '13px', fontWeight: '500', maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               Olá, {user.nome.split(' ')[0]}
             </span>
             <span style={{ fontSize: '10px', color: '#888888' }}>▼</span>
