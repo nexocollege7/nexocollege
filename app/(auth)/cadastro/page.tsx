@@ -2,106 +2,217 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { createUserProfile } from '@/app/actions/auth-actions'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 export default function CadastroPage() {
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [nomeEscola, setNomeEscola] = useState('')
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
   const supabase = createClient()
 
   async function handleCadastro() {
     setLoading(true)
     setError('')
-    if (!nome || !email || !password) {
+
+    if (!nome || !email || !password || !nomeEscola) {
       setError('Preencha todos os campos.')
       setLoading(false)
       return
     }
+
     if (password.length < 6) {
       setError('A senha precisa ter pelo menos 6 caracteres.')
       setLoading(false)
       return
     }
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: nome } }
+
+    // 1. Criar usuário + escola via API
+    const res = await fetch('/api/register-school', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome, email, password, nomeEscola }),
     })
-    if (error) {
-      setError('Erro ao criar conta. Tente novamente.')
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      setError(data.error || 'Erro ao criar conta.')
       setLoading(false)
       return
     }
-    if (data.user) {
-      await createUserProfile(data.user.id, nome, 'student')
-    }
-    setSuccess(true)
-    setLoading(false)
-  }
 
-  if (success) {
-    return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-        <div className="w-full max-w-md text-center">
-          <div className="bg-gray-900 rounded-2xl p-8 border border-gray-800">
-            <div className="text-5xl mb-4">✅</div>
-            <h2 className="text-2xl font-bold text-white mb-2">Conta criada!</h2>
-            <p className="text-gray-400 mb-6">
-              Verifique seu email <strong className="text-white">{email}</strong> para ativar a conta.
-            </p>
-            <Link href="/login" className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg px-4 py-3 transition-colors text-center">
-              Ir para o Login
-            </Link>
-          </div>
-        </div>
-      </div>
-    )
+    // 2. Fazer login automático após cadastro
+    const { error: loginError } = await supabase.auth.signInWithPassword({ email, password })
+
+    if (loginError) {
+      setError('Conta criada! Mas houve um erro ao entrar. Faça login manualmente.')
+      setLoading(false)
+      return
+    }
+
+    // 3. Redirecionar para o painel da escola
+    router.push('/dashboard')
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">NexoCollege</h1>
-          <p className="text-gray-400 mt-2">Crie sua conta gratuitamente</p>
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#0D0D0D',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px',
+      fontFamily: 'Inter, sans-serif',
+    }}>
+      <div style={{ width: '100%', maxWidth: '460px' }}>
+
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#FFFFFF', margin: 0 }}>
+            Nexo<span style={{ color: '#AEEA00' }}>College</span>
+          </h1>
+          <p style={{ color: '#888888', marginTop: '8px', fontSize: '15px' }}>
+            Crie sua escola online gratuitamente
+          </p>
         </div>
-        <div className="bg-gray-900 rounded-2xl p-8 border border-gray-800">
+
+        {/* Card */}
+        <div style={{
+          backgroundColor: '#1A1A1A',
+          borderRadius: '16px',
+          padding: '36px',
+          border: '1px solid #2A2A2A',
+        }}>
+
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg p-3 mb-6 text-sm">{error}</div>
+            <div style={{
+              backgroundColor: 'rgba(239,68,68,0.1)',
+              border: '1px solid rgba(239,68,68,0.3)',
+              color: '#f87171',
+              borderRadius: '8px',
+              padding: '12px 16px',
+              marginBottom: '24px',
+              fontSize: '14px',
+            }}>
+              {error}
+            </div>
           )}
-          <div className="space-y-5">
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+            {/* Nome completo */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Nome completo</label>
-              <input type="text" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Seu nome"
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors" />
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#CCCCCC', marginBottom: '8px' }}>
+                Nome completo
+              </label>
+              <input
+                type="text"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                placeholder="Seu nome"
+                style={{
+                  width: '100%', backgroundColor: '#111111', border: '1px solid #333333',
+                  borderRadius: '8px', padding: '12px 16px', color: '#FFFFFF',
+                  fontSize: '15px', outline: 'none', boxSizing: 'border-box',
+                }}
+              />
             </div>
+
+            {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com"
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors" />
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#CCCCCC', marginBottom: '8px' }}>
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="seu@email.com"
+                style={{
+                  width: '100%', backgroundColor: '#111111', border: '1px solid #333333',
+                  borderRadius: '8px', padding: '12px 16px', color: '#FFFFFF',
+                  fontSize: '15px', outline: 'none', boxSizing: 'border-box',
+                }}
+              />
             </div>
+
+            {/* Senha */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Senha</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres"
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
-                onKeyDown={(e) => e.key === 'Enter' && handleCadastro()} />
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#CCCCCC', marginBottom: '8px' }}>
+                Senha
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+                style={{
+                  width: '100%', backgroundColor: '#111111', border: '1px solid #333333',
+                  borderRadius: '8px', padding: '12px 16px', color: '#FFFFFF',
+                  fontSize: '15px', outline: 'none', boxSizing: 'border-box',
+                }}
+              />
             </div>
-            <button onClick={handleCadastro} disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg px-4 py-3 transition-colors">
-              {loading ? 'Criando conta...' : 'Criar conta'}
+
+            {/* Divisor */}
+            <div style={{ borderTop: '1px solid #2A2A2A', paddingTop: '4px' }}>
+              <p style={{ fontSize: '12px', color: '#666666', margin: '0 0 16px 0' }}>
+                DADOS DA SUA ESCOLA
+              </p>
+
+              {/* Nome da escola */}
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#CCCCCC', marginBottom: '8px' }}>
+                  Nome da sua escola
+                </label>
+                <input
+                  type="text"
+                  value={nomeEscola}
+                  onChange={(e) => setNomeEscola(e.target.value)}
+                  placeholder="Ex: Academia Bíblica Online"
+                  onKeyDown={(e) => e.key === 'Enter' && handleCadastro()}
+                  style={{
+                    width: '100%', backgroundColor: '#111111', border: '1px solid #7C4DFF',
+                    borderRadius: '8px', padding: '12px 16px', color: '#FFFFFF',
+                    fontSize: '15px', outline: 'none', boxSizing: 'border-box',
+                  }}
+                />
+                <p style={{ fontSize: '12px', color: '#666666', marginTop: '6px' }}>
+                  Este será o nome da sua plataforma para os alunos.
+                </p>
+              </div>
+            </div>
+
+            {/* Botão */}
+            <button
+              onClick={handleCadastro}
+              disabled={loading}
+              style={{
+                width: '100%', backgroundColor: loading ? '#555555' : '#AEEA00',
+                color: '#0D0D0D', fontWeight: '700', fontSize: '15px',
+                border: 'none', borderRadius: '8px', padding: '14px',
+                cursor: loading ? 'not-allowed' : 'pointer', marginTop: '4px',
+              }}
+            >
+              {loading ? 'Criando sua escola...' : 'Criar minha escola grátis →'}
             </button>
+
           </div>
-          <div className="mt-6 text-center">
-            <p className="text-gray-400 text-sm">
+
+          <div style={{ marginTop: '24px', textAlign: 'center' }}>
+            <p style={{ color: '#666666', fontSize: '14px' }}>
               Já tem conta?{' '}
-              <Link href="/login" className="text-blue-400 hover:text-blue-300 font-medium">Entrar</Link>
+              <Link href="/login" style={{ color: '#AEEA00', fontWeight: '600', textDecoration: 'none' }}>
+                Entrar
+              </Link>
             </p>
           </div>
+
         </div>
       </div>
     </div>
