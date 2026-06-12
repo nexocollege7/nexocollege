@@ -4,6 +4,14 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getMySchool, updateSchool, createSchool, saveMpToken, getMpTokenStatus, updateMyName, getMyName, saveCustomDomain, saveOwnerContact } from '@/app/actions/school-actions'
 
+type Collaborator = {
+  id: string
+  name: string
+  email: string
+  permissions: string[]
+  created_at: string
+}
+
 type School = {
   id: string
   name: string
@@ -43,12 +51,22 @@ export default function EscolaPage() {
   const [savingContact, setSavingContact] = useState(false)
   const [contactMessage, setContactMessage] = useState('')
 
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([])
+  const [collabName, setCollabName] = useState('')
+  const [collabEmail, setCollabEmail] = useState('')
+  const [collabPassword, setCollabPassword] = useState('')
+  const [collabPermissions, setCollabPermissions] = useState<string[]>([])
+  const [savingCollab, setSavingCollab] = useState(false)
+  const [collabMessage, setCollabMessage] = useState('')
+  const [removingCollab, setRemovingCollab] = useState<string | null>(null)
+
   useEffect(() => {
     async function load() {
-      const [data, status, nome] = await Promise.all([
+      const [data, status, nome, collabRes] = await Promise.all([
         getMySchool(),
         getMpTokenStatus(),
         getMyName(),
+        fetch('/api/collaborators').then(r => r.json()),
       ])
       if (data) {
         setSchool(data)
@@ -61,6 +79,7 @@ export default function EscolaPage() {
       }
       setHasToken(status.hasToken)
       setFullName(nome || '')
+      if (Array.isArray(collabRes)) setCollaborators(collabRes)
       setLoading(false)
     }
     load()
@@ -133,6 +152,52 @@ export default function EscolaPage() {
       setContactMessage('Contato salvo com sucesso!')
     }
     setSavingContact(false)
+  }
+
+  function togglePermission(perm: string) {
+    setCollabPermissions(prev =>
+      prev.includes(perm) ? prev.filter(p => p !== perm) : [...prev, perm]
+    )
+  }
+
+  async function handleAddCollab() {
+    if (!collabName.trim() || !collabEmail.trim() || !collabPassword.trim()) {
+      setCollabMessage('Preencha nome, email e senha.')
+      return
+    }
+    setSavingCollab(true)
+    setCollabMessage('')
+    const res = await fetch('/api/collaborators', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: collabName.trim(),
+        email: collabEmail.trim(),
+        password: collabPassword.trim(),
+        permissions: collabPermissions,
+      }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      setCollabMessage(`Erro: ${data.error}`)
+    } else {
+      setCollabMessage('Colaborador adicionado com sucesso!')
+      setCollaborators(prev => [...prev, data])
+      setCollabName('')
+      setCollabEmail('')
+      setCollabPassword('')
+      setCollabPermissions([])
+    }
+    setSavingCollab(false)
+  }
+
+  async function handleRemoveCollab(id: string) {
+    setRemovingCollab(id)
+    const res = await fetch(`/api/collaborators/${id}`, { method: 'DELETE' })
+    if (res.ok) {
+      setCollaborators(prev => prev.filter(c => c.id !== id))
+    }
+    setRemovingCollab(null)
   }
 
   if (loading) {
@@ -331,6 +396,115 @@ export default function EscolaPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Card Colaboradores */}
+      {school && (
+        <Card className="bg-gray-800 border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-white">Colaboradores</CardTitle>
+            <CardDescription className="text-gray-400">
+              Adicione até 3 pessoas para ajudar a gerenciar sua escola.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+
+            {/* Lista de colaboradores */}
+            {collaborators.length > 0 && (
+              <div className="space-y-3">
+                {collaborators.map(c => (
+                  <div key={c.id} className="flex items-start justify-between p-3 bg-gray-700/50 border border-gray-600 rounded-lg gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm font-medium truncate">{c.name}</p>
+                      <p className="text-gray-400 text-xs truncate">{c.email}</p>
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {c.permissions.map(p => (
+                          <span key={p} className="text-xs px-2 py-0.5 rounded-full bg-green-900/40 border border-green-700/50 text-green-400">
+                            {p === 'gerenciar_cursos' ? 'Cursos' : p === 'gerenciar_alunos' ? 'Alunos' : 'Financeiro'}
+                          </span>
+                        ))}
+                        {c.permissions.length === 0 && (
+                          <span className="text-xs text-gray-500">Sem permissões</span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveCollab(c.id)}
+                      disabled={removingCollab === c.id}
+                      className="text-red-400 hover:text-red-300 text-xs font-medium disabled:opacity-50 shrink-0 mt-1"
+                    >
+                      {removingCollab === c.id ? 'Removendo...' : 'Remover'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Formulário novo colaborador */}
+            {collaborators.length < 3 ? (
+              <div className="space-y-4 border-t border-gray-700 pt-4">
+                <p className="text-sm font-medium text-gray-300">
+                  Adicionar colaborador ({collaborators.length}/3)
+                </p>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-gray-400">Nome completo</label>
+                  <input type="text" value={collabName} onChange={e => setCollabName(e.target.value)}
+                    placeholder="Ex: Maria Silva"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-gray-400">Email</label>
+                  <input type="email" value={collabEmail} onChange={e => setCollabEmail(e.target.value)}
+                    placeholder="email@exemplo.com"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-gray-400">Senha de acesso</label>
+                  <input type="text" value={collabPassword} onChange={e => setCollabPassword(e.target.value)}
+                    placeholder="Mínimo 6 caracteres"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-gray-400">Permissões</label>
+                  <div className="flex flex-col gap-2">
+                    {[
+                      { value: 'gerenciar_cursos', label: 'Gerenciar cursos e aulas' },
+                      { value: 'gerenciar_alunos', label: 'Gerenciar alunos' },
+                      { value: 'ver_financeiro', label: 'Ver financeiro' },
+                    ].map(perm => (
+                      <label key={perm.value} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={collabPermissions.includes(perm.value)}
+                          onChange={() => togglePermission(perm.value)}
+                          style={{ accentColor: '#AEEA00' }}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-gray-300 text-sm">{perm.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                {collabMessage && (
+                  <p className={`text-sm ${collabMessage.startsWith('Erro') ? 'text-red-400' : 'text-green-400'}`}>
+                    {collabMessage}
+                  </p>
+                )}
+                <button onClick={handleAddCollab} disabled={savingCollab}
+                  className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors text-sm">
+                  {savingCollab ? 'Adicionando...' : 'Adicionar Colaborador'}
+                </button>
+              </div>
+            ) : (
+              <div className="border-t border-gray-700 pt-4">
+                <p className="text-sm text-gray-400 text-center">
+                  Limite de 3 colaboradores atingido. Remova um para adicionar outro.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
     </div>
   )
 }

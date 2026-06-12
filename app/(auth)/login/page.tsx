@@ -31,6 +31,8 @@ export default function LoginPage() {
     const masterEmail = process.env.NEXT_PUBLIC_MASTER_EMAIL
     if (data.user?.email === masterEmail) {
       router.push('/master')
+    } else if (profile.role === 'collaborator') {
+      router.push('/dashboard')
     } else if (profile.role === 'student') {
       if (profile.school_id) {
         const { data: school } = await supabase
