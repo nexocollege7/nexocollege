@@ -147,7 +147,22 @@ export default function AprenderPage() {
         </div>
       </div>
 
-      {/* Lista de módulos e aulas */}
+
+        {/* Materiais da aula */}
+        {aulaAtual && aulaAtual.material_links && (
+          <div style={{ padding: '16px 24px', borderBottom: '1px solid #2A2A2A' }}>
+            <p style={{ color: '#888888', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 12px' }}>Materiais desta aula</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {aulaAtual.material_links.split('\n').filter((l) => l.trim()).map((link, i) => (
+                <a key={i} href={link.trim()} target="_blank" rel="noreferrer" style={{ color: '#AEEA00', fontSize: '13px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>📎</span> {link.trim()}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Lista de módulos e aulas */}
       <div style={{
         width: '320px', flexShrink: 0,
         borderLeft: '1px solid #2A2A2A',

@@ -88,14 +88,14 @@ export default function EditarCursoPage() {
   async function handleCriarAula(moduloId: string) {
     const aula = novaAula[moduloId]
     if (!aula?.titulo?.trim() || !aula?.url?.trim()) return
-    const result = await criarAula(moduloId, id, aula.titulo.trim(), aula.url.trim())
+    const result = await criarAula(moduloId, id, aula.titulo.trim(), aula.url.trim(), aula.materiais?.trim() || '')
     if (result.data) {
       setModulos(modulos.map((m) =>
         m.id === moduloId
           ? { ...m, lessons: [...(m.lessons || []), result.data] }
           : m
       ))
-      setNovaAula({ ...novaAula, [moduloId]: { titulo: '', url: '' } })
+      setNovaAula({ ...novaAula, [moduloId]: { titulo: '', url: '', materiais: '' } })
     }
   }
 
@@ -341,6 +341,11 @@ export default function EditarCursoPage() {
                     style={{ ...input, flex: 3, padding: '8px 12px' }}
                     value={novaAula[modulo.id]?.url || ''}
                     onChange={(e) => setNovaAula({ ...novaAula, [modulo.id]: { ...novaAula[modulo.id], url: e.target.value } })}
+                  />
+                  <input placeholder="Links de materiais (um por linha)"
+                    style={{ ...input, flex: 2, padding: '8px 12px' }}
+                    value={novaAula[modulo.id]?.materiais || ''}
+                    onChange={(e) => setNovaAula({ ...novaAula, [modulo.id]: { ...novaAula[modulo.id], materiais: e.target.value } })}
                   />
                   <button onClick={() => handleCriarAula(modulo.id)} style={{ ...btnNeon, whiteSpace: 'nowrap' }}>
                     + Aula

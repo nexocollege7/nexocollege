@@ -18,7 +18,8 @@ export async function criarAula(
   moduleId: string,
   courseId: string,
   title: string,
-  videoUrl: string
+  videoUrl: string,
+  materialLinks: string = ''
 ) {
   const supabase = await createClient()
   const { data: existing } = await supabase
@@ -35,6 +36,7 @@ export async function criarAula(
       course_id: courseId,
       title,
       video_url: videoUrl,
+      material_links: materialLinks || null,
       type: 'video',
       position: nextPosition,
       is_free: false,
@@ -122,4 +124,24 @@ export async function marcarAulaConcluida(lessonId: string, courseId: string) {
 
   if (error) return { error: error.message }
   return { success: true }
+}
+
+export async function salvarMateriais(aulaId: string, links: string) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('lessons')
+    .update({ material_links: links || null })
+    .eq('id', aulaId)
+  if (error) return { error: error.message }
+  return { success: true }
+}
+
+export async function getMateriais(aulaId: string) {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('lessons')
+    .select('material_links')
+    .eq('id', aulaId)
+    .single()
+  return data?.material_links || ''
 }
