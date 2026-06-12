@@ -124,3 +124,43 @@ export async function alterarPlanoEscola(escolaId: string, plano: 'starter' | 'p
   revalidatePath('/master/escolas')
   return { success: true }
 }
+
+export async function getAnaliseComercial() {
+  const supabase = await createClient()
+
+  const { data: escolas } = await supabase
+    .from('schools')
+    .select('id, name, plan, created_at, is_active')
+    .order('created_at', { ascending: true })
+
+  if (!escolas) return null
+
+  // Escolas por mes (ultimos 6 meses)
+  const agora = new Date()
+  const meses = []
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(agora.getFullYear(), agora.getMonth() - i, 1)
+    const label = d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
+    const count = escolas.filter((e) => {
+      const criada = new Date(e.created_at)
+      return criada.getMonth() === d.getMonth() && criada.getFullYear() === d.getFullYear()
+    }).length
+    meses.push({ label, count })
+  }
+
+  // Distribuicao por plano
+  const porPlano = {
+    starter: escolas.filter((e) => (e.plan || 'starter') === 'starter').length,
+    pro: escolas.filter((e) => e.plan === 'pro').length,
+    enterprise: escolas.filter((e) => e.plan === 'enterprise').length,
+  }
+
+  // Metricas
+  const total = escolas.length
+  const pagas = porPlano.pro + porPlano.enterprise
+  const taxaConversao = total > 0 ? Math.round((pagas / total) * 100) : 0
+  const receitaMensal = porPlano.pro * 197 + porPlano.enterprise * 497
+  const ticketMedio = pagas > 0 ? Math.round(receitaMensal / pagas) : 0
+
+  return { meses, porPlano, total, pagas, taxaConversao, receitaMensal, ticketMedio }
+}

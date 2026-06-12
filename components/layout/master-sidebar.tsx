@@ -11,6 +11,7 @@ const menuMaster = [
   { href: '/master/nova-escola', label: 'Nova Escola', icon: '➕' },
   { href: '/master/financeiro', label: 'Financeiro', icon: '💰' },
   { href: '/master/planos', label: 'Planos', icon: '⭐' },
+  { href: '/master/analise', label: 'Analise', icon: '📊' },
 ]
 
 export function MasterSidebar() {
