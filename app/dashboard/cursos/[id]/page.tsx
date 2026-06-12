@@ -228,7 +228,7 @@ export default function EditarCursoPage() {
                 <button
                   onClick={() => setCurso({ ...curso, is_free: true, price: 0 })}
                   style={{
-                    padding: '10px 20px', borderRadius: '8px', border: 'none',
+                    padding: '10px 20px', borderRadius: '8px',
                     backgroundColor: curso.is_free ? '#1A2E00' : '#1A1A1A',
                     color: curso.is_free ? '#AEEA00' : '#888888',
                     fontWeight: curso.is_free ? '700' : '400',
