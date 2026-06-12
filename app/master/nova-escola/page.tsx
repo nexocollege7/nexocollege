@@ -15,6 +15,7 @@ export default function NovaEscolaPage() {
     senha: '',
     descricao: '',
     plano: 'starter',
+    cor: '#AEEA00',
   })
 
   async function handleSubmit() {
@@ -104,15 +105,49 @@ export default function NovaEscolaPage() {
                 placeholder="Breve descrição da escola"
                 value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} />
             </div>
+
+            {/* Cor da escola */}
+            <div>
+              <label style={{ color: '#888888', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
+                Cor principal da escola
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <input
+                  type="color"
+                  value={form.cor}
+                  onChange={(e) => setForm({ ...form, cor: e.target.value })}
+                  style={{
+                    width: '48px', height: '40px', borderRadius: '8px',
+                    border: '1px solid #2A2A2A', backgroundColor: '#0D0D0D',
+                    cursor: 'pointer', padding: '2px',
+                  }}
+                />
+                <input
+                  style={{ ...input, maxWidth: '140px' }}
+                  value={form.cor}
+                  onChange={(e) => setForm({ ...form, cor: e.target.value })}
+                  placeholder="#AEEA00"
+                />
+                <div style={{
+                  width: '80px', height: '40px', borderRadius: '8px',
+                  backgroundColor: form.cor,
+                  border: '1px solid #2A2A2A',
+                }} />
+              </div>
+              <p style={{ color: '#555555', fontSize: '12px', margin: '4px 0 0' }}>
+                Usada nos botões e destaques da vitrine da escola.
+              </p>
+            </div>
+
             <div>
               <label style={{ color: '#888888', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
                 Plano
               </label>
               <select style={input} value={form.plano}
                 onChange={(e) => setForm({ ...form, plano: e.target.value })}>
-                <option value="starter">Starter — até 3 cursos</option>
-                <option value="pro">Pro — cursos ilimitados</option>
-                <option value="enterprise">Enterprise — personalizado</option>
+                <option value="starter">Starter — 1 curso</option>
+                <option value="pro">Pro — até 10 cursos</option>
+                <option value="enterprise">Enterprise — ilimitado</option>
               </select>
             </div>
           </div>
@@ -145,7 +180,6 @@ export default function NovaEscolaPage() {
           </div>
         </div>
 
-        {/* Erro */}
         {erro && (
           <div style={{
             backgroundColor: '#2A1A1A', border: '1px solid #FF5555',
@@ -155,7 +189,6 @@ export default function NovaEscolaPage() {
           </div>
         )}
 
-        {/* Botões */}
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
           <button onClick={() => router.push('/master/escolas')}
             style={{

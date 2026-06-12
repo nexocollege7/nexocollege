@@ -51,6 +51,7 @@ export async function criarEscola(formData: {
   senha: string
   descricao: string
   plano: string
+  cor: string
 }) {
   const supabase = await createClient()
   const adminClient = createAdminClient()
@@ -90,6 +91,7 @@ export async function criarEscola(formData: {
       description: formData.descricao,
       slug: `${slug}-${Date.now()}`,
       plan: formData.plano,
+      primary_color: formData.cor || '#AEEA00',
       is_active: true,
     })
     .select()
