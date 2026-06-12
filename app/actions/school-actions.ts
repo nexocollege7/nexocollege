@@ -1,17 +1,29 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
+// Busca escola pelo school_id do perfil do usuário
 export async function getMySchool() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { data } = await supabase
+  const adminClient = createAdminClient()
+
+  const { data: profile } = await adminClient
+    .from('users')
+    .select('school_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.school_id) return null
+
+  const { data } = await adminClient
     .from('schools')
     .select('*')
-    .eq('owner_id', user.id)
+    .eq('id', profile.school_id)
     .single()
 
   return data
@@ -24,9 +36,19 @@ export async function updateSchool(formData: {
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Não autenticado' }
+  if (!user) return { error: 'Nao autenticado' }
 
-  const { error } = await supabase
+  const adminClient = createAdminClient()
+
+  const { data: profile } = await adminClient
+    .from('users')
+    .select('school_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.school_id) return { error: 'Escola nao encontrada' }
+
+  const { error } = await adminClient
     .from('schools')
     .update({
       name: formData.name,
@@ -34,7 +56,7 @@ export async function updateSchool(formData: {
       primary_color: formData.primary_color,
       updated_at: new Date().toISOString(),
     })
-    .eq('owner_id', user.id)
+    .eq('id', profile.school_id)
 
   if (error) return { error: error.message }
 
@@ -48,7 +70,7 @@ export async function createSchool(formData: {
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Não autenticado' }
+  if (!user) return { error: 'Nao autenticado' }
 
   const slug = formData.name
     .toLowerCase()
@@ -57,13 +79,14 @@ export async function createSchool(formData: {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
 
-  const { error } = await supabase
+  const adminClient = createAdminClient()
+
+  const { error } = await adminClient
     .from('schools')
     .insert({
       name: formData.name,
       description: formData.description,
       slug: `${slug}-${Date.now()}`,
-      owner_id: user.id,
     })
 
   if (error) return { error: error.message }
@@ -75,12 +98,22 @@ export async function createSchool(formData: {
 export async function saveMpToken(token: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Não autenticado' }
+  if (!user) return { error: 'Nao autenticado' }
 
-  const { error } = await supabase
+  const adminClient = createAdminClient()
+
+  const { data: profile } = await adminClient
+    .from('users')
+    .select('school_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.school_id) return { error: 'Escola nao encontrada' }
+
+  const { error } = await adminClient
     .from('schools')
     .update({ mp_access_token: token })
-    .eq('owner_id', user.id)
+    .eq('id', profile.school_id)
 
   if (error) return { error: error.message }
 
@@ -93,23 +126,31 @@ export async function getMpTokenStatus() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { hasToken: false }
 
-  const { data } = await supabase
+  const adminClient = createAdminClient()
+
+  const { data: profile } = await adminClient
+    .from('users')
+    .select('school_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.school_id) return { hasToken: false }
+
+  const { data } = await adminClient
     .from('schools')
     .select('mp_access_token')
-    .eq('owner_id', user.id)
+    .eq('id', profile.school_id)
     .single()
 
   return { hasToken: !!(data?.mp_access_token) }
 }
 
-// Retorna o limite de cursos conforme o plano
 function getLimitePorPlano(plan: string): number {
   if (plan === 'pro') return 10
   if (plan === 'enterprise') return Infinity
-  return 1 // starter
+  return 1
 }
 
-// Verifica se a escola pode criar mais um curso
 export async function verificarLimiteCurso(schoolId: string): Promise<{
   permitido: boolean
   plano: string
@@ -126,7 +167,7 @@ export async function verificarLimiteCurso(schoolId: string): Promise<{
     .single()
 
   if (schoolError || !school) {
-    return { permitido: false, plano: 'starter', usados: 0, limite: 1, mensagem: 'Escola não encontrada.' }
+    return { permitido: false, plano: 'starter', usados: 0, limite: 1, mensagem: 'Escola nao encontrada.' }
   }
 
   const { count, error: countError } = await supabase
@@ -149,16 +190,17 @@ export async function verificarLimiteCurso(schoolId: string): Promise<{
     limite,
     mensagem: permitido
       ? undefined
-      : `Seu plano ${school.plan} permite no máximo ${limite} curso(s). Faça upgrade para continuar.`
+      : `Seu plano ${school.plan} permite no maximo ${limite} curso(s). Faca upgrade para continuar.`
   }
 }
 
 export async function updateMyName(fullName: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Não autenticado' }
+  if (!user) return { error: 'Nao autenticado' }
 
-  const { error } = await supabase
+  const adminClient = createAdminClient()
+  const { error } = await adminClient
     .from('users')
     .update({ full_name: fullName })
     .eq('id', user.id)
@@ -172,7 +214,8 @@ export async function getMyName() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { data } = await supabase
+  const adminClient = createAdminClient()
+  const { data } = await adminClient
     .from('users')
     .select('full_name')
     .eq('id', user.id)
@@ -184,22 +227,60 @@ export async function getMyName() {
 export async function saveCustomDomain(domain: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Não autenticado' }
+  if (!user) return { error: 'Nao autenticado' }
 
-  // Limpa o domínio — remove http://, https://, www. e espaços
+  const adminClient = createAdminClient()
+
+  const { data: profile } = await adminClient
+    .from('users')
+    .select('school_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.school_id) return { error: 'Escola nao encontrada' }
+
   const cleanDomain = domain
     .trim()
     .replace(/^https?:\/\//, '')
     .replace(/^www\./, '')
     .replace(/\/$/, '')
 
-  const { error } = await supabase
+  const { error } = await adminClient
     .from('schools')
     .update({ custom_domain: cleanDomain || null })
-    .eq('owner_id', user.id)
+    .eq('id', profile.school_id)
 
   if (error) return { error: error.message }
 
   revalidatePath('/dashboard/escola')
   return { success: true, domain: cleanDomain }
+}
+
+export async function saveOwnerContact(ownerName: string, ownerPhone: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Nao autenticado' }
+
+  const adminClient = createAdminClient()
+
+  const { data: profile } = await adminClient
+    .from('users')
+    .select('school_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.school_id) return { error: 'Escola nao encontrada' }
+
+  const { error } = await adminClient
+    .from('schools')
+    .update({
+      owner_name: ownerName,
+      owner_phone: ownerPhone,
+    })
+    .eq('id', profile.school_id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/dashboard/escola')
+  return { success: true }
 }
