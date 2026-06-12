@@ -22,7 +22,7 @@ export default function MeusCursosPage() {
       // Busca progresso de cada curso
       const prog: { [courseId: string]: number } = {}
       for (const matricula of (data || [])) {
-        const courseId = matricula.courses?.id
+        const courseId = (matricula as any).courses?.id
         if (!courseId) continue
         const progress = await getLessonProgress(me.id, courseId)
         const concluidas = progress.filter((p: any) => p.is_completed).length
