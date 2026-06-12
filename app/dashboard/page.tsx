@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { getDashboardStats } from '@/app/actions/analytics-actions'
+import OnboardingBanner from '@/components/OnboardingBanner'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -9,9 +10,11 @@ export default async function DashboardPage() {
   if (!user) redirect('/login')
 
   const adminClient = createAdminClient()
+
+  // Buscar perfil com school_id
   const { data: profile } = await adminClient
     .from('users')
-    .select('role')
+    .select('role, school_id, full_name')
     .eq('id', user.id)
     .single()
 
@@ -22,8 +25,34 @@ export default async function DashboardPage() {
     redirect('/dashboard/meus-cursos')
   }
 
-  // Professor vê o dashboard normal
+  // Buscar dados da escola
+  const { data: escola } = await adminClient
+    .from('schools')
+    .select('id, name, slug')
+    .eq('id', profile?.school_id)
+    .single()
+
+  // Verificar se é primeiro acesso (escola sem cursos)
+  const { count: totalCursos } = await adminClient
+    .from('courses')
+    .select('*', { count: 'exact', head: true })
+    .eq('school_id', escola?.id)
+
+  const isPrimeiroAcesso = (totalCursos || 0) === 0
+
+  // Buscar stats normais
   const stats = await getDashboardStats()
+
+  // Tela de primeiro acesso
+  if (isPrimeiroAcesso) {
+    return (
+      <OnboardingBanner
+        nomeEscola={escola?.name || 'Sua Escola'}
+        slug={escola?.slug || ''}
+        nomeUsuario={profile?.full_name || ''}
+      />
+    )
+  }
 
   if (!stats) {
     return (
