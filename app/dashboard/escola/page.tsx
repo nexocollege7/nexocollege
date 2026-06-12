@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { getMySchool, updateSchool, createSchool, saveMpToken, getMpTokenStatus } from '@/app/actions/school-actions'
+import { getMySchool, updateSchool, createSchool, saveMpToken, getMpTokenStatus, updateMyName, getMyName } from '@/app/actions/school-actions'
 
 type School = {
   id: string
@@ -27,17 +27,25 @@ export default function EscolaPage() {
   const [savingToken, setSavingToken] = useState(false)
   const [tokenMessage, setTokenMessage] = useState('')
 
+  const [fullName, setFullName] = useState('')
+  const [savingName, setSavingName] = useState(false)
+  const [nameMessage, setNameMessage] = useState('')
+
   useEffect(() => {
     async function load() {
-      const data = await getMySchool()
+      const [data, status, nome] = await Promise.all([
+        getMySchool(),
+        getMpTokenStatus(),
+        getMyName(),
+      ])
       if (data) {
         setSchool(data)
         setName(data.name)
         setDescription(data.description || '')
         setPrimaryColor(data.primary_color || '#22c55e')
       }
-      const status = await getMpTokenStatus()
       setHasToken(status.hasToken)
+      setFullName(nome || '')
       setLoading(false)
     }
     load()
@@ -46,11 +54,9 @@ export default function EscolaPage() {
   async function handleSave() {
     setSaving(true)
     setMessage('')
-
     const result = school
       ? await updateSchool({ name, description, primary_color: primaryColor })
       : await createSchool({ name, description })
-
     if (result?.error) {
       setMessage(`Erro: ${result.error}`)
     } else {
@@ -65,9 +71,7 @@ export default function EscolaPage() {
     if (!mpToken.trim()) return
     setSavingToken(true)
     setTokenMessage('')
-
     const result = await saveMpToken(mpToken.trim())
-
     if (result?.error) {
       setTokenMessage(`Erro: ${result.error}`)
     } else {
@@ -76,6 +80,19 @@ export default function EscolaPage() {
       setMpToken('')
     }
     setSavingToken(false)
+  }
+
+  async function handleSaveName() {
+    if (!fullName.trim()) return
+    setSavingName(true)
+    setNameMessage('')
+    const result = await updateMyName(fullName.trim())
+    if (result?.error) {
+      setNameMessage(`Erro: ${result.error}`)
+    } else {
+      setNameMessage('✅ Nome atualizado!')
+    }
+    setSavingName(false)
   }
 
   if (loading) {
@@ -93,6 +110,41 @@ export default function EscolaPage() {
         <p className="text-gray-400 mt-1">Configure as informações da sua instituição</p>
       </div>
 
+      {/* Card Perfil do Professor */}
+      <Card className="bg-gray-800 border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-white">👤 Seu Perfil</CardTitle>
+          <CardDescription className="text-gray-400">
+            Seu nome aparece para os alunos nas mensagens e nos cursos.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">Seu nome completo</label>
+            <input
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Ex: Prof. João Silva"
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          {nameMessage && (
+            <p className={`text-sm ${nameMessage.startsWith('Erro') ? 'text-red-400' : 'text-green-400'}`}>
+              {nameMessage}
+            </p>
+          )}
+          <button
+            onClick={handleSaveName}
+            disabled={savingName || !fullName.trim()}
+            className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+          >
+            {savingName ? 'Salvando...' : 'Salvar Nome'}
+          </button>
+        </CardContent>
+      </Card>
+
+      {/* Card Escola */}
       <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
           <CardTitle className="text-white">
@@ -105,11 +157,8 @@ export default function EscolaPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">
-              Nome da Escola *
-            </label>
+            <label className="text-sm font-medium text-gray-300">Nome da Escola *</label>
             <input
               type="text"
               value={name}
@@ -118,11 +167,8 @@ export default function EscolaPage() {
               className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">
-              Descrição
-            </label>
+            <label className="text-sm font-medium text-gray-300">Descrição</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -131,11 +177,8 @@ export default function EscolaPage() {
               className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
           </div>
-
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">
-              Cor Principal
-            </label>
+            <label className="text-sm font-medium text-gray-300">Cor Principal</label>
             <div className="flex items-center gap-3">
               <input
                 type="color"
@@ -146,13 +189,11 @@ export default function EscolaPage() {
               <span className="text-gray-400 text-sm">{primaryColor}</span>
             </div>
           </div>
-
           {message && (
             <p className={`text-sm ${message.startsWith('Erro') ? 'text-red-400' : 'text-green-400'}`}>
               {message}
             </p>
           )}
-
           <button
             onClick={handleSave}
             disabled={saving || !name.trim()}
@@ -160,10 +201,10 @@ export default function EscolaPage() {
           >
             {saving ? 'Salvando...' : school ? 'Salvar Alterações' : 'Criar Escola'}
           </button>
-
         </CardContent>
       </Card>
 
+      {/* Card MP */}
       {school && (
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
@@ -173,18 +214,14 @@ export default function EscolaPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-
             {hasToken && (
               <div className="flex items-center gap-2 px-3 py-2 bg-green-900/30 border border-green-700 rounded-lg">
                 <span className="text-green-400 text-sm">✅ Token configurado</span>
                 <span className="text-gray-500 text-xs ml-auto">Para trocar, cole um novo token abaixo</span>
               </div>
             )}
-
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">
-                Access Token do Mercado Pago
-              </label>
+              <label className="text-sm font-medium text-gray-300">Access Token do Mercado Pago</label>
               <input
                 type="password"
                 value={mpToken}
@@ -194,24 +231,17 @@ export default function EscolaPage() {
               />
               <p className="text-xs text-gray-500">
                 Encontre seu token em{' '}
-                <a
-                  href="https://www.mercadopago.com.br/developers/panel/app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-400 hover:underline"
-                >
+                <a href="https://www.mercadopago.com.br/developers/panel/app" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
                   mercadopago.com.br/developers
                 </a>
                 {' '}→ Suas aplicações → Credenciais
               </p>
             </div>
-
             {tokenMessage && (
               <p className={`text-sm ${tokenMessage.startsWith('Erro') ? 'text-red-400' : 'text-green-400'}`}>
                 {tokenMessage}
               </p>
             )}
-
             <button
               onClick={handleSaveToken}
               disabled={savingToken || !mpToken.trim()}
@@ -219,11 +249,11 @@ export default function EscolaPage() {
             >
               {savingToken ? 'Salvando...' : 'Salvar Token'}
             </button>
-
           </CardContent>
         </Card>
       )}
 
+      {/* Card Info Técnica */}
       {school && (
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader>

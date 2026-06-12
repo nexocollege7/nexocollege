@@ -152,3 +152,31 @@ export async function verificarLimiteCurso(schoolId: string): Promise<{
       : `Seu plano ${school.plan} permite no máximo ${limite} curso(s). Faça upgrade para continuar.`
   }
 }
+
+export async function updateMyName(fullName: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const { error } = await supabase
+    .from('users')
+    .update({ full_name: fullName })
+    .eq('id', user.id)
+
+  if (error) return { error: error.message }
+  return { success: true }
+}
+
+export async function getMyName() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data } = await supabase
+    .from('users')
+    .select('full_name')
+    .eq('id', user.id)
+    .single()
+
+  return data?.full_name || ''
+}
