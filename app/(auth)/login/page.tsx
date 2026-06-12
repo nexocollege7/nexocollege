@@ -32,7 +32,6 @@ export default function LoginPage() {
     if (data.user?.email === masterEmail) {
       router.push('/master')
     } else if (profile.role === 'student') {
-      // Busca o slug da escola do aluno
       if (profile.school_id) {
         const { data: school } = await supabase
           .from('schools')
@@ -40,7 +39,7 @@ export default function LoginPage() {
           .eq('id', profile.school_id)
           .single()
         if (school?.slug) {
-          router.push(`/vitrine/${school.slug}`)
+          router.push('/vitrine/' + school.slug)
           router.refresh()
           return
         }
@@ -54,56 +53,79 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">NexoCollege</h1>
-          <p className="text-gray-400 mt-2">Entre na sua conta</p>
+    <div style={{
+      minHeight: '100vh', backgroundColor: '#0D0D0D',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '20px', fontFamily: 'Inter, sans-serif', fontSize: '16px',
+    }}>
+      <div style={{ width: '100%', maxWidth: '420px' }}>
+
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <h1 style={{ fontSize: "22px", fontWeight: '800', color: '#FFFFFF', margin: 0 }}>
+            Nexo<span style={{ color: '#AEEA00' }}>College</span>
+          </h1>
+          <p style={{ color: '#888888', marginTop: '8px', fontSize: '15px' }}>
+            Entre na sua conta
+          </p>
         </div>
-        <div className="bg-gray-900 rounded-2xl p-8 border border-gray-800">
+
+        <div style={{ backgroundColor: '#1A1A1A', borderRadius: '16px', padding: '36px', border: '1px solid #2A2A2A' }}>
+
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg p-3 mb-6 text-sm">
+            <div style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '8px', padding: '12px 16px', marginBottom: '24px', fontSize: '14px' }}>
               {error}
             </div>
           )}
-          <div className="space-y-5">
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#CCCCCC', marginBottom: '8px' }}>Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu@email.com"
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                style={{ width: '100%', backgroundColor: '#111111', border: '1px solid #333333', borderRadius: '8px', padding: '12px 16px', color: '#FFFFFF', fontSize: "14px", outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Senha</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#CCCCCC', marginBottom: '8px' }}>Senha</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                placeholder="Sua senha"
                 onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                style={{ width: '100%', backgroundColor: '#111111', border: '1px solid #333333', borderRadius: '8px', padding: '12px 16px', color: '#FFFFFF', fontSize: "14px", outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
+
             <button
               onClick={handleLogin}
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg px-4 py-3 transition-colors"
+              style={{
+                width: '100%', backgroundColor: loading ? '#555555' : '#AEEA00',
+                color: '#0D0D0D', fontWeight: '700', fontSize: '15px',
+                border: 'none', borderRadius: '8px', padding: '14px',
+                cursor: loading ? 'not-allowed' : 'pointer', marginTop: '4px',
+              }}
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
+
           </div>
-          <div className="mt-6 text-center">
-            <p className="text-gray-400 text-sm">
-              Não tem conta?{' '}
-              <Link href="/cadastro" className="text-blue-400 hover:text-blue-300 font-medium">
-                Criar conta
+
+          <div style={{ marginTop: '24px', textAlign: 'center' }}>
+            <p style={{ color: '#666666', fontSize: '14px' }}>
+              Nao tem conta?{' '}
+              <Link href="/cadastro" style={{ color: '#AEEA00', fontWeight: '600', textDecoration: 'none' }}>
+                Criar escola gratis
               </Link>
             </p>
           </div>
+
         </div>
       </div>
     </div>
