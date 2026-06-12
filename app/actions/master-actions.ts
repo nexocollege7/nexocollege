@@ -5,7 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
 export async function getMasterStats() {
-  const supabase = await createClient()
+  const adminClient = createAdminClient()
 
   const [
     { count: totalEscolas },
@@ -13,10 +13,10 @@ export async function getMasterStats() {
     { count: totalCursos },
     { data: pagamentos },
   ] = await Promise.all([
-    supabase.from('schools').select('*', { count: 'exact', head: true }),
-    supabase.from('users').select('*', { count: 'exact', head: true }),
-    supabase.from('courses').select('*', { count: 'exact', head: true }),
-    supabase.from('payments').select('amount').eq('status', 'approved'),
+    adminClient.from('schools').select('*', { count: 'exact', head: true }),
+    adminClient.from('profiles').select('*', { count: 'exact', head: true }),
+    adminClient.from('courses').select('*', { count: 'exact', head: true }),
+    adminClient.from('payments').select('amount').eq('status', 'approved'),
   ])
 
   const receitaTotal = (pagamentos || []).reduce(
@@ -32,17 +32,42 @@ export async function getMasterStats() {
 }
 
 export async function getEscolas() {
-  const supabase = await createClient()
-  const { data, error } = await supabase
+  const adminClient = createAdminClient()
+
+  // Buscar escolas
+  const { data: schools, error } = await adminClient
     .from('schools')
-    .select(`
-      *,
-      courses(count),
-      enrollments(count)
-    `)
+    .select('*')
     .order('created_at', { ascending: false })
-  if (error) return []
-  return data
+
+  if (error) {
+    console.error('getEscolas error:', error)
+    return []
+  }
+  if (!schools || schools.length === 0) return []
+
+  // Buscar contagem de cursos e alunos para cada escola
+  const result = await Promise.all(
+    schools.map(async (school) => {
+      const [{ count: cursosCount }, { count: alunosCount }] = await Promise.all([
+        adminClient
+          .from('courses')
+          .select('*', { count: 'exact', head: true })
+          .eq('school_id', school.id),
+        adminClient
+          .from('enrollments')
+          .select('*', { count: 'exact', head: true })
+          .eq('school_id', school.id),
+      ])
+      return {
+        ...school,
+        courses: [{ count: cursosCount ?? 0 }],
+        enrollments: [{ count: alunosCount ?? 0 }],
+      }
+    })
+  )
+
+  return result
 }
 
 export async function criarEscola(formData: {

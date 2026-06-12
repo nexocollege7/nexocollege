@@ -49,10 +49,8 @@ export function MasterSidebar() {
       }}>
         {!collapsed && (
           <div>
-            <span style={{ fontSize: '20px', fontWeight: '700', color: '#AEEA00', letterSpacing: '-0.5px', whiteSpace: 'nowrap' }}>
-              Nexo<span style={{ color: '#F0F0F0' }}>College</span>
-            </span>
-            <div style={{ fontSize: '11px', color: '#7C4DFF', marginTop: '2px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <img src="/logo.png" alt="NexoCollege" style={{ height: '32px', mixBlendMode: 'lighten', display: 'block', marginBottom: '4px' }} />
+            <div style={{ fontSize: '11px', color: '#7C4DFF', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               ⚡ Painel Master
             </div>
           </div>
