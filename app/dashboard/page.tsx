@@ -112,7 +112,7 @@ export default async function DashboardPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#F0F0F0', margin: 0 }}>
-            Ola, {profile?.full_name?.split(' ')[0] || 'Professor'}!
+            Ola, {profile?.full_name || 'Professor'}!
           </h1>
           <p style={{ color: '#888888', marginTop: '4px', fontSize: '14px' }}>
             Visao geral de <strong style={{ color: cor }}>{escola?.name}</strong>
