@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { getMyTeachers, getMyStudents, getMessages, sendMessage } from '@/app/actions/chat-actions'
+import { getMyTeachers, getMyStudents, getMessages, sendMessage, marcarMensagensLidas } from '@/app/actions/chat-actions'
 import { Send, MessageCircle } from 'lucide-react'
 
 export default function MensagensPage() {
@@ -24,10 +24,12 @@ export default function MensagensPage() {
     }
   }
 
-  async function loadMessages() {
-    if (!selected) return
-    const data = await getMessages(selected.courseId, selected.otherId)
+  async function loadMessages(sel?: any) {
+    const s = sel || selected
+    if (!s) return
+    const data = await getMessages(s.courseId, s.otherId)
     setMessages(data)
+    await marcarMensagensLidas(s.otherId, s.courseId)
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
   }
 
@@ -41,8 +43,9 @@ export default function MensagensPage() {
   }, [])
 
   useEffect(() => {
-    loadMessages()
-    const interval = setInterval(loadMessages, 30000)
+    if (!selected) return
+    loadMessages(selected)
+    const interval = setInterval(() => loadMessages(selected), 30000)
     return () => clearInterval(interval)
   }, [selected])
 
@@ -51,11 +54,10 @@ export default function MensagensPage() {
     setSending(true)
     await sendMessage(selected.otherId, selected.courseId, content)
     setContent('')
-    await loadMessages()
+    await loadMessages(selected)
     setSending(false)
   }
 
-  // Monta lista de conversas dependendo do role
   function renderConversations() {
     if (conversations.length === 0) return (
       <div className="p-4 text-center">
@@ -65,7 +67,6 @@ export default function MensagensPage() {
     )
 
     if (isTeacher) {
-      // Professor vê: nome do aluno + curso
       return conversations.map((msg: any) => {
         const course = msg.courses
         const student = msg.sender
@@ -87,7 +88,6 @@ export default function MensagensPage() {
         )
       })
     } else {
-      // Aluno vê: nome do professor + curso
       return conversations.map((enrollment: any) => {
         const course = enrollment.courses
         const teacher = course?.teacher
@@ -114,7 +114,6 @@ export default function MensagensPage() {
 
   return (
     <div className="flex gap-4 h-[calc(100vh-120px)]">
-      {/* Lista de conversas */}
       <div className="w-64 shrink-0 bg-gray-800 border border-gray-700 rounded-xl overflow-y-auto">
         <div className="p-4 border-b border-gray-700">
           <h2 className="text-white font-semibold text-sm">Mensagens</h2>
@@ -125,7 +124,6 @@ export default function MensagensPage() {
         {renderConversations()}
       </div>
 
-      {/* Chat */}
       <div className="flex-1 flex flex-col bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
         {!selected ? (
           <div className="flex-1 flex items-center justify-center">

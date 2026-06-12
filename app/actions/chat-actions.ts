@@ -113,3 +113,31 @@ export async function getMyStudents() {
     return true
   })
 }
+
+export async function getUnreadCount() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return 0
+
+  const { count } = await supabase
+    .from('messages')
+    .select('*', { count: 'exact', head: true })
+    .eq('receiver_id', user.id)
+    .eq('is_read', false)
+
+  return count ?? 0
+}
+
+export async function marcarMensagensLidas(senderId: string, courseId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  await supabase
+    .from('messages')
+    .update({ is_read: true })
+    .eq('receiver_id', user.id)
+    .eq('sender_id', senderId)
+    .eq('course_id', courseId)
+    .eq('is_read', false)
+}
