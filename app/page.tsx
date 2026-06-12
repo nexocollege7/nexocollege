@@ -275,7 +275,7 @@ export default function LandingPage() {
         <div className="plans-grid" style={{ display: 'flex', gap: '22px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <div className="plan-card">
             <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: '12px', color: '#666' }}>Starter</div>
-            <div style={{ fontSize: '48px', fontWeight: 900, color: cor, marginBottom: '6px' }}>Grátis</div>
+            <div style={{ fontSize: '48px', fontWeight: 900, color: cor, marginBottom: '6px' }}>R$ 0</div>
             <div style={{ color: '#444', fontSize: '13px', marginBottom: '30px' }}>Para sempre</div>
             {['1 curso', 'Alunos ilimitados', 'Vitrine personalizada', 'Certificados'].map(i => (
               <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'center', fontSize: '14px', color: '#888', marginBottom: '10px' }}>
@@ -287,8 +287,8 @@ export default function LandingPage() {
           <div className="plan-card plan-card-destaque">
             <div style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: cor, color: '#0D0D0D', fontSize: '11px', fontWeight: 900, padding: '4px 18px', borderRadius: '100px', whiteSpace: 'nowrap', letterSpacing: '0.07em' }}>MAIS POPULAR</div>
             <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: '12px', color: cor }}>Pro</div>
-            <div style={{ fontSize: '48px', fontWeight: 900, color: '#F0F0F0', marginBottom: '6px' }}>R$ 197<span style={{ fontSize: '17px', color: '#555', fontWeight: 400 }}>/mês</span></div>
-            <div style={{ color: '#444', fontSize: '13px', marginBottom: '30px' }}>R$ 2.364 cobrado anualmente</div>
+            <div style={{ fontSize: '48px', fontWeight: 900, color: '#F0F0F0', marginBottom: '6px' }}>R$ 1.997<span style={{ fontSize: '17px', color: '#555', fontWeight: 400 }}>/ano</span></div>
+            <div style={{ color: '#444', fontSize: '13px', marginBottom: '30px' }}>Cobrado anualmente</div>
             {['Até 10 cursos', 'Alunos ilimitados', 'Vitrine personalizada', 'Certificados', 'Gateway próprio MP', 'Suporte prioritário'].map(i => (
               <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'center', fontSize: '14px', color: '#888', marginBottom: '10px' }}>
                 <span style={{ color: cor, fontWeight: 900 }}>✓</span> {i}
@@ -298,8 +298,8 @@ export default function LandingPage() {
           </div>
           <div className="plan-card">
             <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: '12px', color: '#666' }}>Enterprise</div>
-            <div style={{ fontSize: '48px', fontWeight: 900, color: '#F0F0F0', marginBottom: '6px' }}>R$ 597<span style={{ fontSize: '17px', color: '#555', fontWeight: 400 }}>/mês</span></div>
-            <div style={{ color: '#444', fontSize: '13px', marginBottom: '30px' }}>R$ 7.164 cobrado anualmente</div>
+            <div style={{ fontSize: '48px', fontWeight: 900, color: '#F0F0F0', marginBottom: '6px' }}>R$ 4.997<span style={{ fontSize: '17px', color: '#555', fontWeight: 400 }}>/ano</span></div>
+            <div style={{ color: '#444', fontSize: '13px', marginBottom: '30px' }}>Cobrado anualmente</div>
             {['Cursos ilimitados', 'Alunos ilimitados', 'Vitrine personalizada', 'Certificados', 'Gateway próprio MP', 'Suporte VIP'].map(i => (
               <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'center', fontSize: '14px', color: '#888', marginBottom: '10px' }}>
                 <span style={{ color: cor, fontWeight: 900 }}>✓</span> {i}
