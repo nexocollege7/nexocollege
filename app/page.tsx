@@ -84,21 +84,45 @@ export default function LandingPage() {
         .footer-link { color: #444; font-size: 13px; text-decoration: none; transition: color 0.2s; }
         .footer-link:hover { color: #AEEA00; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+        @media (max-width: 1024px) {
+          .features-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .section-pad { padding: 80px 32px !important; }
+          .hero-pad { padding: 120px 32px 80px !important; }
+        }
         @media (max-width: 768px) {
-          .hero-title { font-size: 38px !important; letter-spacing: -1px !important; }
+          .hero-title { font-size: 36px !important; letter-spacing: -1px !important; line-height: 1.15 !important; }
           .nav-links { display: none !important; }
+          .nav-wrap { padding: 0 16px !important; height: 56px !important; }
+          .btn-sm-primary { font-size: 12px !important; padding: 8px 14px !important; white-space: nowrap !important; }
+          .btn-sm-outline { font-size: 12px !important; padding: 8px 12px !important; white-space: nowrap !important; }
           .features-grid { grid-template-columns: 1fr !important; }
           .stats-grid { grid-template-columns: 1fr 1fr !important; }
-          .plans-grid { flex-direction: column !important; align-items: center !important; }
-          .plan-card { max-width: 100% !important; }
-          .section-pad { padding: 60px 24px !important; }
-          .hero-pad { padding: 110px 24px 80px !important; }
-          .parallax-content { padding: 0 24px !important; }
+          .plans-grid { flex-direction: column !important; align-items: stretch !important; padding: 0 4px !important; }
+          .plan-card { max-width: 100% !important; width: 100% !important; min-width: unset !important; }
+          .section-pad { padding: 60px 20px !important; }
+          .hero-pad { padding: 100px 20px 70px !important; }
+          .parallax-content { padding: 0 20px !important; }
+          .parallax-band { height: auto !important; min-height: 180px !important; padding: 40px 0 !important; }
+          .parallax-content p { font-size: 18px !important; }
+          .btn-primary { font-size: 15px !important; padding: 14px 28px !important; width: 100% !important; justify-content: center !important; }
+          .btn-outline { font-size: 15px !important; padding: 14px 28px !important; width: 100% !important; justify-content: center !important; }
+          .step-card { flex-direction: column !important; gap: 16px !important; padding: 22px !important; }
+          .feature-card { padding: 22px !important; }
+        }
+        @media (max-width: 480px) {
+          .hero-title { font-size: 30px !important; }
+          .btn-sm-primary { font-size: 11px !important; padding: 7px 12px !important; white-space: nowrap !important; }
+          .btn-sm-outline { font-size: 11px !important; padding: 7px 10px !important; white-space: nowrap !important; }
+          .cta-title { font-size: 22px !important; line-height: 1.25 !important; word-break: break-word !important; overflow-wrap: break-word !important; padding: 0 12px !important; }
+          .cta-btn { font-size: 15px !important; padding: 14px 28px !important; width: 100% !important; }
+          .footer-copy { font-size: 11px !important; text-align: center !important; }
+          .footer-wrap { flex-direction: column !important; align-items: center !important; text-align: center !important; padding: 24px 20px !important; gap: 16px !important; }
         }
       `}</style>
 
       {/* NAV */}
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, background: 'rgba(13,13,13,0.96)', backdropFilter: 'blur(12px)', borderBottom: '1px solid #1A1A1A', padding: '0 48px', height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <nav className="nav-wrap" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, background: 'rgba(13,13,13,0.96)', backdropFilter: 'blur(12px)', borderBottom: '1px solid #1A1A1A', padding: '0 48px', height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <img src="/logo.png" alt="NexoCollege" style={{ height: '38px', mixBlendMode: 'lighten', display: 'block' }} />
         </div>
@@ -287,7 +311,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA FINAL */}
-      <section style={{ padding: '100px 48px', textAlign: 'center', background: 'linear-gradient(145deg, #0D0D0D, #111900)', borderTop: '1px solid #1e2800' }}>
+      <section className="section-pad" style={{ padding: '100px 48px', textAlign: 'center', background: 'linear-gradient(145deg, #0D0D0D, #111900)', borderTop: '1px solid #1e2800' }}>
         <h2 style={{ fontSize: '48px', fontWeight: 900, lineHeight: 1.2, marginBottom: '20px', color: '#F0F0F0' }}>
           Você tem conhecimento.<br /><span style={{ color: cor }}>O mundo precisa ouvir você.</span>
         </h2>
@@ -299,9 +323,9 @@ export default function LandingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer style={{ borderTop: '1px solid #161616', padding: '30px 48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+      <footer className="footer-wrap" style={{ borderTop: '1px solid #161616', padding: '30px 48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <img src="/logo.png" alt="NexoCollege" style={{ height: '30px', mixBlendMode: 'lighten', display: 'block' }} />
-        <p style={{ color: '#333', fontSize: '13px' }}>© 2026 NexoCollege. Todos os direitos reservados.</p>
+        <p className="footer-copy" style={{ color: '#333', fontSize: '13px' }}>© 2026 NexoCollege. Todos os direitos reservados.</p>
         <Link href="/login" className="footer-link">Acessar minha escola →</Link>
       </footer>
     </div>
