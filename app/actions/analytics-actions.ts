@@ -7,15 +7,29 @@ export async function getDashboardStats() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { data: school } = await supabase
-    .from('schools')
-    .select('id')
-    .eq('owner_id', user.id)
+  // Buscar perfil para verificar role
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role, school_id')
+    .eq('id', user.id)
     .single()
 
-  if (!school) return null
+  let schoolId: string | null = null
 
-  const schoolId = school.id
+  if (profile?.role === 'collaborator') {
+    // Colaborador usa o school_id do perfil
+    schoolId = profile.school_id
+  } else {
+    // Dono da escola busca pelo owner_id
+    const { data: school } = await supabase
+      .from('schools')
+      .select('id')
+      .eq('owner_id', user.id)
+      .single()
+    schoolId = school?.id || null
+  }
+
+  if (!schoolId) return null
 
   const [
     { count: totalAlunos },
