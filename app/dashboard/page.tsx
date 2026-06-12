@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { getDashboardStats } from '@/app/actions/analytics-actions'
 import OnboardingBanner from '@/components/OnboardingBanner'
+import Link from 'next/link'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -11,7 +12,6 @@ export default async function DashboardPage() {
 
   const adminClient = createAdminClient()
 
-  // Buscar perfil com school_id
   const { data: profile } = await adminClient
     .from('users')
     .select('role, school_id, full_name')
@@ -20,19 +20,14 @@ export default async function DashboardPage() {
 
   const role = profile?.role || 'student'
 
-  // Aluno vai direto para meus-cursos
-  if (role === 'student') {
-    redirect('/dashboard/meus-cursos')
-  }
+  if (role === 'student') redirect('/dashboard/meus-cursos')
 
-  // Buscar dados da escola
   const { data: escola } = await adminClient
     .from('schools')
-    .select('id, name, slug')
+    .select('id, name, slug, primary_color')
     .eq('id', profile?.school_id)
     .single()
 
-  // Verificar se é primeiro acesso (escola sem cursos)
   const { count: totalCursos } = await adminClient
     .from('courses')
     .select('*', { count: 'exact', head: true })
@@ -40,10 +35,8 @@ export default async function DashboardPage() {
 
   const isPrimeiroAcesso = (totalCursos || 0) === 0
 
-  // Buscar stats normais
   const stats = await getDashboardStats()
 
-  // Tela de primeiro acesso
   if (isPrimeiroAcesso) {
     return (
       <OnboardingBanner
@@ -57,62 +50,113 @@ export default async function DashboardPage() {
   if (!stats) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '256px' }}>
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ color: '#F0F0F0', fontWeight: '600' }}>Bem-vindo ao NexoCollege!</p>
-          <p style={{ color: '#888888', fontSize: '14px', marginTop: '4px' }}>Configure sua escola para começar.</p>
-        </div>
+        <p style={{ color: '#888888' }}>Carregando...</p>
       </div>
     )
   }
 
+  const cor = escola?.primary_color || '#AEEA00'
+
   const cards = [
-    { label: 'Alunos Ativos', value: stats.totalAlunos, iconColor: '#60A5FA', iconBg: '#1E3A5F', icon: '👥' },
-    { label: 'Cursos', value: stats.totalCursos, iconColor: '#AEEA00', iconBg: '#1A2E00', icon: '📚' },
-    { label: 'Certificados', value: stats.totalCertificados, iconColor: '#FACC15', iconBg: '#2E2100', icon: '🏆' },
-    { label: 'Receita Total', value: `R$ ${stats.receita.toFixed(2)}`, iconColor: '#7C4DFF', iconBg: '#1E0E3F', icon: '💰' },
+    { label: 'Alunos Ativos', value: stats.totalAlunos, icon: '👥', color: '#60A5FA', bg: '#1E3A5F', link: '/dashboard/alunos' },
+    { label: 'Cursos', value: stats.totalCursos, icon: '📚', color: cor, bg: '#1A2E00', link: '/dashboard/cursos' },
+    { label: 'Certificados', value: stats.totalCertificados, icon: '🏆', color: '#FACC15', bg: '#2E2100', link: '/dashboard/certificados' },
+    { label: 'Receita Total', value: `R$ ${stats.receita.toFixed(2)}`, icon: '💰', color: '#7C4DFF', bg: '#1E0E3F', link: null },
+  ]
+
+  const acessoRapido = [
+    { label: 'Novo Curso', icon: '➕', href: '/dashboard/cursos/novo', cor: cor },
+    { label: 'Ver Alunos', icon: '👥', href: '/dashboard/alunos', cor: '#60A5FA' },
+    { label: 'Mensagens', icon: '💬', href: '/dashboard/mensagens', cor: '#7C4DFF' },
+    { label: 'Minha Vitrine', icon: '🌐', href: '/dashboard/vitrine', cor: '#FACC15' },
+    { label: 'Minha Escola', icon: '🏫', href: '/dashboard/escola', cor: '#888888' },
   ]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <div>
-        <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#F0F0F0', margin: 0 }}>Dashboard</h1>
-        <p style={{ color: '#888888', marginTop: '4px', fontSize: '14px' }}>Visão geral da sua escola</p>
+
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#F0F0F0', margin: 0 }}>
+            Ola, {profile?.full_name?.split(' ')[0] || 'Professor'}!
+          </h1>
+          <p style={{ color: '#888888', marginTop: '4px', fontSize: '14px' }}>
+            Visao geral de <strong style={{ color: cor }}>{escola?.name}</strong>
+          </p>
+        </div>
+        <Link href="/dashboard/cursos/novo" style={{
+          backgroundColor: cor, color: '#0D0D0D', fontWeight: '700',
+          fontSize: '14px', padding: '10px 20px', borderRadius: '8px',
+          textDecoration: 'none',
+        }}>
+          + Novo Curso
+        </Link>
       </div>
 
+      {/* Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
         {cards.map((card) => (
           <div key={card.label} style={{
             backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A',
             borderRadius: '12px', padding: '20px',
+            cursor: card.link ? 'pointer' : 'default',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
               <p style={{ color: '#888888', fontSize: '13px', margin: 0 }}>{card.label}</p>
-              <div style={{
-                width: '36px', height: '36px', backgroundColor: card.iconBg,
-                borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
+              <div style={{ width: '36px', height: '36px', backgroundColor: card.bg, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <span style={{ fontSize: '16px' }}>{card.icon}</span>
               </div>
             </div>
-            <p style={{ fontSize: '28px', fontWeight: '700', color: '#F0F0F0', margin: 0 }}>{card.value}</p>
+            <p style={{ fontSize: '28px', fontWeight: '700', color: card.color, margin: 0 }}>{card.value}</p>
           </div>
         ))}
       </div>
 
+      {/* Acesso rapido */}
+      <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '20px' }}>
+        <h2 style={{ color: '#888888', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 16px' }}>Acesso Rapido</h2>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          {acessoRapido.map((item) => (
+            <Link key={item.href} href={item.href} style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              padding: '10px 16px', borderRadius: '8px',
+              border: '1px solid #2A2A2A', backgroundColor: '#111111',
+              textDecoration: 'none', color: '#CCCCCC', fontSize: '13px', fontWeight: '500',
+              transition: 'border-color 0.2s',
+            }}>
+              <span style={{ fontSize: '16px' }}>{item.icon}</span>
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* Matriculas e pagamentos */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
         <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '20px' }}>
-          <h2 style={{ color: '#F0F0F0', fontWeight: '600', fontSize: '14px', margin: '0 0 16px' }}>📈 Matrículas Recentes</h2>
+          <h2 style={{ color: '#F0F0F0', fontWeight: '600', fontSize: '14px', margin: '0 0 16px' }}>Matriculas Recentes</h2>
           {stats.matriculasRecentes.length === 0 ? (
-            <p style={{ color: '#555555', fontSize: '14px', textAlign: 'center', padding: '16px 0' }}>Nenhuma matrícula ainda</p>
+            <div style={{ textAlign: 'center', padding: '24px 0' }}>
+              <p style={{ color: '#555555', fontSize: '14px', margin: '0 0 8px' }}>Nenhuma matricula ainda</p>
+              <Link href="/dashboard/vitrine" style={{ color: cor, fontSize: '13px', textDecoration: 'none', fontWeight: '600' }}>
+                Compartilhe sua vitrine
+              </Link>
+            </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {stats.matriculasRecentes.map((m: any, i: number) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div>
-                    <p style={{ color: '#F0F0F0', fontSize: '14px', fontWeight: '500', margin: 0 }}>{m.users?.full_name || 'Aluno'}</p>
-                    <p style={{ color: '#888888', fontSize: '12px', margin: 0 }}>{m.courses?.title}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#2A2A2A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '700', color: cor }}>
+                      {(m.users?.full_name || 'A').charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p style={{ color: '#F0F0F0', fontSize: '13px', fontWeight: '500', margin: 0 }}>{m.users?.full_name || 'Aluno'}</p>
+                      <p style={{ color: '#888888', fontSize: '11px', margin: 0 }}>{m.courses?.title}</p>
+                    </div>
                   </div>
-                  <p style={{ color: '#555555', fontSize: '12px' }}>{new Date(m.enrolled_at).toLocaleDateString('pt-BR')}</p>
+                  <p style={{ color: '#555555', fontSize: '11px', margin: 0 }}>{new Date(m.enrolled_at).toLocaleDateString('pt-BR')}</p>
                 </div>
               ))}
             </div>
@@ -120,20 +164,25 @@ export default async function DashboardPage() {
         </div>
 
         <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '20px' }}>
-          <h2 style={{ color: '#F0F0F0', fontWeight: '600', fontSize: '14px', margin: '0 0 16px' }}>💰 Últimos Pagamentos</h2>
+          <h2 style={{ color: '#F0F0F0', fontWeight: '600', fontSize: '14px', margin: '0 0 16px' }}>Ultimos Pagamentos</h2>
           {stats.pagamentos.length === 0 ? (
-            <p style={{ color: '#555555', fontSize: '14px', textAlign: 'center', padding: '16px 0' }}>Nenhum pagamento ainda</p>
+            <div style={{ textAlign: 'center', padding: '24px 0' }}>
+              <p style={{ color: '#555555', fontSize: '14px', margin: '0 0 8px' }}>Nenhum pagamento ainda</p>
+              <Link href="/dashboard/escola" style={{ color: cor, fontSize: '13px', textDecoration: 'none', fontWeight: '600' }}>
+                Configurar Mercado Pago
+              </Link>
+            </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {stats.pagamentos.map((p: any, i: number) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <div style={{ width: '8px', height: '8px', backgroundColor: '#AEEA00', borderRadius: '50%' }} />
-                    <p style={{ color: '#F0F0F0', fontSize: '14px', margin: 0 }}>Aprovado</p>
+                    <p style={{ color: '#F0F0F0', fontSize: '13px', margin: 0 }}>Aprovado</p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <p style={{ color: '#F0F0F0', fontSize: '14px', fontWeight: '500', margin: 0 }}>R$ {Number(p.amount).toFixed(2)}</p>
-                    <p style={{ color: '#555555', fontSize: '12px', margin: 0 }}>{p.paid_at ? new Date(p.paid_at).toLocaleDateString('pt-BR') : '-'}</p>
+                    <p style={{ color: '#F0F0F0', fontSize: '14px', fontWeight: '600', margin: 0 }}>R$ {Number(p.amount).toFixed(2)}</p>
+                    <p style={{ color: '#555555', fontSize: '11px', margin: 0 }}>{p.paid_at ? new Date(p.paid_at).toLocaleDateString('pt-BR') : '-'}</p>
                   </div>
                 </div>
               ))}
@@ -141,6 +190,7 @@ export default async function DashboardPage() {
           )}
         </div>
       </div>
+
     </div>
   )
 }
