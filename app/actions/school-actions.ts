@@ -180,3 +180,26 @@ export async function getMyName() {
 
   return data?.full_name || ''
 }
+
+export async function saveCustomDomain(domain: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  // Limpa o domínio — remove http://, https://, www. e espaços
+  const cleanDomain = domain
+    .trim()
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(/\/$/, '')
+
+  const { error } = await supabase
+    .from('schools')
+    .update({ custom_domain: cleanDomain || null })
+    .eq('owner_id', user.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/dashboard/escola')
+  return { success: true, domain: cleanDomain }
+}
