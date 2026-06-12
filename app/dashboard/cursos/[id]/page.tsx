@@ -18,7 +18,7 @@ export default function EditarCursoPage() {
   const [salvando, setSalvando] = useState(false)
   const [uploadando, setUploadando] = useState(false)
   const [novoModulo, setNovoModulo] = useState('')
-  const [novaAula, setNovaAula] = useState<{ [key: string]: { titulo: string; url: string } }>({})
+  const [novaAula, setNovaAula] = useState<{ [key: string]: { titulo: string; url: string; materiais?: string } }>({})
 
   useEffect(() => {
     async function load() {
