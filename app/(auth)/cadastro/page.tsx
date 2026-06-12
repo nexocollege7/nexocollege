@@ -72,10 +72,8 @@ export default function CadastroPage() {
       <div style={{ width: '100%', maxWidth: '460px' }}>
 
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#FFFFFF', margin: 0 }}>
-            Nexo<span style={{ color: '#AEEA00' }}>College</span>
-          </h1>
-          <p style={{ color: '#888888', marginTop: '8px', fontSize: '15px' }}>
+          <img src="/logo.png" alt="NexoCollege" style={{ height: '48px', mixBlendMode: 'lighten', display: 'inline-block', marginBottom: '12px' }} />
+          <p style={{ color: '#888888', fontSize: '15px', margin: 0 }}>
             Crie sua escola online gratuitamente
           </p>
         </div>
