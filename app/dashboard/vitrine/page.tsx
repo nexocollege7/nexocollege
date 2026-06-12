@@ -8,7 +8,7 @@ import Link from 'next/link'
 export default function VitrinePage() {
   const [school, setSchool] = useState<any>(null)
   const [cursos, setCursos] = useState<any[]>([])
-  const [featuredId, setFeaturedId] = useState<string>('')
+  const [featuredIds, setFeaturedIds] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -19,7 +19,7 @@ export default function VitrinePage() {
       const schoolData = await getMySchool()
       if (!schoolData) return
       setSchool(schoolData)
-      setFeaturedId(schoolData.featured_course_id || '')
+      setFeaturedIds(schoolData.featured_course_ids ? schoolData.featured_course_ids.split(',') : [])
 
       const { data: cursosData } = await supabase
         .from('courses')
@@ -39,7 +39,7 @@ export default function VitrinePage() {
 
     const { error } = await supabase
       .from('schools')
-      .update({ featured_course_id: featuredId || null })
+      .update({ featured_course_ids: featuredIds.length > 0 ? featuredIds.join(',') : null })
       .eq('id', school.id)
 
     if (error) {
@@ -95,8 +95,8 @@ export default function VitrinePage() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {/* Opcao: sem destaque */}
-            <label style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '10px', border: '1px solid ' + (!featuredId ? '#AEEA00' : '#2A2A2A'), backgroundColor: !featuredId ? '#1A2E00' : '#111111', cursor: 'pointer' }}>
-              <input type="radio" name="featured" value="" checked={!featuredId} onChange={() => setFeaturedId('')} style={{ accentColor: '#AEEA00' }} />
+            <label style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '10px', border: '1px solid ' + (featuredIds.length === 0 ? '#AEEA00' : '#2A2A2A'), backgroundColor: featuredIds.length === 0 ? '#1A2E00' : '#111111', cursor: 'pointer' }}>
+              <input type="checkbox" checked={featuredIds.length === 0} onChange={() => setFeaturedIds([])} style={{ accentColor: '#AEEA00' }} />
               <div>
                 <p style={{ color: '#F0F0F0', fontSize: '14px', fontWeight: '500', margin: 0 }}>Ordem automatica</p>
                 <p style={{ color: '#666666', fontSize: '12px', margin: 0 }}>Cursos aparecem do mais recente para o mais antigo</p>
@@ -104,8 +104,8 @@ export default function VitrinePage() {
             </label>
 
             {cursos.map((curso) => (
-              <label key={curso.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '10px', border: '1px solid ' + (featuredId === curso.id ? '#AEEA00' : '#2A2A2A'), backgroundColor: featuredId === curso.id ? '#1A2E00' : '#111111', cursor: 'pointer' }}>
-                <input type="radio" name="featured" value={curso.id} checked={featuredId === curso.id} onChange={() => setFeaturedId(curso.id)} style={{ accentColor: '#AEEA00' }} />
+              <label key={curso.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '10px', border: '1px solid ' + (featuredIds.includes(curso.id) ? '#AEEA00' : '#2A2A2A'), backgroundColor: featuredIds.includes(curso.id) ? '#1A2E00' : '#111111', cursor: 'pointer' }}>
+                <input type="checkbox" checked={featuredIds.includes(curso.id)} onChange={(e) => { if (e.target.checked) { setFeaturedIds([...featuredIds, curso.id]) } else { setFeaturedIds(featuredIds.filter(id => id !== curso.id)) } }} style={{ accentColor: '#AEEA00' }} />
                 <div style={{ width: '48px', height: '36px', borderRadius: '6px', backgroundColor: '#2A2A2A', overflow: 'hidden', flexShrink: 0 }}>
                   {curso.thumbnail_url && <img src={curso.thumbnail_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
                 </div>
