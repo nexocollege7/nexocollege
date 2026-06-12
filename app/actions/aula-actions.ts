@@ -2,6 +2,18 @@
 
 import { createClient } from '@/lib/supabase/server'
 
+async function atualizarTotalAulas(supabase: any, courseId: string) {
+  const { count } = await supabase
+    .from('lessons')
+    .select('*', { count: 'exact', head: true })
+    .eq('course_id', courseId)
+
+  await supabase
+    .from('courses')
+    .update({ total_lessons: count ?? 0 })
+    .eq('id', courseId)
+}
+
 export async function criarAula(
   moduleId: string,
   courseId: string,
@@ -30,16 +42,30 @@ export async function criarAula(
     .select()
     .single()
   if (error) return { error: error.message }
+  await atualizarTotalAulas(supabase, courseId)
   return { data }
 }
 
 export async function deletarAula(aulaId: string) {
   const supabase = await createClient()
+
+  // Busca o course_id antes de deletar
+  const { data: aula } = await supabase
+    .from('lessons')
+    .select('course_id')
+    .eq('id', aulaId)
+    .single()
+
   const { error } = await supabase
     .from('lessons')
     .delete()
     .eq('id', aulaId)
   if (error) return { error: error.message }
+
+  if (aula?.course_id) {
+    await atualizarTotalAulas(supabase, aula.course_id)
+  }
+
   return { success: true }
 }
 
