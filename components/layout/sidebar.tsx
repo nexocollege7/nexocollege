@@ -13,6 +13,7 @@ const menuItems = [
   { href: '/dashboard/alunos', label: 'Alunos', icon: '👥' },
   { href: '/dashboard/mensagens', label: 'Mensagens', icon: '💬' },
   { href: '/dashboard/certificados', label: 'Certificados', icon: '🏆' },
+  { href: '/dashboard/vitrine', label: 'Vitrine', icon: '🌐' },
 ]
 
 export function Sidebar() {
