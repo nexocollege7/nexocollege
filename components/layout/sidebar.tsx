@@ -16,7 +16,7 @@ const menuItems = [
   { href: '/dashboard/vitrine', label: 'Vitrine', icon: '🌐' },
 ]
 
-export function Sidebar() {
+export function Sidebar({ onClose }: { onClose?: () => void } = {}) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()

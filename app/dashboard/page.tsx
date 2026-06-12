@@ -74,6 +74,14 @@ export default async function DashboardPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .cards-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .dashboard-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+          .dashboard-header a { width: 100% !important; text-align: center !important; }
+          .matriculas-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
 
       {/* Banner de Upgrade — aparece só para plano Starter */}
       {escola?.plan === 'starter' || !escola?.plan ? (
@@ -109,7 +117,7 @@ export default async function DashboardPage() {
       ) : null}
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="dashboard-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#F0F0F0', margin: 0 }}>
             Ola, {profile?.full_name || 'Professor'}!
@@ -128,7 +136,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }} className="cards-grid">
         {cards.map((card) => (
           <div key={card.label} style={{
             backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A',
@@ -166,7 +174,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Matriculas e pagamentos */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+      <div className="matriculas-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
         <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '20px' }}>
           <h2 style={{ color: '#F0F0F0', fontWeight: '600', fontSize: '14px', margin: '0 0 16px' }}>Matriculas Recentes</h2>
           {stats.matriculasRecentes.length === 0 ? (
