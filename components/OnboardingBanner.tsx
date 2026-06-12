@@ -11,7 +11,7 @@ interface Props {
 
 export default function OnboardingBanner({ nomeEscola, slug, nomeUsuario }: Props) {
   const [copiado, setCopiado] = useState(false)
-  const linkPlataforma = 'https://nexocollege.vercel.app/vitrine/' + slug
+  const linkPlataforma = 'https://' + slug + '.nexocollege.com.br'
 
   function copiarLink() {
     navigator.clipboard.writeText(linkPlataforma)

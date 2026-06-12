@@ -2,6 +2,23 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  const host = request.headers.get('host') || ''
+  const url = request.nextUrl
+
+  // Detecta subdominio em nexocollege.com.br
+  // Ex: academiabiblia.nexocollege.com.br -> subdominio = 'academiabiblia'
+  const isNexoCollegeDomain = host.endsWith('.nexocollege.com.br')
+  const isWww = host.startsWith('www.')
+  const isApex = host === 'nexocollege.com.br'
+
+  if (isNexoCollegeDomain && !isWww) {
+    const subdomain = host.replace('.nexocollege.com.br', '')
+    // Reescreve internamente para /vitrine/[slug] sem redirecionar
+    const rewriteUrl = url.clone()
+    rewriteUrl.pathname = '/vitrine/' + subdomain + (url.pathname === '/' ? '' : url.pathname)
+    return NextResponse.rewrite(rewriteUrl)
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -28,33 +45,33 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const isPublicRoute =
-    request.nextUrl.pathname === '/' ||
-    request.nextUrl.pathname.startsWith('/login') ||
-    request.nextUrl.pathname.startsWith('/cadastro') ||
-    request.nextUrl.pathname.startsWith('/auth/') ||
-    request.nextUrl.pathname.startsWith('/vitrine/') ||
-    request.nextUrl.pathname.startsWith('/api/register-school')
+    url.pathname === '/' ||
+    url.pathname.startsWith('/login') ||
+    url.pathname.startsWith('/cadastro') ||
+    url.pathname.startsWith('/auth/') ||
+    url.pathname.startsWith('/vitrine/') ||
+    url.pathname.startsWith('/api/register-school')
 
-  const isMasterRoute = request.nextUrl.pathname.startsWith('/master')
+  const isMasterRoute = url.pathname.startsWith('/master')
 
   if (isMasterRoute) {
     if (!user) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/login'
-      return NextResponse.redirect(url)
+      const redirect = url.clone()
+      redirect.pathname = '/login'
+      return NextResponse.redirect(redirect)
     }
     const masterEmail = process.env.NEXT_PUBLIC_MASTER_EMAIL
     if (user.email !== masterEmail) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/dashboard'
-      return NextResponse.redirect(url)
+      const redirect = url.clone()
+      redirect.pathname = '/dashboard'
+      return NextResponse.redirect(redirect)
     }
   }
 
   if (!user && !isPublicRoute) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
+    const redirect = url.clone()
+    redirect.pathname = '/login'
+    return NextResponse.redirect(redirect)
   }
 
   return supabaseResponse
