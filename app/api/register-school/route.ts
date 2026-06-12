@@ -14,7 +14,7 @@ function gerarSlug(nome: string): string {
 
 export async function POST(request: Request) {
   try {
-    const { nome, email, password, nomeEscola } = await request.json()
+    const { nome, email, password, nomeEscola, termosAceitos } = await request.json()
 
     if (!nome || !email || !password || !nomeEscola) {
       return NextResponse.json({ error: 'Preencha todos os campos.' }, { status: 400 })
@@ -24,9 +24,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'A senha precisa ter pelo menos 6 caracteres.' }, { status: 400 })
     }
 
+    if (!termosAceitos) {
+      return NextResponse.json({ error: 'Voce precisa aceitar os termos de uso para continuar.' }, { status: 400 })
+    }
+
     const adminClient = createAdminClient()
 
-    // 1. Criar usuário no Auth
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email,
       password,
@@ -36,7 +39,7 @@ export async function POST(request: Request) {
 
     if (authError) {
       if (authError.message.includes('already registered')) {
-        return NextResponse.json({ error: 'Este email já está cadastrado.' }, { status: 400 })
+        return NextResponse.json({ error: 'Este email ja esta cadastrado.' }, { status: 400 })
       }
       return NextResponse.json({ error: 'Erro ao criar conta. Tente novamente.' }, { status: 500 })
     }
@@ -44,13 +47,13 @@ export async function POST(request: Request) {
     const userId = authData.user.id
     const slug = gerarSlug(nomeEscola)
 
-    // 2. Criar escola
     const { data: escola, error: escolaError } = await adminClient
       .from('schools')
       .insert({
         name: nomeEscola,
         slug,
         plan: 'starter',
+        terms_accepted_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
       })
       .select('id')
@@ -61,7 +64,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Erro ao criar escola. Tente novamente.' }, { status: 500 })
     }
 
-    // 3. Verificar se perfil já existe (criado pelo trigger do Supabase)
     const { data: perfilExistente } = await adminClient
       .from('users')
       .select('id')
@@ -69,14 +71,9 @@ export async function POST(request: Request) {
       .single()
 
     if (perfilExistente) {
-      // Perfil já existe — apenas atualizar role e school_id
       const { error: updateError } = await adminClient
         .from('users')
-        .update({
-          full_name: nome,
-          role: 'admin',
-          school_id: escola.id,
-        })
+        .update({ full_name: nome, role: 'admin', school_id: escola.id })
         .eq('id', userId)
 
       if (updateError) {
@@ -85,16 +82,9 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Erro ao configurar perfil. Tente novamente.' }, { status: 500 })
       }
     } else {
-      // Perfil não existe — inserir
       const { error: insertError } = await adminClient
         .from('users')
-        .insert({
-          id: userId,
-          full_name: nome,
-          role: 'admin',
-          school_id: escola.id,
-          created_at: new Date().toISOString(),
-        })
+        .insert({ id: userId, full_name: nome, role: 'admin', school_id: escola.id, created_at: new Date().toISOString() })
 
       if (insertError) {
         await adminClient.auth.admin.deleteUser(userId)
@@ -105,8 +95,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, slug })
 
-  } catch (err) {
-    console.log('ERRO GERAL:', err)
+  } catch {
     return NextResponse.json({ error: 'Erro interno. Tente novamente.' }, { status: 500 })
   }
 }
