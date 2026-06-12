@@ -23,13 +23,19 @@ export async function getEnrollments() {
       status,
       enrolled_at,
       student_id,
-      users ( id, full_name ),
+      users!enrollments_student_id_fkey ( id, full_name, role ),
       courses ( id, title )
     `)
     .eq('school_id', school.id)
     .order('enrolled_at', { ascending: false })
 
-  return data || []
+  // Filtrar apenas alunos reais (excluir admin e collaborator)
+  const alunosApenas = (data || []).filter((e: any) => {
+    const role = e.users?.role
+    return role === 'student' || role === null || role === undefined
+  })
+
+  return alunosApenas
 }
 
 export async function enrollStudentByEmail(email: string, courseId: string) {
