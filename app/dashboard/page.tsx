@@ -24,7 +24,7 @@ export default async function DashboardPage() {
 
   const { data: escola } = await adminClient
     .from('schools')
-    .select('id, name, slug, primary_color')
+    .select('id, name, slug, primary_color, plan')
     .eq('id', profile?.school_id)
     .single()
 
@@ -74,6 +74,39 @@ export default async function DashboardPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+      {/* Banner de Upgrade — aparece só para plano Starter */}
+      {escola?.plan === 'starter' || !escola?.plan ? (
+        <div style={{
+          background: 'linear-gradient(135deg, #1a2000, #2a3500)',
+          border: '1px solid rgba(174,234,0,0.3)',
+          borderRadius: '14px',
+          padding: '18px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '16px',
+          flexWrap: 'wrap',
+        }}>
+          <div>
+            <p style={{ color: '#AEEA00', fontWeight: '800', fontSize: '15px', margin: '0 0 4px' }}>
+              ⚡ Você está no plano Gratuito
+            </p>
+            <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>
+              Faça upgrade para criar mais cursos e desbloquear recursos avançados
+            </p>
+          </div>
+          <Link href="/dashboard/upgrade" style={{
+            background: '#AEEA00', color: '#0D0D0D',
+            fontWeight: '800', fontSize: '14px',
+            padding: '10px 22px', borderRadius: '10px',
+            textDecoration: 'none', whiteSpace: 'nowrap',
+            flexShrink: 0,
+          }}>
+            Ver planos →
+          </Link>
+        </div>
+      ) : null}
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
