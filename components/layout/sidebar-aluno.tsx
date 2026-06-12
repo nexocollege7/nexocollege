@@ -12,7 +12,7 @@ const menuAluno = [
   { href: '/dashboard/mensagens', label: 'Mensagens', icon: '💬' },
 ]
 
-export function SidebarAluno() {
+export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
