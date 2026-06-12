@@ -13,6 +13,7 @@ export async function getMeuscursos() {
       id,
       status,
       enrolled_at,
+      course_id,
       courses (
         id,
         title,
@@ -21,7 +22,7 @@ export async function getMeuscursos() {
         total_lessons,
         slug,
         school_id,
-        schools ( name, primary_color )
+        schools!courses_school_id_fkey ( name, primary_color )
       )
     `)
     .eq('student_id', user.id)
@@ -37,7 +38,7 @@ export async function getCourseWithLessons(courseId: string) {
     .from('courses')
     .select(`
       *,
-      schools ( name, primary_color ),
+      schools!courses_school_id_fkey ( name, primary_color ),
       modules (
         id,
         title,
