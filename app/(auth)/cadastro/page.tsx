@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -183,7 +183,7 @@ function Modal({ titulo, conteudo, onFechar }: { titulo: string; conteudo: strin
   )
 }
 
-export default function CadastroPage() {
+function CadastroContent() {
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -402,5 +402,13 @@ export default function CadastroPage() {
         </div>
       </div>
     </>
+  )
+}
+
+export default function CadastroPage() {
+  return (
+    <Suspense fallback={null}>
+      <CadastroContent />
+    </Suspense>
   )
 }
