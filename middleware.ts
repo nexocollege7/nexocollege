@@ -12,6 +12,10 @@ export async function middleware(request: NextRequest) {
   const isApex = host === 'nexocollege.com.br'
 
   if (isNexoCollegeDomain && !isWww) {
+    // Rotas de API nunca devem ser reescritas para vitrine
+    if (url.pathname.startsWith('/api/')) {
+      return NextResponse.next()
+    }
     const subdomain = host.replace('.nexocollege.com.br', '')
     // Reescreve internamente para /vitrine/[slug] sem redirecionar
     const rewriteUrl = url.clone()
