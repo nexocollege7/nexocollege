@@ -4,12 +4,12 @@ import { createClient } from '@supabase/supabase-js'
 
 const PLANOS_VALIDOS = ['starter', 'creator', 'pro', 'scale', 'enterprise']
 
-const adminClient = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 export async function POST(request: NextRequest) {
+  const adminClient = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
   try {
     const body = await request.json()
 
