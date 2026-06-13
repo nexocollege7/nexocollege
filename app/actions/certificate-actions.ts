@@ -15,7 +15,7 @@ export async function getMyCertificates() {
       issued_at,
       unique_code,
       courses ( title ),
-      schools!courses_school_id_fkey ( name )
+      schools ( name )
     `)
     .eq('student_id', user.id)
     .order('issued_at', { ascending: false })
@@ -74,7 +74,7 @@ export async function getCertificateByCode(code: string) {
       unique_code,
       users ( full_name ),
       courses ( title ),
-      schools!courses_school_id_fkey ( name )
+      schools ( name )
     `)
     .eq('unique_code', code)
     .single()
