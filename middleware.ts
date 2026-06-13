@@ -50,7 +50,9 @@ export async function middleware(request: NextRequest) {
     url.pathname.startsWith('/cadastro') ||
     url.pathname.startsWith('/auth/') ||
     url.pathname.startsWith('/vitrine/') ||
-    url.pathname.startsWith('/api/register-school')
+    url.pathname.startsWith('/api/register-school') ||
+    url.pathname.startsWith('/api/webhook-upgrade') ||
+    url.pathname.startsWith('/api/webhook')
 
   const isMasterRoute = url.pathname.startsWith('/master')
 
