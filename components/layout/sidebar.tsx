@@ -17,12 +17,17 @@ const menuItems = [
   { href: '/dashboard/upgrade', label: 'Upgrade', icon: '⚡' },
 ]
 
+const masterItems = [
+  { href: '/dashboard/master/planos', label: 'Planos', icon: '💎' },
+]
+
 export function Sidebar({ onClose }: { onClose?: () => void } = {}) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
   const [collapsed, setCollapsed] = useState(false)
   const [unread, setUnread] = useState(0)
+  const [userEmail, setUserEmail] = useState('')
 
   useEffect(() => {
     async function loadUnread() {
@@ -33,6 +38,14 @@ export function Sidebar({ onClose }: { onClose?: () => void } = {}) {
     const interval = setInterval(loadUnread, 30000)
     return () => clearInterval(interval)
   }, [])
+
+  useEffect(() => {
+    async function loadUser() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user?.email) setUserEmail(user.email)
+    }
+    loadUser()
+  }, [supabase])
 
   async function handleSair() {
     await supabase.auth.signOut()
@@ -125,6 +138,35 @@ export function Sidebar({ onClose }: { onClose?: () => void } = {}) {
             </Link>
           )
         })}
+      {userEmail === (process.env.NEXT_PUBLIC_MASTER_EMAIL || 'fe.jose7@gmail.com') && (
+          <div style={{ padding: '8px', borderTop: '1px solid #1a1a1a', marginTop: '8px' }}>
+            {!collapsed && (
+              <div style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#333', padding: '8px 12px 4px' }}>
+                Master
+              </div>
+            )}
+            {masterItems.map(item => {
+              const isActive = pathname === item.href
+              return (
+                <Link key={item.href} href={item.href} onClick={onClose} style={{
+                  display: 'flex', alignItems: 'center',
+                  gap: collapsed ? '0' : '10px',
+                  padding: collapsed ? '10px' : '10px 12px',
+                  borderRadius: '8px', textDecoration: 'none',
+                  justifyContent: collapsed ? 'center' : 'flex-start',
+                  background: isActive ? 'rgba(174,234,0,0.1)' : 'transparent',
+                  color: isActive ? '#AEEA00' : '#444',
+                  fontSize: '14px', fontWeight: isActive ? 700 : 500,
+                  marginBottom: '2px',
+                  transition: 'background 0.15s, color 0.15s',
+                }}>
+                  <span style={{ fontSize: '16px', flexShrink: 0 }}>{item.icon}</span>
+                  {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>}
+                </Link>
+              )
+            })}
+          </div>
+        )}
       </nav>
 
       <div style={{

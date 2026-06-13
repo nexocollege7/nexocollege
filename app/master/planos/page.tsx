@@ -2,213 +2,241 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { createAdminClient } from '@/lib/supabase/admin'
+
+type Plano = {
+  id: string
+  name: string
+  slug: string
+  price_yearly: number
+  max_courses: number
+  max_students: number
+  max_storage_gb: number
+  has_certificate: boolean
+  has_custom_domain: boolean
+  is_active: boolean
+}
 
 export default function PlanosPage() {
-  const [proPrice, setProPrice] = useState('')
-  const [enterprisePrice, setEnterprisePrice] = useState('')
-  const [proToken, setProToken] = useState('')
-  const [enterpriseToken, setEnterpriseToken] = useState('')
+  const [planos, setPlanos] = useState<Plano[]>([])
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState('')
+  const [editando, setEditando] = useState<Plano | null>(null)
+  const [salvando, setSalvando] = useState<string | null>(null)
+  const [sucesso, setSucesso] = useState('')
+  const [erro, setErro] = useState('')
 
   useEffect(() => {
     async function load() {
       const supabase = createClient()
       const { data } = await supabase
-        .from('platform_settings')
-        .select('key, value')
-
-      if (data) {
-        data.forEach((row) => {
-          if (row.key === 'pro_price_yearly') setProPrice(row.value)
-          if (row.key === 'enterprise_price_yearly') setEnterprisePrice(row.value)
-          if (row.key === 'pro_mp_access_token') setProToken(row.value)
-          if (row.key === 'enterprise_mp_access_token') setEnterpriseToken(row.value)
-        })
-      }
+        .from('plans')
+        .select('*')
+        .order('price_yearly', { ascending: true })
+      if (data) setPlanos(data)
       setLoading(false)
     }
     load()
   }, [])
 
-  async function handleSave() {
-    setSaving(true)
-    setMessage('')
+  async function salvarPlano(plano: Plano) {
+    setSalvando(plano.id)
+    setErro('')
+    setSucesso('')
 
-    const supabase = createClient()
+    const res = await fetch('/api/master/planos', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(plano),
+    })
 
-    const updates = [
-      { key: 'pro_price_yearly', value: proPrice },
-      { key: 'enterprise_price_yearly', value: enterprisePrice },
-      { key: 'pro_mp_access_token', value: proToken },
-      { key: 'enterprise_mp_access_token', value: enterpriseToken },
-    ]
+    const data = await res.json()
 
-    for (const update of updates) {
-      await supabase
-        .from('platform_settings')
-        .update({ value: update.value, updated_at: new Date().toISOString() })
-        .eq('key', update.key)
+    if (!res.ok) {
+      setErro(data.error || 'Erro ao salvar.')
+    } else {
+      setSucesso(`Plano "${plano.name}" salvo com sucesso!`)
+      setEditando(null)
+      setPlanos(prev => prev.map(p => p.id === plano.id ? plano : p))
+      setTimeout(() => setSucesso(''), 3000)
     }
+    setSalvando(null)
+  }
 
-    setMessage('✅ Configurações salvas com sucesso!')
-    setSaving(false)
+  async function toggleAtivo(plano: Plano) {
+    await salvarPlano({ ...plano, is_active: !plano.is_active })
   }
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '256px' }}>
-      <p style={{ color: '#888888' }}>Carregando...</p>
+      <p style={{ color: '#888' }}>Carregando...</p>
     </div>
   )
 
   return (
-    <div style={{ maxWidth: '720px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div style={{ maxWidth: '900px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#F0F0F0', margin: 0 }}>
-          Configuração de Planos
+          Gestão de Planos
         </h1>
-        <p style={{ color: '#888888', marginTop: '4px', fontSize: '14px' }}>
-          Defina os valores anuais dos planos pagos. Esses valores aparecem na landing page e são usados no checkout.
+        <p style={{ color: '#888', marginTop: '4px', fontSize: '14px' }}>
+          Edite preços, limites e disponibilidade dos planos da plataforma.
         </p>
       </div>
 
-      {/* Plano Starter */}
-      <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '28px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-          <span style={{ fontSize: '24px' }}>🆓</span>
-          <div>
-            <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#F0F0F0', margin: 0 }}>Starter</h2>
-            <p style={{ color: '#888888', fontSize: '13px', margin: 0 }}>Plano gratuito — até 1 curso</p>
-          </div>
-          <span style={{ marginLeft: 'auto', padding: '4px 12px', backgroundColor: '#1A2E00', color: '#AEEA00', borderRadius: '100px', fontSize: '12px', fontWeight: '700' }}>
-            GRATUITO
-          </span>
+      {sucesso && (
+        <div style={{ background: 'rgba(174,234,0,0.1)', border: '1px solid rgba(174,234,0,0.3)', color: '#AEEA00', borderRadius: '10px', padding: '12px 16px', fontSize: '14px' }}>
+          ✅ {sucesso}
         </div>
-        <p style={{ color: '#555555', fontSize: '13px' }}>
-          Sem configuração necessária. Toda escola começa no Starter automaticamente.
-        </p>
-      </div>
-
-      {/* Plano Pro */}
-      <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #AEEA00', borderRadius: '16px', padding: '28px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-          <span style={{ fontSize: '24px' }}>⭐</span>
-          <div>
-            <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#F0F0F0', margin: 0 }}>Pro</h2>
-            <p style={{ color: '#888888', fontSize: '13px', margin: 0 }}>Até 10 cursos — pagamento anual</p>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div>
-            <label style={{ color: '#888888', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
-              Valor anual (R$)
-            </label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: '#888888' }}>R$</span>
-              <input
-                type="number"
-                value={proPrice}
-                onChange={(e) => setProPrice(e.target.value)}
-                style={{
-                  width: '160px', padding: '10px 14px', borderRadius: '8px',
-                  border: '1px solid #2A2A2A', backgroundColor: '#0D0D0D',
-                  color: '#F0F0F0', fontSize: '16px', fontWeight: '700', outline: 'none',
-                }}
-              />
-              <span style={{ color: '#555555', fontSize: '13px' }}>
-                = R$ {proPrice ? (parseFloat(proPrice) / 12).toFixed(2) : '0,00'}/mês
-              </span>
-            </div>
-          </div>
-          <div>
-            <label style={{ color: '#888888', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
-              Access Token MP (para receber pagamentos do plano Pro)
-            </label>
-            <input
-              type="password"
-              value={proToken}
-              onChange={(e) => setProToken(e.target.value)}
-              placeholder="APP_USR-xxxx ou TEST-xxxx"
-              style={{
-                width: '100%', padding: '10px 14px', borderRadius: '8px',
-                border: '1px solid #2A2A2A', backgroundColor: '#0D0D0D',
-                color: '#F0F0F0', fontSize: '14px', outline: 'none', fontFamily: 'monospace',
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Plano Enterprise */}
-      <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #7C4DFF', borderRadius: '16px', padding: '28px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-          <span style={{ fontSize: '24px' }}>🚀</span>
-          <div>
-            <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#F0F0F0', margin: 0 }}>Enterprise</h2>
-            <p style={{ color: '#888888', fontSize: '13px', margin: 0 }}>Cursos ilimitados — pagamento anual</p>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div>
-            <label style={{ color: '#888888', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
-              Valor anual (R$)
-            </label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: '#888888' }}>R$</span>
-              <input
-                type="number"
-                value={enterprisePrice}
-                onChange={(e) => setEnterprisePrice(e.target.value)}
-                style={{
-                  width: '160px', padding: '10px 14px', borderRadius: '8px',
-                  border: '1px solid #2A2A2A', backgroundColor: '#0D0D0D',
-                  color: '#F0F0F0', fontSize: '16px', fontWeight: '700', outline: 'none',
-                }}
-              />
-              <span style={{ color: '#555555', fontSize: '13px' }}>
-                = R$ {enterprisePrice ? (parseFloat(enterprisePrice) / 12).toFixed(2) : '0,00'}/mês
-              </span>
-            </div>
-          </div>
-          <div>
-            <label style={{ color: '#888888', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
-              Access Token MP (para receber pagamentos do plano Enterprise)
-            </label>
-            <input
-              type="password"
-              value={enterpriseToken}
-              onChange={(e) => setEnterpriseToken(e.target.value)}
-              placeholder="APP_USR-xxxx ou TEST-xxxx"
-              style={{
-                width: '100%', padding: '10px 14px', borderRadius: '8px',
-                border: '1px solid #2A2A2A', backgroundColor: '#0D0D0D',
-                color: '#F0F0F0', fontSize: '14px', outline: 'none', fontFamily: 'monospace',
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {message && (
-        <p style={{ color: '#AEEA00', fontSize: '14px' }}>{message}</p>
       )}
 
-      <button
-        onClick={handleSave}
-        disabled={saving}
-        style={{
-          padding: '14px 32px', borderRadius: '10px', border: 'none',
-          backgroundColor: '#AEEA00', color: '#0D0D0D',
-          fontWeight: '800', fontSize: '15px', cursor: saving ? 'not-allowed' : 'pointer',
-          opacity: saving ? 0.6 : 1, alignSelf: 'flex-start',
-        }}
-      >
-        {saving ? 'Salvando...' : 'Salvar Configurações'}
-      </button>
+      {erro && (
+        <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '10px', padding: '12px 16px', fontSize: '14px' }}>
+          ❌ {erro}
+        </div>
+      )}
+
+      {planos.map(plano => (
+        <div key={plano.id} style={{
+          background: '#1A1A1A',
+          border: `1px solid ${plano.slug === 'pro' ? '#AEEA00' : plano.slug === 'enterprise' ? '#7C4DFF' : '#2A2A2A'}`,
+          borderRadius: '16px', padding: '28px',
+          opacity: plano.is_active ? 1 : 0.5,
+        }}>
+          {editando?.id === plano.id ? (
+            // Modo edição
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#F0F0F0', margin: 0 }}>
+                  Editando: {plano.name}
+                </h2>
+                <button onClick={() => setEditando(null)} style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', fontSize: '20px' }}>✕</button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#666', marginBottom: '6px' }}>Nome</label>
+                  <input
+                    value={editando.name}
+                    onChange={e => setEditando({ ...editando, name: e.target.value })}
+                    style={{ width: '100%', background: '#0D0D0D', border: '1px solid #333', borderRadius: '8px', padding: '10px 12px', color: '#F0F0F0', fontSize: '14px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#666', marginBottom: '6px' }}>Preço anual (R$)</label>
+                  <input
+                    type="number"
+                    value={editando.price_yearly}
+                    onChange={e => setEditando({ ...editando, price_yearly: Number(e.target.value) })}
+                    style={{ width: '100%', background: '#0D0D0D', border: '1px solid #333', borderRadius: '8px', padding: '10px 12px', color: '#F0F0F0', fontSize: '14px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#666', marginBottom: '6px' }}>Máx. cursos</label>
+                  <input
+                    type="number"
+                    value={editando.max_courses}
+                    onChange={e => setEditando({ ...editando, max_courses: Number(e.target.value) })}
+                    style={{ width: '100%', background: '#0D0D0D', border: '1px solid #333', borderRadius: '8px', padding: '10px 12px', color: '#F0F0F0', fontSize: '14px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#666', marginBottom: '6px' }}>Máx. alunos</label>
+                  <input
+                    type="number"
+                    value={editando.max_students}
+                    onChange={e => setEditando({ ...editando, max_students: Number(e.target.value) })}
+                    style={{ width: '100%', background: '#0D0D0D', border: '1px solid #333', borderRadius: '8px', padding: '10px 12px', color: '#F0F0F0', fontSize: '14px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#666', marginBottom: '6px' }}>Storage (GB)</label>
+                  <input
+                    type="number"
+                    value={editando.max_storage_gb}
+                    onChange={e => setEditando({ ...editando, max_storage_gb: Number(e.target.value) })}
+                    style={{ width: '100%', background: '#0D0D0D', border: '1px solid #333', borderRadius: '8px', padding: '10px 12px', color: '#F0F0F0', fontSize: '14px' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#888', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={editando.has_certificate} onChange={e => setEditando({ ...editando, has_certificate: e.target.checked })} />
+                  Certificados
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#888', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={editando.has_custom_domain} onChange={e => setEditando({ ...editando, has_custom_domain: e.target.checked })} />
+                  Domínio próprio
+                </label>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => salvarPlano(editando)}
+                  disabled={salvando === editando.id}
+                  style={{ padding: '10px 24px', background: '#AEEA00', color: '#0D0D0D', fontWeight: '800', fontSize: '14px', border: 'none', borderRadius: '10px', cursor: 'pointer' }}
+                >
+                  {salvando === editando.id ? 'Salvando...' : 'Salvar'}
+                </button>
+                <button
+                  onClick={() => setEditando(null)}
+                  style={{ padding: '10px 24px', background: 'transparent', color: '#666', fontWeight: '600', fontSize: '14px', border: '1px solid #333', borderRadius: '10px', cursor: 'pointer' }}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            // Modo visualização
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
+                <div style={{ minWidth: '120px' }}>
+                  <div style={{ fontSize: '16px', fontWeight: 700, color: '#F0F0F0', marginBottom: '2px' }}>{plano.name}</div>
+                  <div style={{ fontSize: '11px', color: '#444' }}>slug: {plano.slug}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '22px', fontWeight: 900, color: '#F0F0F0' }}>
+                    {plano.slug === 'enterprise' ? 'Sob consulta' : plano.price_yearly === 0 ? 'Grátis' : `R$ ${Number(plano.price_yearly).toLocaleString('pt-BR')}`}
+                  </div>
+                  {plano.price_yearly > 0 && plano.slug !== 'enterprise' && <div style={{ fontSize: '11px', color: '#555' }}>= R$ {Math.round(plano.price_yearly / 12)}/mês</div>}
+                </div>
+                <div style={{ display: 'flex', gap: '20px' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#F0F0F0' }}>{plano.max_courses}</div>
+                    <div style={{ fontSize: '11px', color: '#555' }}>cursos</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#F0F0F0' }}>{Number(plano.max_students).toLocaleString('pt-BR')}</div>
+                    <div style={{ fontSize: '11px', color: '#555' }}>alunos</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#F0F0F0' }}>{plano.max_storage_gb}GB</div>
+                    <div style={{ fontSize: '11px', color: '#555' }}>storage</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  {plano.has_certificate && <span style={{ fontSize: '11px', background: '#1a2200', color: '#AEEA00', padding: '3px 8px', borderRadius: '6px' }}>Certificados</span>}
+                  {plano.has_custom_domain && <span style={{ fontSize: '11px', background: '#1a2200', color: '#AEEA00', padding: '3px 8px', borderRadius: '6px' }}>Domínio próprio</span>}
+                  {!plano.is_active && <span style={{ fontSize: '11px', background: '#2a0000', color: '#f87171', padding: '3px 8px', borderRadius: '6px' }}>Inativo</span>}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  onClick={() => toggleAtivo(plano)}
+                  style={{ padding: '8px 16px', background: 'transparent', border: `1px solid ${plano.is_active ? '#333' : '#AEEA00'}`, color: plano.is_active ? '#555' : '#AEEA00', fontSize: '12px', fontWeight: 600, borderRadius: '8px', cursor: 'pointer' }}
+                >
+                  {plano.is_active ? 'Desativar' : 'Ativar'}
+                </button>
+                <button
+                  onClick={() => setEditando(plano)}
+                  style={{ padding: '8px 16px', background: '#AEEA00', color: '#0D0D0D', fontSize: '12px', fontWeight: 800, borderRadius: '8px', border: 'none', cursor: 'pointer' }}
+                >
+                  Editar
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   )
 }

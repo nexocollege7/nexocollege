@@ -1,10 +1,35 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 export default function LandingPage() {
   const typedRef = useRef<HTMLSpanElement>(null)
+  const [precos, setPrecos] = useState<Record<string, number>>({
+    starter: 0,
+    creator: 597,
+    pro: 1197,
+    scale: 2497,
+  })
+
+  useEffect(() => {
+    async function carregarPrecos() {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('plans')
+        .select('slug, price_yearly')
+        .in('slug', ['starter', 'creator', 'pro', 'scale'])
+        .eq('is_active', true)
+
+      if (data) {
+        const novosPrecos: Record<string, number> = {}
+        data.forEach(p => { novosPrecos[p.slug] = Number(p.price_yearly) })
+        setPrecos(prev => ({ ...prev, ...novosPrecos }))
+      }
+    }
+    carregarPrecos()
+  }, [])
 
   useEffect(() => {
     const words = ['conhecimento.', 'propósito.', 'experiência.', 'missão.']
@@ -345,7 +370,7 @@ export default function LandingPage() {
           {/* Creator */}
           <div className="plan-card">
             <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: '12px', color: '#666' }}>Creator</div>
-            <div style={{ fontSize: '42px', fontWeight: 900, color: '#F0F0F0', marginBottom: '6px' }}>R$ 597<span style={{ fontSize: '17px', color: '#555', fontWeight: 400 }}>/ano</span></div>
+            <div style={{ fontSize: '42px', fontWeight: 900, color: '#F0F0F0', marginBottom: '6px' }}>R$ {precos.creator.toLocaleString('pt-BR')}<span style={{ fontSize: '17px', color: '#555', fontWeight: 400 }}>/ano</span></div>
             <div style={{ color: '#444', fontSize: '13px', marginBottom: '4px' }}>Cobrado anualmente</div>
             <div style={{ color: '#333', fontSize: '11px', marginBottom: '30px' }}>Parcelamento em até 12x sujeito a juros</div>
             {['Até 5 cursos', 'Até 200 alunos', 'Vitrine personalizada', 'Certificados automáticos'].map(i => (
@@ -360,7 +385,7 @@ export default function LandingPage() {
           <div className="plan-card plan-card-destaque">
             <div style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: cor, color: '#0D0D0D', fontSize: '11px', fontWeight: 900, padding: '4px 18px', borderRadius: '100px', whiteSpace: 'nowrap', letterSpacing: '0.07em' }}>⭐ MAIS VENDIDO</div>
             <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: '12px', color: cor }}>Pro</div>
-            <div style={{ fontSize: '42px', fontWeight: 900, color: '#F0F0F0', marginBottom: '6px' }}>R$ 1.197<span style={{ fontSize: '17px', color: '#555', fontWeight: 400 }}>/ano</span></div>
+            <div style={{ fontSize: '42px', fontWeight: 900, color: '#F0F0F0', marginBottom: '6px' }}>R$ {precos.pro.toLocaleString('pt-BR')}<span style={{ fontSize: '17px', color: '#555', fontWeight: 400 }}>/ano</span></div>
             <div style={{ color: '#444', fontSize: '13px', marginBottom: '4px' }}>Cobrado anualmente</div>
             <div style={{ color: '#333', fontSize: '11px', marginBottom: '30px' }}>Parcelamento em até 12x sujeito a juros</div>
             {['Até 15 cursos', 'Até 500 alunos', 'Vitrine personalizada', 'Certificados automáticos', 'Gateway próprio MP', 'Suporte prioritário'].map(i => (
@@ -374,7 +399,7 @@ export default function LandingPage() {
           {/* Scale */}
           <div className="plan-card">
             <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: '12px', color: '#666' }}>Scale</div>
-            <div style={{ fontSize: '42px', fontWeight: 900, color: '#F0F0F0', marginBottom: '6px' }}>R$ 2.497<span style={{ fontSize: '17px', color: '#555', fontWeight: 400 }}>/ano</span></div>
+            <div style={{ fontSize: '42px', fontWeight: 900, color: '#F0F0F0', marginBottom: '6px' }}>R$ {precos.scale.toLocaleString('pt-BR')}<span style={{ fontSize: '17px', color: '#555', fontWeight: 400 }}>/ano</span></div>
             <div style={{ color: '#444', fontSize: '13px', marginBottom: '4px' }}>Cobrado anualmente</div>
             <div style={{ color: '#333', fontSize: '11px', marginBottom: '30px' }}>Parcelamento em até 12x sujeito a juros</div>
             {['Até 50 cursos', 'Até 2.000 alunos', 'Vitrine personalizada', 'Certificados automáticos', 'Gateway próprio MP', 'Domínio próprio', 'Suporte VIP'].map(i => (
