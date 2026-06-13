@@ -11,7 +11,7 @@ export default function LoginEscolaPage() {
   const slug = params.slug as string
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirect = searchParams.get('redirect') || 'https://nexocollege.com.br/dashboard/meus-cursos'
+  const redirect = searchParams.get('redirect') || `/vitrine/${slug}`
   const supabase = createClient()
 
   const [school, setSchool] = useState<any>(null)

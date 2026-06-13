@@ -145,6 +145,28 @@ export default function AprenderPage() {
             {aulasConcluidas}/{totalAulas} aulas — {progresso}%
           </span>
         </div>
+
+        {/* Curso concluído */}
+        {progresso === 100 && (
+          <div style={{
+            margin: '0 24px 16px',
+            padding: '16px 20px',
+            backgroundColor: '#1A2E00',
+            border: '1px solid #AEEA00',
+            borderRadius: '12px',
+            display: 'flex', alignItems: 'center', gap: '12px',
+          }}>
+            <span style={{ fontSize: '28px' }}>🎉</span>
+            <div>
+              <p style={{ color: '#AEEA00', fontWeight: '700', fontSize: '15px', margin: 0 }}>
+                Curso concluído!
+              </p>
+              <p style={{ color: '#888888', fontSize: '13px', margin: '2px 0 0' }}>
+                Parabéns! Acesse a aba Certificados para baixar seu certificado.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
 
