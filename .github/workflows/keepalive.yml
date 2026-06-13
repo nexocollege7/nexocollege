@@ -2,7 +2,7 @@ name: Supabase Keep-Alive
 
 on:
   schedule:
-    - cron: '0 10 */3 * *'  # A cada 3 dias às 10h UTC
+    - cron: '0 */4 * * *'  # A cada 4 horas
   workflow_dispatch:         # Permite rodar manualmente
 
 jobs:
@@ -11,8 +11,13 @@ jobs:
     steps:
       - name: Ping Supabase
         run: |
-          curl -s -o /dev/null -w "%{http_code}" \
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}/rest/v1/schools?select=id&limit=1" \
             -H "apikey: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}"
-          echo " — Supabase keep-alive ping enviado"
+            -H "Authorization: Bearer ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}")
+          echo "Status: $STATUS — Supabase keep-alive ping enviado"
+          if [ "$STATUS" != "200" ]; then
+            echo "⚠️ Ping retornou status $STATUS"
+            exit 1
+          fi
+          echo "✅ Supabase respondeu corretamente"
