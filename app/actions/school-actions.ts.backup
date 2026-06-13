@@ -81,27 +81,15 @@ export async function createSchool(formData: {
 
   const adminClient = createAdminClient()
 
-  // 1. Cria a escola com owner_id preenchido
-  const { data: school, error } = await adminClient
+  const { error } = await adminClient
     .from('schools')
     .insert({
       name: formData.name,
       description: formData.description,
       slug: `${slug}-${Date.now()}`,
-      owner_id: user.id,
     })
-    .select('id')
-    .single()
 
   if (error) return { error: error.message }
-
-  // 2. Atualiza o school_id no perfil do usuário
-  const { error: profileError } = await adminClient
-    .from('users')
-    .update({ school_id: school.id })
-    .eq('id', user.id)
-
-  if (profileError) return { error: profileError.message }
 
   revalidatePath('/dashboard/escola')
   return { success: true }
