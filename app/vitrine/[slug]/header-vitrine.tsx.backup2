@@ -139,7 +139,7 @@ export default function HeaderVitrine({ slug, cor, nomeEscola }: Props) {
           )}
         </div>
       ) : (
-        <Link href={`/vitrine/${slug}/login`} style={{
+        <Link href={typeof window !== 'undefined' && window.location.hostname.includes('.nexocollege.com.br') ? '/login' : `/vitrine/${slug}/login`} style={{
           padding: '8px 20px', borderRadius: '8px',
           backgroundColor: cor, color: '#0D0D0D',
           fontWeight: '700', fontSize: '14px', textDecoration: 'none',
