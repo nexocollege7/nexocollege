@@ -23,6 +23,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.rewrite(rewriteUrl)
   }
 
+  // Rotas de API nunca devem ser interceptadas pelo middleware
+  if (url.pathname.startsWith('/api/')) {
+    return NextResponse.next()
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
