@@ -96,13 +96,14 @@ export async function POST(req: NextRequest) {
     if (createError) return NextResponse.json({ error: createError.message }, { status: 500 })
     collaboratorUserId = newUser.user.id
 
-    // Criar perfil em public.users
-    await adminClient.from('users').upsert({
+    // Criar perfil
+    await adminClient.from('profiles').upsert({
       id: collaboratorUserId,
       name,
+      email,
       role: 'collaborator',
       school_id: school.id,
-    }, { onConflict: 'id' })
+    })
   }
 
   // Verificar se já é colaborador desta escola
