@@ -14,6 +14,7 @@ const menuItems = [
   { href: '/dashboard/mensagens', label: 'Mensagens', icon: '💬' },
   { href: '/dashboard/certificados', label: 'Certificados', icon: '🏆' },
   { href: '/dashboard/vitrine', label: 'Vitrine', icon: '🌐' },
+  { href: '/dashboard/upgrade', label: 'Upgrade', icon: '⚡' },
 ]
 
 export function Sidebar({ onClose }: { onClose?: () => void } = {}) {
