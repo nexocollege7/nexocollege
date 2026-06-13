@@ -2,14 +2,23 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 
 function gerarSlug(nome: string): string {
-  return nome
+  // Normalizar: remover acentos e caracteres especiais
+  const palavras = nome
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/[^a-z0-9\s]/g, '')
     .trim()
-    .replace(/\s+/g, '-')
-    + '-' + Date.now()
+    .split(/\s+/)
+
+  // Juntar palavras até o limite de 20 caracteres (palavra completa)
+  let slug = ''
+  for (const palavra of palavras) {
+    if ((slug + palavra).length > 20) break
+    slug += palavra
+  }
+
+  return slug || palavras[0].slice(0, 20)
 }
 
 export async function POST(request: Request) {
@@ -45,7 +54,21 @@ export async function POST(request: Request) {
     }
 
     const userId = authData.user.id
-    const slug = gerarSlug(nomeEscola)
+    const slugBase = gerarSlug(nomeEscola)
+
+    // Garantir slug único
+    let slug = slugBase
+    let tentativa = 1
+    while (true) {
+      const { data: existente } = await adminClient
+        .from('schools')
+        .select('id')
+        .eq('slug', slug)
+        .single()
+      if (!existente) break
+      slug = slugBase + tentativa
+      tentativa++
+    }
 
     const { data: escola, error: escolaError } = await adminClient
       .from('schools')
