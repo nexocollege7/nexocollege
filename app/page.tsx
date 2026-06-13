@@ -339,7 +339,7 @@ export default function LandingPage() {
                 <span style={{ color: cor, fontWeight: 900 }}>✓</span> {i}
               </div>
             ))}
-            <Link href="/cadastro" className="plan-btn-outline">Começar grátis</Link>
+            <Link href="/cadastro?plano=starter" className="plan-btn-outline">Começar grátis</Link>
           </div>
 
           {/* Creator */}
@@ -353,7 +353,7 @@ export default function LandingPage() {
                 <span style={{ color: cor, fontWeight: 900 }}>✓</span> {i}
               </div>
             ))}
-            <Link href="/cadastro" className="plan-btn-outline">Assinar Creator</Link>
+            <Link href="/cadastro?plano=creator" className="plan-btn-outline">Assinar Creator</Link>
           </div>
 
           {/* Pro — Destaque */}
@@ -368,7 +368,7 @@ export default function LandingPage() {
                 <span style={{ color: cor, fontWeight: 900 }}>✓</span> {i}
               </div>
             ))}
-            <Link href="/cadastro" className="plan-btn-green">Assinar Pro</Link>
+            <Link href="/cadastro?plano=pro" className="plan-btn-green">Assinar Pro</Link>
           </div>
 
           {/* Scale */}
@@ -382,7 +382,7 @@ export default function LandingPage() {
                 <span style={{ color: cor, fontWeight: 900 }}>✓</span> {i}
               </div>
             ))}
-            <Link href="/cadastro" className="plan-btn-outline">Assinar Scale</Link>
+            <Link href="/cadastro?plano=scale" className="plan-btn-outline">Assinar Scale</Link>
           </div>
 
         </div>

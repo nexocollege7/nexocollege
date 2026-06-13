@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 const TERMOS_DE_USO = `TERMOS DE USO — NEXOCOLLEGE
 Última atualização: junho de 2026
@@ -193,6 +193,8 @@ export default function CadastroPage() {
   const [loading, setLoading] = useState(false)
   const [modalAberto, setModalAberto] = useState<'termos' | 'privacidade' | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const planoParam = searchParams.get('plano')
   const supabase = createClient()
 
   async function handleCadastro() {
@@ -239,6 +241,24 @@ export default function CadastroPage() {
       return
     }
 
+    // Se veio com plano pago, ir para checkout
+    const planosPagos = ['creator', 'pro', 'scale']
+    if (planoParam && planosPagos.includes(planoParam)) {
+      try {
+        const res = await fetch('/api/criar-preferencia-upgrade', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plano: planoParam }),
+        })
+        const data = await res.json()
+        if (data.url) {
+          window.location.href = data.url
+          return
+        }
+      } catch {
+        // Se falhar o checkout, vai para o dashboard normalmente
+      }
+    }
     router.push('/dashboard')
   }
 

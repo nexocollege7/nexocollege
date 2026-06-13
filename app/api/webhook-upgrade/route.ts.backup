@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { MercadoPagoConfig, Payment } from 'mercadopago'
 import { createClient } from '@supabase/supabase-js'
 
-const PLANOS_VALIDOS = ['starter', 'creator', 'pro', 'scale', 'enterprise']
-
 const adminClient = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -13,6 +11,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
+    // MP envia type=payment quando um pagamento é processado
     if (body.type !== 'payment') {
       return NextResponse.json({ ok: true })
     }
@@ -39,7 +38,7 @@ export async function POST(request: NextRequest) {
     const schoolId = parts[1]
     const plano = parts[2]
 
-    if (!schoolId || !PLANOS_VALIDOS.includes(plano)) {
+    if (!schoolId || !['pro', 'enterprise'].includes(plano)) {
       return NextResponse.json({ error: 'Referência inválida' }, { status: 400 })
     }
 
