@@ -25,7 +25,10 @@ type PlanoInfo = {
 }
 
 function getLimitePorPlano(plan: string): number {
-  if (plan === 'pro') return 10
+  if (plan === 'starter') return 1
+  if (plan === 'creator') return 5
+  if (plan === 'pro') return 15
+  if (plan === 'scale') return 50
   if (plan === 'enterprise') return Infinity
   return 1
 }
