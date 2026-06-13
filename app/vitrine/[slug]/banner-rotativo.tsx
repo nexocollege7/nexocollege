@@ -108,7 +108,7 @@ export default function BannerRotativo({ courses, slug, cor }: Props) {
           </p>
         )}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <Link href={`/vitrine/${slug}/${destaque.slug}`} style={{
+          <Link href={`https://nexocollege.com.br/vitrine/${slug}/${destaque.slug}`} style={{
             padding: '14px 32px', borderRadius: '8px',
             backgroundColor: cor, color: '#0D0D0D',
             fontWeight: '800', fontSize: '15px',

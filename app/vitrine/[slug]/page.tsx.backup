@@ -63,7 +63,7 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
             gap: '20px',
           }}>
             {courses.map((course) => (
-              <Link key={course.id} href={`https://nexocollege.com.br/vitrine/${slug}/${course.slug}`} className="curso-card">
+              <Link key={course.id} href={`/vitrine/${slug}/${course.slug}`} className="curso-card">
                 <div style={{
                   height: '160px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
