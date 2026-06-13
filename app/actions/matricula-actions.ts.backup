@@ -96,27 +96,3 @@ export async function revokeEnrollment(enrollmentId: string) {
   revalidatePath('/dashboard/alunos')
   return { success: true }
 }
-
-export async function getSchoolStudents() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return []
-
-  const { data: profile } = await supabase
-    .from('users')
-    .select('school_id')
-    .eq('id', user.id)
-    .single()
-
-  const schoolId = profile?.school_id
-  if (!schoolId) return []
-
-  const { data } = await supabase
-    .from('users')
-    .select('id, full_name, role, created_at')
-    .eq('school_id', schoolId)
-    .eq('role', 'student')
-    .order('created_at', { ascending: false })
-
-  return data || []
-}

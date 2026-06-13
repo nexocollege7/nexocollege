@@ -1,13 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getEnrollments, getSchoolStudents, revokeEnrollment, enrollStudentByEmail } from '@/app/actions/matricula-actions'
+import { getEnrollments, revokeEnrollment, enrollStudentByEmail } from '@/app/actions/matricula-actions'
 import { getMyCourses } from '@/app/actions/course-actions'
-import { Users, UserPlus, X, GraduationCap } from 'lucide-react'
+import { Users, UserPlus, X } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function AlunosPage() {
-  const [students, setStudents] = useState<any[]>([])
   const [enrollments, setEnrollments] = useState<any[]>([])
   const [courses, setCourses] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -17,8 +16,7 @@ export default function AlunosPage() {
   const [courseId, setCourseId] = useState('')
 
   async function load() {
-    const [s, e, c] = await Promise.all([getSchoolStudents(), getEnrollments(), getMyCourses()])
-    setStudents(s)
+    const [e, c] = await Promise.all([getEnrollments(), getMyCourses()])
     setEnrollments(e)
     setCourses(c)
     if (c.length > 0 && !courseId) setCourseId(c[0].id)
@@ -33,9 +31,9 @@ export default function AlunosPage() {
     setMessage('')
     const result = await enrollStudentByEmail(email, courseId)
     if (result?.error) {
-      setMessage('Erro: ' + result.error)
+      setMessage(`Erro: ${result.error}`)
     } else {
-      setMessage('Aluno inscrito no curso com sucesso!')
+      setMessage('✅ Aluno matriculado com sucesso!')
       setEmail('')
       load()
     }
@@ -48,10 +46,6 @@ export default function AlunosPage() {
     load()
   }
 
-  function getEnrollmentsForStudent(studentId: string) {
-    return enrollments.filter(e => e.student_id === studentId && e.status === 'active')
-  }
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -60,58 +54,22 @@ export default function AlunosPage() {
     )
   }
 
-  const activeEnrollments = enrollments.filter(e => e.status === 'active')
-  const canceledEnrollments = enrollments.filter(e => e.status === 'canceled')
+  const active = enrollments.filter(e => e.status === 'active')
+  const canceled = enrollments.filter(e => e.status === 'canceled')
 
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
         <h1 className="text-2xl font-bold text-white">Alunos</h1>
-        <p className="text-gray-400 mt-1">{students.length} aluno{students.length !== 1 ? 's' : ''} cadastrado{students.length !== 1 ? 's' : ''} na escola</p>
+        <p className="text-gray-400 mt-1">{active.length} aluno{active.length !== 1 ? 's' : ''} ativo{active.length !== 1 ? 's' : ''}</p>
       </div>
 
-      {/* Alunos cadastrados na escola */}
-      <Card className="bg-gray-800 border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-white text-base flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            Alunos da Escola ({students.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {students.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center py-6">Nenhum aluno cadastrado ainda</p>
-          ) : (
-            <div className="space-y-2">
-              {students.map((student) => {
-                const inscricoes = getEnrollmentsForStudent(student.id)
-                return (
-                  <div key={student.id} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
-                    <div>
-                      <p className="text-white text-sm font-medium">{student.full_name || 'Sem nome'}</p>
-                      <p className="text-gray-400 text-xs mt-0.5">
-                        {inscricoes.length === 0
-                          ? 'Nenhum curso ainda'
-                          : inscricoes.map((e: any) => e.courses?.title).join(', ')}
-                      </p>
-                    </div>
-                    <span className="text-xs text-green-400 bg-green-900/30 px-2 py-1 rounded-full">
-                      {inscricoes.length} curso{inscricoes.length !== 1 ? 's' : ''}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Inscrever aluno em curso */}
+      {/* Matricular novo aluno */}
       <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
           <CardTitle className="text-white text-base flex items-center gap-2">
             <UserPlus className="w-4 h-4" />
-            Inscrever Aluno em Curso
+            Matricular Aluno
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -137,38 +95,41 @@ export default function AlunosPage() {
               disabled={saving}
               className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
             >
-              {saving ? 'Inscrevendo...' : 'Inscrever'}
+              {saving ? 'Matriculando...' : 'Matricular'}
             </button>
           </div>
           {message && (
-            <p className={'text-sm ' + (message.startsWith('Erro') ? 'text-red-400' : 'text-green-400')}>
+            <p className={`text-sm ${message.startsWith('Erro') ? 'text-red-400' : 'text-green-400'}`}>
               {message}
             </p>
           )}
         </CardContent>
       </Card>
 
-      {/* Inscrições ativas */}
+      {/* Lista de matrículas ativas */}
       <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
           <CardTitle className="text-white text-base flex items-center gap-2">
-            <GraduationCap className="w-4 h-4" />
-            Inscrições em Cursos ({activeEnrollments.length})
+            <Users className="w-4 h-4" />
+            Matrículas Ativas ({active.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {activeEnrollments.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center py-6">Nenhuma inscrição em curso ainda</p>
+          {active.length === 0 ? (
+            <p className="text-gray-500 text-sm text-center py-6">Nenhum aluno matriculado ainda</p>
           ) : (
             <div className="space-y-2">
-              {activeEnrollments.map((enrollment) => (
-                <div key={enrollment.id} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+              {active.map((enrollment) => (
+                <div
+                  key={enrollment.id}
+                  className="flex items-center justify-between p-3 bg-gray-700 rounded-lg"
+                >
                   <div>
                     <p className="text-white text-sm font-medium">
                       {enrollment.users?.full_name || 'Sem nome'}
                     </p>
                     <p className="text-gray-400 text-xs mt-0.5">
-                      {enrollment.courses?.title} · inscrito em {new Date(enrollment.enrolled_at).toLocaleDateString('pt-BR')}
+                      {enrollment.courses?.title} · matriculado em {new Date(enrollment.enrolled_at).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
                   <button
@@ -185,18 +146,21 @@ export default function AlunosPage() {
         </CardContent>
       </Card>
 
-      {/* Inscrições canceladas */}
-      {canceledEnrollments.length > 0 && (
+      {/* Matrículas canceladas */}
+      {canceled.length > 0 && (
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
             <CardTitle className="text-white text-base text-gray-500">
-              Inscrições Canceladas ({canceledEnrollments.length})
+              Matrículas Canceladas ({canceled.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {canceledEnrollments.map((enrollment) => (
-                <div key={enrollment.id} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg opacity-50">
+              {canceled.map((enrollment) => (
+                <div
+                  key={enrollment.id}
+                  className="flex items-center justify-between p-3 bg-gray-700 rounded-lg opacity-50"
+                >
                   <div>
                     <p className="text-white text-sm font-medium">
                       {enrollment.users?.full_name || 'Sem nome'}
