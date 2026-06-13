@@ -50,6 +50,54 @@ export default function LandingPage() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const section = entry.target
+          const cards = section.querySelectorAll('.plan-card')
+          cards.forEach((card, i) => {
+            const el = card as HTMLElement
+            setTimeout(() => {
+              el.style.opacity = '1'
+              el.style.transform = 'translateY(0) scale(1)'
+            }, i * 120)
+          })
+          const featureCards = section.querySelectorAll('.feature-card')
+          featureCards.forEach((card, i) => {
+            const el = card as HTMLElement
+            setTimeout(() => {
+              el.style.opacity = '1'
+              el.style.transform = 'translateY(0) scale(1)'
+            }, i * 100)
+          })
+          observer.unobserve(section)
+        }
+      })
+    }, { threshold: 0.05 })
+
+    // Preparar cards com estado inicial invisível
+    document.querySelectorAll('.plan-card').forEach(el => {
+      const element = el as HTMLElement
+      element.style.opacity = '0'
+      element.style.transform = 'translateY(48px) scale(0.96)'
+      element.style.transition = 'opacity 0.55s cubic-bezier(0.22,1,0.36,1), transform 0.55s cubic-bezier(0.22,1,0.36,1)'
+    })
+    document.querySelectorAll('.feature-card').forEach(el => {
+      const element = el as HTMLElement
+      element.style.opacity = '0'
+      element.style.transform = 'translateY(40px) scale(0.97)'
+      element.style.transition = 'opacity 0.5s cubic-bezier(0.22,1,0.36,1), transform 0.5s cubic-bezier(0.22,1,0.36,1)'
+    })
+
+    // Observar as seções pai
+    document.querySelectorAll('#planos, #funcionalidades').forEach(section => {
+      observer.observe(section)
+    })
+
+    return () => observer.disconnect()
+  }, [])
+
   const cor = '#AEEA00'
 
   return (
@@ -68,7 +116,7 @@ export default function LandingPage() {
         .feature-card:hover { border-color: rgba(174,234,0,0.5); transform: translateY(-6px); }
         .step-card { display: flex; gap: 24px; align-items: flex-start; background: #141414; border: 1px solid #222; border-radius: 18px; padding: 28px; margin-bottom: 16px; transition: border-color 0.25s, transform 0.25s; }
         .step-card:hover { border-color: rgba(174,234,0,0.3); transform: translateX(5px); }
-        .plan-card { background: #141414; border: 1px solid #222; border-radius: 22px; padding: 36px; flex: 1; min-width: 260px; max-width: 320px; position: relative; transition: transform 0.25s; }
+        .plan-card { background: #141414; border: 1px solid #222; border-radius: 22px; padding: 32px 28px; flex: 1; min-width: 0; max-width: none; position: relative; transition: transform 0.25s; }
         .plan-card:hover { transform: translateY(-6px); }
         .plan-card-destaque { border-color: #AEEA00 !important; background: linear-gradient(145deg, #141414, #181f00) !important; }
         .plan-btn-green { display: block; text-align: center; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 15px; background: #AEEA00; color: #0D0D0D; border: none; cursor: pointer; text-decoration: none; transition: opacity 0.2s; margin-top: 26px; }
@@ -100,6 +148,10 @@ export default function LandingPage() {
           .stats-grid { grid-template-columns: 1fr 1fr !important; }
           .plans-grid { flex-direction: column !important; align-items: stretch !important; padding: 0 4px !important; }
           .plan-card { max-width: 100% !important; width: 100% !important; min-width: unset !important; }
+        }
+        @media (min-width: 601px) and (max-width: 1024px) {
+          .plans-grid { flex-wrap: wrap !important; gap: 16px !important; justify-content: center !important; }
+          .plan-card { min-width: 260px !important; max-width: calc(50% - 16px) !important; flex: 0 1 calc(50% - 16px) !important; }
           .section-pad { padding: 60px 20px !important; }
           .hero-pad { padding: 100px 20px 70px !important; }
           .parallax-content { padding: 0 20px !important; }
@@ -265,54 +317,97 @@ export default function LandingPage() {
       <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, rgba(174,234,0,0.25), transparent)', maxWidth: '600px', margin: '0 auto' }} />
 
       {/* PLANOS */}
-      <section id="planos" className="section-pad" style={{ padding: '100px 48px', maxWidth: '1160px', margin: '0 auto' }}>
+      <section id="planos" className="section-pad" style={{ padding: '100px 48px', maxWidth: '1280px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '56px' }}>
           <h2 style={{ fontSize: '40px', fontWeight: 800, marginBottom: '16px', color: '#F0F0F0' }}>
             Comece grátis.{' '}<span style={{ color: cor }}>Cresça no seu ritmo.</span>
           </h2>
           <p style={{ color: '#666', fontSize: '18px' }}>Sem surpresas. Sem taxas escondidas.</p>
         </div>
-        <div className="plans-grid" style={{ display: 'flex', gap: '22px', justifyContent: 'center', flexWrap: 'wrap' }}>
+
+        {/* Linha 1 — 4 planos */}
+        <div className="plans-grid" style={{ display: 'flex', gap: '18px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '24px' }}>
+
+          {/* Starter */}
           <div className="plan-card">
             <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: '12px', color: '#666' }}>Starter</div>
-            <div style={{ fontSize: '48px', fontWeight: 900, color: cor, marginBottom: '6px' }}>R$ 0</div>
+            <div style={{ fontSize: '42px', fontWeight: 900, color: cor, marginBottom: '6px' }}>R$ 0</div>
             <div style={{ color: '#444', fontSize: '13px', marginBottom: '6px' }}>Para sempre</div>
             <div style={{ color: '#333', fontSize: '11px', marginBottom: '30px' }}>—</div>
-            {['1 curso', 'Alunos ilimitados', 'Vitrine personalizada', 'Certificados'].map(i => (
+            {['1 curso', 'Até 50 alunos', 'Vitrine personalizada'].map(i => (
               <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'center', fontSize: '14px', color: '#888', marginBottom: '10px' }}>
                 <span style={{ color: cor, fontWeight: 900 }}>✓</span> {i}
               </div>
             ))}
             <Link href="/cadastro" className="plan-btn-outline">Começar grátis</Link>
           </div>
-          <div className="plan-card plan-card-destaque">
-            <div style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: cor, color: '#0D0D0D', fontSize: '11px', fontWeight: 900, padding: '4px 18px', borderRadius: '100px', whiteSpace: 'nowrap', letterSpacing: '0.07em' }}>MAIS POPULAR</div>
-            <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: '12px', color: cor }}>Pro</div>
-            <div style={{ fontSize: '48px', fontWeight: 900, color: '#F0F0F0', marginBottom: '6px' }}>R$ 1.997<span style={{ fontSize: '17px', color: '#555', fontWeight: 400 }}>/ano</span></div>
+
+          {/* Creator */}
+          <div className="plan-card">
+            <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: '12px', color: '#666' }}>Creator</div>
+            <div style={{ fontSize: '42px', fontWeight: 900, color: '#F0F0F0', marginBottom: '6px' }}>R$ 597<span style={{ fontSize: '17px', color: '#555', fontWeight: 400 }}>/ano</span></div>
             <div style={{ color: '#444', fontSize: '13px', marginBottom: '4px' }}>Cobrado anualmente</div>
-            <div style={{ color: '#333', fontSize: '11px', marginBottom: '30px' }}>Parcelamento em até 12x sujeito a juros (Mercado Pago)</div>
-            {['Até 10 cursos', 'Alunos ilimitados', 'Vitrine personalizada', 'Certificados', 'Gateway próprio MP', 'Suporte prioritário'].map(i => (
+            <div style={{ color: '#333', fontSize: '11px', marginBottom: '30px' }}>Parcelamento em até 12x sujeito a juros</div>
+            {['Até 5 cursos', 'Até 200 alunos', 'Vitrine personalizada', 'Certificados automáticos'].map(i => (
+              <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'center', fontSize: '14px', color: '#888', marginBottom: '10px' }}>
+                <span style={{ color: cor, fontWeight: 900 }}>✓</span> {i}
+              </div>
+            ))}
+            <Link href="/cadastro" className="plan-btn-outline">Assinar Creator</Link>
+          </div>
+
+          {/* Pro — Destaque */}
+          <div className="plan-card plan-card-destaque">
+            <div style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: cor, color: '#0D0D0D', fontSize: '11px', fontWeight: 900, padding: '4px 18px', borderRadius: '100px', whiteSpace: 'nowrap', letterSpacing: '0.07em' }}>⭐ MAIS VENDIDO</div>
+            <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: '12px', color: cor }}>Pro</div>
+            <div style={{ fontSize: '42px', fontWeight: 900, color: '#F0F0F0', marginBottom: '6px' }}>R$ 1.197<span style={{ fontSize: '17px', color: '#555', fontWeight: 400 }}>/ano</span></div>
+            <div style={{ color: '#444', fontSize: '13px', marginBottom: '4px' }}>Cobrado anualmente</div>
+            <div style={{ color: '#333', fontSize: '11px', marginBottom: '30px' }}>Parcelamento em até 12x sujeito a juros</div>
+            {['Até 15 cursos', 'Até 500 alunos', 'Vitrine personalizada', 'Certificados automáticos', 'Gateway próprio MP', 'Suporte prioritário'].map(i => (
               <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'center', fontSize: '14px', color: '#888', marginBottom: '10px' }}>
                 <span style={{ color: cor, fontWeight: 900 }}>✓</span> {i}
               </div>
             ))}
             <Link href="/cadastro" className="plan-btn-green">Assinar Pro</Link>
           </div>
+
+          {/* Scale */}
           <div className="plan-card">
-            <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: '12px', color: '#666' }}>Enterprise</div>
-            <div style={{ fontSize: '48px', fontWeight: 900, color: '#F0F0F0', marginBottom: '6px' }}>R$ 4.997<span style={{ fontSize: '17px', color: '#555', fontWeight: 400 }}>/ano</span></div>
+            <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: '12px', color: '#666' }}>Scale</div>
+            <div style={{ fontSize: '42px', fontWeight: 900, color: '#F0F0F0', marginBottom: '6px' }}>R$ 2.497<span style={{ fontSize: '17px', color: '#555', fontWeight: 400 }}>/ano</span></div>
             <div style={{ color: '#444', fontSize: '13px', marginBottom: '4px' }}>Cobrado anualmente</div>
-            <div style={{ color: '#333', fontSize: '11px', marginBottom: '30px' }}>Parcelamento em até 12x sujeito a juros (Mercado Pago)</div>
-            {['Cursos ilimitados', 'Alunos ilimitados', 'Vitrine personalizada', 'Certificados', 'Gateway próprio MP', 'Suporte VIP'].map(i => (
+            <div style={{ color: '#333', fontSize: '11px', marginBottom: '30px' }}>Parcelamento em até 12x sujeito a juros</div>
+            {['Até 50 cursos', 'Até 2.000 alunos', 'Vitrine personalizada', 'Certificados automáticos', 'Gateway próprio MP', 'Domínio próprio', 'Suporte VIP'].map(i => (
               <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'center', fontSize: '14px', color: '#888', marginBottom: '10px' }}>
                 <span style={{ color: cor, fontWeight: 900 }}>✓</span> {i}
               </div>
             ))}
-            <Link href="/cadastro" className="plan-btn-outline">Assinar Enterprise</Link>
+            <Link href="/cadastro" className="plan-btn-outline">Assinar Scale</Link>
+          </div>
+
+        </div>
+
+        {/* Linha 2 — Enterprise em faixa */}
+        <div style={{ background: 'linear-gradient(135deg, #141414, #1a1f00)', border: '1px solid #2a3500', borderRadius: '22px', padding: '40px 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '32px' }}>
+          <div style={{ flex: 1, minWidth: '280px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: cor, marginBottom: '12px' }}>Enterprise</div>
+            <div style={{ fontSize: '32px', fontWeight: 900, color: '#F0F0F0', marginBottom: '8px' }}>Para grandes operações</div>
+            <div style={{ fontSize: '16px', color: '#666', marginBottom: '0' }}>Volume de alunos e cursos ilimitados. Suporte dedicado. Proposta sob medida.</div>
+          </div>
+          <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', flex: 1, minWidth: '280px' }}>
+            {['Cursos ilimitados', 'Alunos ilimitados', 'Domínio próprio', 'Gerente de conta dedicado', 'SLA garantido', 'Onboarding personalizado'].map(i => (
+              <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'center', fontSize: '14px', color: '#888' }}>
+                <span style={{ color: cor, fontWeight: 900 }}>✓</span> {i}
+              </div>
+            ))}
+          </div>
+          <div style={{ minWidth: '200px', textAlign: 'center' }}>
+            <div style={{ fontSize: '13px', color: '#555', marginBottom: '16px' }}>Preço sob consulta</div>
+            <a href="mailto:contato@nexocollege.com.br" className="plan-btn-green" style={{ display: 'inline-block', padding: '14px 32px', borderRadius: '12px', fontWeight: 700, fontSize: '15px', background: cor, color: '#0D0D0D', textDecoration: 'none' }}>Falar com equipe</a>
           </div>
         </div>
-      </section>
 
+      </section>
       {/* CTA FINAL */}
       <section className="section-pad" style={{ padding: '100px 48px', textAlign: 'center', background: 'linear-gradient(145deg, #0D0D0D, #111900)', borderTop: '1px solid #1e2800' }}>
         <h2 style={{ fontSize: '48px', fontWeight: 900, lineHeight: 1.2, marginBottom: '20px', color: '#F0F0F0' }}>
