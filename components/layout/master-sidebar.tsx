@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
