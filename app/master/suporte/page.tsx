@@ -63,7 +63,7 @@ export default function MasterSuportePage() {
     setTickets(data || [])
   }
 
-  async function loadMessages(ticketId) {
+  async function loadMessages(ticketId: string) {
     const { data } = await supabase
       .from('support_messages')
       .select('*')
@@ -72,7 +72,7 @@ export default function MasterSuportePage() {
     setMessages(data || [])
   }
 
-  async function updateStatus(ticketId, newStatus) {
+  async function updateStatus(ticketId: string, newStatus: string) {
     await supabase
       .from('support_tickets')
       .update({ status: newStatus })
@@ -98,7 +98,7 @@ export default function MasterSuportePage() {
     setSending(false)
   }
 
-  function timeAgo(date) {
+  function timeAgo(date: string) {
     const diff = Math.floor((Date.now() - new Date(date)) / 60000)
     if (diff < 1) return 'agora'
     if (diff < 60) return diff + 'min atrás'

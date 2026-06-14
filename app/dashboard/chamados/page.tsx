@@ -62,7 +62,7 @@ export default function ChamadosPage() {
     setLoading(false)
   }
 
-  async function loadTickets(sid) {
+  async function loadTickets(sid?: string) {
     const { data } = await supabase
       .from('support_tickets')
       .select('*, sender_id:support_messages(sender_id)')
@@ -72,7 +72,7 @@ export default function ChamadosPage() {
     setTickets(data || [])
   }
 
-  async function loadMessages(ticketId) {
+  async function loadMessages(ticketId: string) {
     const { data } = await supabase
       .from('support_messages')
       .select('*')
@@ -81,7 +81,7 @@ export default function ChamadosPage() {
     setMessages(data || [])
   }
 
-  async function updateStatus(ticketId, newStatus) {
+  async function updateStatus(ticketId: string, newStatus: string) {
     await supabase.from('support_tickets').update({ status: newStatus }).eq('id', ticketId)
     setSelectedTicket(prev => prev ? { ...prev, status: newStatus } : null)
     await loadTickets(schoolId)
@@ -104,7 +104,7 @@ export default function ChamadosPage() {
     setSending(false)
   }
 
-  function timeAgo(date) {
+  function timeAgo(date: string) {
     const diff = Math.floor((Date.now() - new Date(date)) / 60000)
     if (diff < 1) return 'agora'
     if (diff < 60) return diff + 'min atrás'
@@ -112,7 +112,7 @@ export default function ChamadosPage() {
     return Math.floor(diff/1440) + 'd atrás'
   }
 
-  function getStudentName(ticketId) {
+  function getStudentName(ticketId: string) {
     const msg = messages.find(m => m.sender_role === 'student')
     if (msg) return studentNames[msg.sender_id] || 'Aluno'
     return 'Aluno'
