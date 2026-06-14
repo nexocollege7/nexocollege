@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 const menuMaster = [
   { href: '/master', label: 'Dashboard', icon: '⊞' },
@@ -20,6 +21,22 @@ export function MasterSidebar() {
   const router = useRouter()
   const supabase = createClient()
   const [collapsed, setCollapsed] = useState(false)
+  const [pendentes, setPendentes] = useState(0)
+
+  useEffect(() => {
+    async function loadPendentes() {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('support_tickets')
+        .select('id')
+        .eq('ticket_type', 'escola_master')
+        .eq('status', 'aberto')
+      setPendentes(data?.length || 0)
+    }
+    loadPendentes()
+    const interval = setInterval(loadPendentes, 30000)
+    return () => clearInterval(interval)
+  }, [])
 
   async function handleSair() {
     await supabase.auth.signOut()
@@ -85,7 +102,14 @@ export function MasterSidebar() {
               borderLeft: collapsed ? '3px solid transparent' : (isActive ? '3px solid #AEEA00' : '3px solid transparent'),
               transition: 'all 0.15s ease',
             }}>
-              <span style={{ fontSize: '16px', flexShrink: 0 }}>{item.icon}</span>
+              <span style={{ fontSize: '16px', flexShrink: 0, position: 'relative' }}>
+                {item.icon}
+                {item.href === '/master/suporte' && pendentes > 0 && (
+                  <span style={{ position: 'absolute', top: '-4px', right: '-6px', backgroundColor: '#FF5555', color: '#fff', fontSize: '9px', fontWeight: '700', borderRadius: '10px', padding: '1px 4px', minWidth: '14px', textAlign: 'center', lineHeight: '14px' }}>
+                    {pendentes > 9 ? '9+' : pendentes}
+                  </span>
+                )}
+              </span>
               {!collapsed && item.label}
             </Link>
           )
