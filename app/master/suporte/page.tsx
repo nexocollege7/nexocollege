@@ -21,7 +21,7 @@ const COLUMNS = [
 export default function MasterSuportePage() {
   const supabase = createClient()
   const [tickets, setTickets] = useState([])
-  const [selectedTicket, setSelectedTicket] = useState(null)
+  const [selectedTicket, setSelectedTicket] = useState<any>(null)
   const [messages, setMessages] = useState([])
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(true)
