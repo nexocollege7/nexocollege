@@ -88,7 +88,7 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
       >
         {!collapsed && (
           <div>
-            <span style={{ fontSize: '18px', fontWeight: '800', color: corEscola, letterSpacing: '-0.5px', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: '18px', fontWeight: '800', color: corEscola, letterSpacing: '-0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '160px', display: 'block' }}>
               {escola ? escola.name : 'NexoCollege'}
             </span>
             <div style={{ fontSize: '11px', color: '#555555', marginTop: '2px', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
