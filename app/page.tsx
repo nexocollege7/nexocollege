@@ -548,7 +548,7 @@ export default function LandingPage() {
             <div className="cnote">
               <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>Sem cartão de crédito</span>
               <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>Pronto em minutos</span>
-              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>Plano gratuito para sempre</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>Comece gratuitamente</span>
             </div>
           </div>
         </div>
