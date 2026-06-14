@@ -19,12 +19,24 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
   const supabase = createClient()
   const [collapsed, setCollapsed] = useState(false)
   const [unread, setUnread] = useState(0)
+  const [ajudaPendente, setAjudaPendente] = useState(0)
   const [escola, setEscola] = useState<{ name: string, slug: string, primary_color: string } | null>(null)
 
   useEffect(() => {
     async function load() {
       const count = await getUnreadCount()
       setUnread(count)
+
+      // Buscar tickets de ajuda pendentes
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      if (currentUser) {
+        const { data: pendentes } = await supabase
+          .from('support_tickets')
+          .select('id')
+          .eq('ticket_type', 'aluno_escola')
+          .eq('status', 'em_andamento')
+        setAjudaPendente(pendentes?.length || 0)
+      }
 
       // Buscar escola do aluno
       const { data: { user } } = await supabase.auth.getUser()
@@ -119,6 +131,7 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
         {menuAluno.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
           const isMensagens = item.href === '/dashboard/mensagens'
+          const isAjuda = item.href === '/dashboard/ajuda'
           return (
             <Link key={item.href} href={item.href} title={collapsed ? item.label : undefined} style={{
               display: 'flex', alignItems: 'center', gap: '10px',
@@ -133,6 +146,11 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
             }}>
               <span style={{ fontSize: '16px', flexShrink: 0, position: 'relative' }}>
                 {item.icon}
+                {isAjuda && ajudaPendente > 0 && (
+                  <span style={{ position: 'absolute', top: '-4px', right: '-6px', backgroundColor: '#FF5555', color: '#fff', fontSize: '9px', fontWeight: '700', borderRadius: '10px', padding: '1px 4px', minWidth: '14px', textAlign: 'center', lineHeight: '14px' }}>
+                    {ajudaPendente > 9 ? '9+' : ajudaPendente}
+                  </span>
+                )}
                 {isMensagens && unread > 0 && (
                   <span style={{ position: 'absolute', top: '-4px', right: '-6px', backgroundColor: '#FF5555', color: '#fff', fontSize: '9px', fontWeight: '700', borderRadius: '10px', padding: '1px 4px', minWidth: '14px', textAlign: 'center', lineHeight: '14px' }}>
                     {unread > 9 ? '9+' : unread}
