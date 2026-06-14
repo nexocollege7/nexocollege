@@ -74,14 +74,19 @@ export function AdminLayout({ children, user, title }: AdminLayoutProps) {
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
               color: '#F0F0F0', fontSize: '22px', padding: '4px',
+              flexShrink: 0,
             }}
           >
             ☰
           </button>
-          <span style={{ fontSize: '16px', fontWeight: '700', color: '#AEEA00' }}>
+          <span style={{
+            fontSize: '14px', fontWeight: '700', color: '#AEEA00',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            flex: 1, textAlign: 'center', padding: '0 8px',
+          }}>
             Nexo<span style={{ color: '#F0F0F0' }}>College</span>
           </span>
-          <div style={{ width: '30px' }} />
+          <div style={{ width: '30px', flexShrink: 0 }} />
         </div>
 
         <Header user={user} title={title} />
