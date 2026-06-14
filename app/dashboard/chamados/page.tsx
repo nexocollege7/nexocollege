@@ -20,15 +20,15 @@ const COLUMNS = [
 
 export default function ChamadosPage() {
   const supabase = createClient()
-  const [tickets, setTickets] = useState([])
+  const [tickets, setTickets] = useState<any[]>([])
   const [selectedTicket, setSelectedTicket] = useState<any>(null)
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState<any[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
-  const [userId, setUserId] = useState(null)
-  const [schoolId, setSchoolId] = useState(null)
-  const [studentNames, setStudentNames] = useState({})
+  const [userId, setUserId] = useState<string | null>(null)
+  const [schoolId, setSchoolId] = useState<string | null>(null)
+  const [studentNames, setStudentNames] = useState<Record<string, string>>({})
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => { loadData() }, [])

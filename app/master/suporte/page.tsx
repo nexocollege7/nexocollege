@@ -20,14 +20,14 @@ const COLUMNS = [
 
 export default function MasterSuportePage() {
   const supabase = createClient()
-  const [tickets, setTickets] = useState([])
+  const [tickets, setTickets] = useState<any[]>([])
   const [selectedTicket, setSelectedTicket] = useState<any>(null)
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState<any[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
-  const [userId, setUserId] = useState(null)
-  const [schools, setSchools] = useState({})
+  const [userId, setUserId] = useState<string | null>(null)
+  const [schools, setSchools] = useState<Record<string, string>>({})
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => { loadData() }, [])

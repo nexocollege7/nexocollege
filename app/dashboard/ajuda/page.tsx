@@ -20,16 +20,16 @@ const STATUS = {
 
 export default function AjudaPage() {
   const supabase = createClient()
-  const [tickets, setTickets] = useState([])
+  const [tickets, setTickets] = useState<any[]>([])
   const [selectedTicket, setSelectedTicket] = useState<any>(null)
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState<any[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [showNewTicket, setShowNewTicket] = useState(false)
   const [form, setForm] = useState({ title: '', category: 'duvida_conteudo', firstMessage: '' })
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
-  const [userId, setUserId] = useState(null)
-  const [schoolId, setSchoolId] = useState(null)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [schoolId, setSchoolId] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => { loadUser() }, [])
