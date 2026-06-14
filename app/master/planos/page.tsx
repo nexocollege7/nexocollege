@@ -125,7 +125,7 @@ export default function PlanosPage() {
                   <input
                     type="number"
                     value={editando.price_yearly}
-                    onChange={e => setEditando({ ...editando, price_yearly: Number(e.target.value.replace(/\./g, '').replace(',', '.')) })}
+                    onChange={e => { const raw = e.target.value.replace(/[^0-9]/g, ''); setEditando({ ...editando, price_yearly: Number(raw) }) }}
                     style={{ width: '100%', background: '#0D0D0D', border: '1px solid #333', borderRadius: '8px', padding: '10px 12px', color: '#F0F0F0', fontSize: '14px' }}
                   />
                 </div>
