@@ -10,6 +10,7 @@ const menuAluno = [
   { href: '/dashboard/meus-cursos', label: 'Meus Cursos', icon: '📚' },
   { href: '/dashboard/certificados', label: 'Certificados', icon: '🏆' },
   { href: '/dashboard/mensagens', label: 'Mensagens', icon: '💬' },
+  { href: '/dashboard/ajuda', label: 'Ajuda', icon: '🆘' },
 ]
 
 export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
@@ -150,7 +151,7 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
 
         {/* Botao Vitrine */}
         {escola && (
-          <Link href={`https://${escola.slug}.nexocollege.com.br`} title={collapsed ? 'Ver Vitrine' : undefined} style={{
+          <a href={`https://${escola.slug}.nexocollege.com.br`} target="_blank" rel="noreferrer" title={collapsed ? 'Ver Vitrine' : undefined} style={{
             display: 'flex', alignItems: 'center', gap: '10px',
             padding: collapsed ? '10px' : '10px 12px',
             justifyContent: collapsed ? 'center' : 'flex-start',
@@ -162,7 +163,7 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
           }}>
             <span style={{ fontSize: '16px', flexShrink: 0 }}>🏫</span>
             {!collapsed && 'Vitrine'}
-          </Link>
+          </a>
         )}
       </nav>
 

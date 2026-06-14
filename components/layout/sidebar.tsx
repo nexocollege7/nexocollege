@@ -15,6 +15,8 @@ const menuItems = [
   { href: '/dashboard/certificados', label: 'Certificados', icon: '🏆' },
   { href: '/dashboard/vitrine', label: 'Vitrine', icon: '🌐' },
   { href: '/dashboard/upgrade', label: 'Upgrade', icon: '⚡' },
+  { href: '/dashboard/chamados', label: 'Chamados dos Alunos', icon: '🎫' },
+  { href: '/dashboard/suporte', label: 'Suporte', icon: '🆘' },
 ]
 
 const masterItems = [

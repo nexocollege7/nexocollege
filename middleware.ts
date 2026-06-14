@@ -7,6 +7,7 @@ const ROTAS_ALUNO = [
   '/dashboard/aprender',
   '/dashboard/certificados',
   '/dashboard/mensagens',
+  '/dashboard/ajuda',
 ]
 
 function alunoTemAcesso(pathname: string): boolean {
@@ -25,6 +26,11 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next()
     }
     const subdomain = host.replace('.nexocollege.com.br', '')
+    // Login no subdomínio → redireciona para www com parâmetro de escola
+    if (url.pathname.startsWith('/login')) {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+      return NextResponse.redirect(new URL('/login', appUrl))
+    }
     const rewriteUrl = url.clone()
     rewriteUrl.pathname = '/vitrine/' + subdomain + (url.pathname === '/' ? '' : url.pathname)
     return NextResponse.rewrite(rewriteUrl)
@@ -49,9 +55,10 @@ export async function middleware(request: NextRequest) {
             request.cookies.set(name, value)
           )
           supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set({ name, value, ...options })
+            supabaseResponse.cookies.set({ name, value, ...options })
+          })
         },
       },
     }

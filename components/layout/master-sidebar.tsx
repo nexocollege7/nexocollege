@@ -12,6 +12,7 @@ const menuMaster = [
   { href: '/master/financeiro', label: 'Financeiro', icon: '💰' },
   { href: '/master/planos', label: 'Planos', icon: '⭐' },
   { href: '/master/analise', label: 'Analise', icon: '📊' },
+  { href: '/master/suporte', label: 'Suporte', icon: '🎫' },
 ]
 
 export function MasterSidebar() {
