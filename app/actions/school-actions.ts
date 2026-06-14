@@ -107,7 +107,7 @@ export async function createSchool(formData: {
   return { success: true }
 }
 
-export async function saveMpToken(token: string) {
+export async function saveMpToken(token: string, publicKey?: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Nao autenticado' }
@@ -122,9 +122,12 @@ export async function saveMpToken(token: string) {
 
   if (!profile?.school_id) return { error: 'Escola nao encontrada' }
 
+  const updateData: any = { mp_access_token: token }
+  if (publicKey) updateData.mp_public_key = publicKey
+
   const { error } = await adminClient
     .from('schools')
-    .update({ mp_access_token: token })
+    .update(updateData)
     .eq('id', profile.school_id)
 
   if (error) return { error: error.message }
@@ -136,7 +139,7 @@ export async function saveMpToken(token: string) {
 export async function getMpTokenStatus() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { hasToken: false }
+  if (!user) return { hasToken: false, hasPublicKey: false }
 
   const adminClient = createAdminClient()
 
@@ -146,15 +149,18 @@ export async function getMpTokenStatus() {
     .eq('id', user.id)
     .single()
 
-  if (!profile?.school_id) return { hasToken: false }
+  if (!profile?.school_id) return { hasToken: false, hasPublicKey: false }
 
   const { data } = await adminClient
     .from('schools')
-    .select('mp_access_token')
+    .select('mp_access_token, mp_public_key')
     .eq('id', profile.school_id)
     .single()
 
-  return { hasToken: !!(data?.mp_access_token) }
+  return { 
+    hasToken: !!(data?.mp_access_token),
+    hasPublicKey: !!(data?.mp_public_key)
+  }
 }
 
 function getLimitePorPlano(plan: string): number {

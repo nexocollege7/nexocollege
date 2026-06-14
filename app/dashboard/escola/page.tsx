@@ -34,7 +34,9 @@ export default function EscolaPage() {
   const [primaryColor, setPrimaryColor] = useState('#22c55e')
 
   const [mpToken, setMpToken] = useState('')
+  const [mpPublicKey, setMpPublicKey] = useState('')
   const [hasToken, setHasToken] = useState(false)
+  const [hasPublicKey, setHasPublicKey] = useState(false)
   const [savingToken, setSavingToken] = useState(false)
   const [tokenMessage, setTokenMessage] = useState('')
 
@@ -78,6 +80,7 @@ export default function EscolaPage() {
         setOwnerPhone(data.owner_phone || '')
       }
       setHasToken(status.hasToken)
+      setHasPublicKey(status.hasPublicKey || false)
       setFullName(nome || '')
       if (Array.isArray(collabRes)) setCollaborators(collabRes)
       setLoading(false)
@@ -105,7 +108,7 @@ export default function EscolaPage() {
     if (!mpToken.trim()) return
     setSavingToken(true)
     setTokenMessage('')
-    const result = await saveMpToken(mpToken.trim())
+    const result = await saveMpToken(mpToken.trim(), mpPublicKey.trim() || undefined)
     if (result?.error) {
       setTokenMessage(`Erro: ${result.error}`)
     } else {
@@ -366,6 +369,19 @@ export default function EscolaPage() {
               <input type="password" value={mpToken} onChange={(e) => setMpToken(e.target.value)}
                 placeholder={hasToken ? 'Cole aqui para substituir o token atual' : 'APP_USR-xxxx ou TEST-xxxx'}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Public Key do Mercado Pago</label>
+              {hasPublicKey && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-green-900/30 border border-green-700 rounded-lg mb-2">
+                  <span className="text-green-400 text-sm">Public Key configurada</span>
+                  <span className="text-gray-500 text-xs ml-auto">Cole uma nova para substituir</span>
+                </div>
+              )}
+              <input type="password" value={mpPublicKey} onChange={(e) => setMpPublicKey(e.target.value)}
+                placeholder={hasPublicKey ? 'Cole aqui para substituir a Public Key atual' : 'APP_USR-xxxx ou TEST-xxxx'}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm" />
+              <p className="text-xs text-gray-500">A Public Key é usada no checkout do aluno. Encontre em: Mercado Pago → Seu negócio → Configurações → Credenciais</p>
             </div>
             {tokenMessage && (
               <p className={`text-sm ${tokenMessage.startsWith('Erro') ? 'text-red-400' : 'text-green-400'}`}>{tokenMessage}</p>
