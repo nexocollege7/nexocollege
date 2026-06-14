@@ -28,7 +28,7 @@ export default function MasterSuportePage() {
   const [sending, setSending] = useState(false)
   const [userId, setUserId] = useState(null)
   const [schools, setSchools] = useState({})
-  const messagesEndRef = useRef(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => { loadData() }, [])
   useEffect(() => {

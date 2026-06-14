@@ -30,7 +30,7 @@ export default function AjudaPage() {
   const [sending, setSending] = useState(false)
   const [userId, setUserId] = useState(null)
   const [schoolId, setSchoolId] = useState(null)
-  const messagesEndRef = useRef(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => { loadUser() }, [])
   useEffect(() => { if (schoolId) loadTickets() }, [schoolId])

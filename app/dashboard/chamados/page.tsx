@@ -29,7 +29,7 @@ export default function ChamadosPage() {
   const [userId, setUserId] = useState(null)
   const [schoolId, setSchoolId] = useState(null)
   const [studentNames, setStudentNames] = useState({})
-  const messagesEndRef = useRef(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => { loadData() }, [])
   useEffect(() => {
