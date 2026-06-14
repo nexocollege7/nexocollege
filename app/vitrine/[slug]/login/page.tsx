@@ -80,12 +80,15 @@ export default function LoginEscolaPage() {
     }
 
     if (data.user) {
-      await supabase.from('users').upsert({
-        id: data.user.id,
-        email,
-        full_name: nome,
-        role: 'student',
-        school_id: schoolId,
+      await fetch('/api/register-student', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: data.user.id,
+          email,
+          fullName: nome,
+          schoolId,
+        }),
       })
     }
 
