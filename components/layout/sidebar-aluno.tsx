@@ -151,7 +151,7 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
 
         {/* Botao Vitrine */}
         {escola && (
-          <a href={`https://${escola.slug}.nexocollege.com.br`} target="_blank" rel="noreferrer" title={collapsed ? 'Ver Vitrine' : undefined} style={{
+          <a href={`https://www.nexocollege.com.br/vitrine/${escola.slug}`} target="_blank" rel="noreferrer" title={collapsed ? 'Ver Vitrine' : undefined} style={{
             display: 'flex', alignItems: 'center', gap: '10px',
             padding: collapsed ? '10px' : '10px 12px',
             justifyContent: collapsed ? 'center' : 'flex-start',
