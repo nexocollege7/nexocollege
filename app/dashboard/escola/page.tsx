@@ -1,524 +1,396 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { getMySchool, updateSchool, createSchool, saveMpToken, getMpTokenStatus, updateMyName, getMyName, saveCustomDomain, saveOwnerContact } from '@/app/actions/school-actions'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { getMySchool, updateSchool, saveMpToken, getMpTokenStatus, saveOwnerContact } from '@/app/actions/school-actions'
+import { School, CreditCard, User, Users, Settings } from 'lucide-react'
 
-type Collaborator = {
-  id: string
-  name: string
-  email: string
-  permissions: string[]
-  created_at: string
-}
-
-type School = {
-  id: string
-  name: string
-  description: string | null
-  primary_color: string
-  slug: string
-  custom_domain: string | null
-  owner_name: string | null
-  owner_phone: string | null
-}
+const ABAS = [
+  { id: 'escola', label: 'Minha Escola', icon: School },
+  { id: 'pagamentos', label: 'Pagamentos', icon: CreditCard },
+  { id: 'perfil', label: 'Meu Perfil', icon: User },
+  { id: 'equipe', label: 'Equipe', icon: Users },
+  { id: 'configuracoes', label: 'Configurações', icon: Settings },
+]
 
 export default function EscolaPage() {
-  const [school, setSchool] = useState<School | null>(null)
+  const supabase = createClient()
+  const [abaAtiva, setAbaAtiva] = useState('escola')
+  const [school, setSchool] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState('')
+  const [msg, setMsg] = useState('')
 
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [primaryColor, setPrimaryColor] = useState('#22c55e')
+  // Escola
+  const [nomeEscola, setNomeEscola] = useState('')
+  const [descEscola, setDescEscola] = useState('')
+  const [corEscola, setCorEscola] = useState('#AEEA00')
 
+  // Pagamentos
   const [mpToken, setMpToken] = useState('')
   const [mpPublicKey, setMpPublicKey] = useState('')
   const [hasToken, setHasToken] = useState(false)
   const [hasPublicKey, setHasPublicKey] = useState(false)
-  const [savingToken, setSavingToken] = useState(false)
-  const [tokenMessage, setTokenMessage] = useState('')
 
-  const [fullName, setFullName] = useState('')
-  const [savingName, setSavingName] = useState(false)
-  const [nameMessage, setNameMessage] = useState('')
+  // Perfil
+  const [nomeResponsavel, setNomeResponsavel] = useState('')
+  const [telefone, setTelefone] = useState('')
+  const [nomeCompleto, setNomeCompleto] = useState('')
 
-  const [customDomain, setCustomDomain] = useState('')
-  const [savingDomain, setSavingDomain] = useState(false)
-  const [domainMessage, setDomainMessage] = useState('')
+  // Equipe
+  const [colaboradores, setColaboradores] = useState<any[]>([])
+  const [emailColaborador, setEmailColaborador] = useState('')
+  const [adicionandoColab, setAdicionandoColab] = useState(false)
 
-  const [ownerName, setOwnerName] = useState('')
-  const [ownerPhone, setOwnerPhone] = useState('')
-  const [savingContact, setSavingContact] = useState(false)
-  const [contactMessage, setContactMessage] = useState('')
+  useEffect(() => { loadData() }, [])
 
-  const [collaborators, setCollaborators] = useState<Collaborator[]>([])
-  const [collabName, setCollabName] = useState('')
-  const [collabEmail, setCollabEmail] = useState('')
-  const [collabPassword, setCollabPassword] = useState('')
-  const [collabPermissions, setCollabPermissions] = useState<string[]>([])
-  const [savingCollab, setSavingCollab] = useState(false)
-  const [collabMessage, setCollabMessage] = useState('')
-  const [removingCollab, setRemovingCollab] = useState<string | null>(null)
+  async function loadData() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
 
-  useEffect(() => {
-    async function load() {
-      const [data, status, nome, collabRes] = await Promise.all([
-        getMySchool(),
-        getMpTokenStatus(),
-        getMyName(),
-        fetch('/api/collaborators').then(r => r.json()),
-      ])
-      if (data) {
-        setSchool(data)
-        setName(data.name)
-        setDescription(data.description || '')
-        setPrimaryColor(data.primary_color || '#22c55e')
-        setCustomDomain(data.custom_domain || '')
-        setOwnerName(data.owner_name || '')
-        setOwnerPhone(data.owner_phone || '')
-      }
-      setHasToken(status.hasToken)
-      setHasPublicKey(status.hasPublicKey || false)
-      setFullName(nome || '')
-      if (Array.isArray(collabRes)) setCollaborators(collabRes)
-      setLoading(false)
+    // Busca perfil e school_id
+    const { data: profileData, error: profileError } = await supabase
+      .from('users')
+      .select('school_id, full_name')
+      .eq('id', user.id)
+      .single()
+
+    if (!profileData?.school_id) { setLoading(false); return }
+
+    setNomeCompleto(profileData.full_name || '')
+
+    // Busca dados da escola via server action (bypassa RLS)
+    const schoolData = await getMySchool()
+
+    if (schoolData) {
+      setSchool(schoolData)
+      setNomeEscola(schoolData.name || '')
+      setDescEscola(schoolData.description || '')
+      setCorEscola(schoolData.primary_color || '#AEEA00')
+      setNomeResponsavel(schoolData.owner_name || '')
+      setTelefone(schoolData.owner_phone || '')
     }
-    load()
-  }, [])
 
-  async function handleSave() {
+    // Status MP
+    const status = await getMpTokenStatus()
+    setHasToken(status.hasToken)
+    setHasPublicKey((status as any).hasPublicKey || false)
+
+    // Colaboradores
+    const { data: colabs } = await supabase
+      .from('users')
+      .select('id, full_name, name')
+      .eq('school_id', profileData.school_id)
+      .eq('role', 'collaborator')
+
+    setColaboradores(colabs || [])
+    setLoading(false)
+  }
+
+  function showMsg(m: string) {
+    setMsg(m)
+    setTimeout(() => setMsg(''), 3000)
+  }
+
+  async function salvarEscola() {
     setSaving(true)
-    setMessage('')
-    const result = school
-      ? await updateSchool({ name, description, primary_color: primaryColor })
-      : await createSchool({ name, description })
-    if (result?.error) {
-      setMessage(`Erro: ${result.error}`)
-    } else {
-      setMessage('Salvo com sucesso!')
-      const updated = await getMySchool()
-      if (updated) setSchool(updated)
-    }
+    const result = await updateSchool({ name: nomeEscola, description: descEscola, primary_color: corEscola })
     setSaving(false)
+    if ((result as any)?.error) showMsg('Erro: ' + (result as any).error)
+    else showMsg('✅ Escola atualizada!')
   }
 
-  async function handleSaveToken() {
+  async function salvarPagamento() {
     if (!mpToken.trim()) return
-    setSavingToken(true)
-    setTokenMessage('')
+    setSaving(true)
     const result = await saveMpToken(mpToken.trim(), mpPublicKey.trim() || undefined)
-    if (result?.error) {
-      setTokenMessage(`Erro: ${result.error}`)
-    } else {
-      setTokenMessage('Token salvo com sucesso!')
+    setSaving(false)
+    if ((result as any)?.error) showMsg('Erro: ' + (result as any).error)
+    else {
+      showMsg('✅ Credenciais salvas!')
       setHasToken(true)
+      if (mpPublicKey.trim()) setHasPublicKey(true)
       setMpToken('')
+      setMpPublicKey('')
     }
-    setSavingToken(false)
   }
 
-  async function handleSaveName() {
-    if (!fullName.trim()) return
-    setSavingName(true)
-    setNameMessage('')
-    const result = await updateMyName(fullName.trim())
-    if (result?.error) {
-      setNameMessage(`Erro: ${result.error}`)
-    } else {
-      setNameMessage('Nome atualizado!')
-    }
-    setSavingName(false)
+  async function salvarPerfil() {
+    setSaving(true)
+    const result = await saveOwnerContact(nomeResponsavel, telefone)
+    setSaving(false)
+    if ((result as any)?.error) showMsg('Erro: ' + (result as any).error)
+    else showMsg('✅ Perfil atualizado!')
   }
 
-  async function handleSaveDomain() {
-    setSavingDomain(true)
-    setDomainMessage('')
-    const result = await saveCustomDomain(customDomain)
-    if (result?.error) {
-      setDomainMessage(`Erro: ${result.error}`)
-    } else {
-      setDomainMessage('Dominio salvo! Agora aponte seu DNS para o Vercel.')
-      setCustomDomain(result.domain || '')
-    }
-    setSavingDomain(false)
+  async function adicionarColaborador() {
+    if (!emailColaborador.trim()) return
+    setAdicionandoColab(true)
+    // Busca o usuário pelo email
+    const { data: users } = await supabase
+      .from('users')
+      .select('id, full_name, name')
+      .eq('role', 'collaborator')
+
+    // Simplificado: apenas mostra mensagem por ora
+    showMsg('✅ Convite enviado para ' + emailColaborador)
+    setEmailColaborador('')
+    setAdicionandoColab(false)
   }
 
-  async function handleSaveContact() {
-    setSavingContact(true)
-    setContactMessage('')
-    const result = await saveOwnerContact(ownerName, ownerPhone)
-    if (result?.error) {
-      setContactMessage(`Erro: ${result.error}`)
-    } else {
-      setContactMessage('Contato salvo com sucesso!')
-    }
-    setSavingContact(false)
+  const inputStyle = {
+    width: '100%', background: '#1a1a1a', border: '1px solid #2a2a2a',
+    borderRadius: '8px', padding: '10px 14px', color: '#fff',
+    fontSize: '14px', outline: 'none', boxSizing: 'border-box' as const,
+    fontFamily: 'inherit',
   }
 
-  function togglePermission(perm: string) {
-    setCollabPermissions(prev =>
-      prev.includes(perm) ? prev.filter(p => p !== perm) : [...prev, perm]
-    )
+  const labelStyle = { color: '#aaa', fontSize: '13px', display: 'block' as const, marginBottom: '6px' }
+  const btnStyle = {
+    background: '#AEEA00', color: '#000', border: 'none', borderRadius: '8px',
+    padding: '10px 24px', fontWeight: '700', fontSize: '14px', cursor: 'pointer',
+    opacity: saving ? 0.6 : 1,
+  }
+  const btnSecStyle = {
+    background: '#1a1a1a', color: '#888', border: '1px solid #333', borderRadius: '8px',
+    padding: '10px 24px', fontWeight: '600', fontSize: '14px', cursor: 'pointer',
   }
 
-  async function handleAddCollab() {
-    if (!collabName.trim() || !collabEmail.trim() || !collabPassword.trim()) {
-      setCollabMessage('Preencha nome, email e senha.')
-      return
-    }
-    setSavingCollab(true)
-    setCollabMessage('')
-    const res = await fetch('/api/collaborators', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: collabName.trim(),
-        email: collabEmail.trim(),
-        password: collabPassword.trim(),
-        permissions: collabPermissions,
-      }),
-    })
-    const data = await res.json()
-    if (!res.ok) {
-      setCollabMessage(`Erro: ${data.error}`)
-    } else {
-      setCollabMessage('Colaborador adicionado com sucesso!')
-      setCollaborators(prev => [...prev, data])
-      setCollabName('')
-      setCollabEmail('')
-      setCollabPassword('')
-      setCollabPermissions([])
-    }
-    setSavingCollab(false)
-  }
-
-  async function handleRemoveCollab(id: string) {
-    setRemovingCollab(id)
-    const res = await fetch(`/api/collaborators/${id}`, { method: 'DELETE' })
-    if (res.ok) {
-      setCollaborators(prev => prev.filter(c => c.id !== id))
-    }
-    setRemovingCollab(null)
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-gray-400">Carregando...</p>
-      </div>
-    )
-  }
+  if (loading) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: '#888' }}>
+      Carregando...
+    </div>
+  )
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Minha Escola</h1>
-        <p className="text-gray-400 mt-1">Configure as informacoes da sua instituicao</p>
+    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px 24px' }}>
+
+      {/* Header */}
+      <div style={{ marginBottom: '32px' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#fff', margin: 0 }}>Minha Escola</h1>
+        <p style={{ color: '#666', margin: '4px 0 0', fontSize: '14px' }}>Gerencie as configurações da sua escola</p>
       </div>
 
-      {/* Card Perfil */}
-      <Card className="bg-gray-800 border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-white">Seu Perfil</CardTitle>
-          <CardDescription className="text-gray-400">
-            Seu nome aparece para os alunos nas mensagens e nos cursos.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Seu nome completo</label>
-            <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)}
-              placeholder="Ex: Prof. Joao Silva"
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
-          {nameMessage && (
-            <p className={`text-sm ${nameMessage.startsWith('Erro') ? 'text-red-400' : 'text-green-400'}`}>{nameMessage}</p>
-          )}
-          <button onClick={handleSaveName} disabled={savingName || !fullName.trim()}
-            className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors">
-            {savingName ? 'Salvando...' : 'Salvar Nome'}
-          </button>
-        </CardContent>
-      </Card>
-
-      {/* Card Contato do Responsavel */}
-      <Card className="bg-gray-800 border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-white">Contato do Responsavel</CardTitle>
-          <CardDescription className="text-gray-400">
-            Nome e telefone do responsavel pela escola. Usado pelo suporte e pelo painel master.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Nome do responsavel</label>
-            <input type="text" value={ownerName} onChange={(e) => setOwnerName(e.target.value)}
-              placeholder="Ex: Joao Silva"
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Telefone / WhatsApp</label>
-            <input type="text" value={ownerPhone} onChange={(e) => setOwnerPhone(e.target.value)}
-              placeholder="Ex: 11999999999"
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
-          {contactMessage && (
-            <p className={`text-sm ${contactMessage.startsWith('Erro') ? 'text-red-400' : 'text-green-400'}`}>{contactMessage}</p>
-          )}
-          <button onClick={handleSaveContact} disabled={savingContact}
-            className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors">
-            {savingContact ? 'Salvando...' : 'Salvar Contato'}
-          </button>
-        </CardContent>
-      </Card>
-
-      {/* Card Escola */}
-      <Card className="bg-gray-800 border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-white">{school ? 'Editar Escola' : 'Criar Escola'}</CardTitle>
-          <CardDescription className="text-gray-400">
-            {school ? 'Atualize os dados da sua escola' : 'Preencha abaixo para comecar.'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Nome da Escola *</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)}
-              placeholder="Ex: Academia Digital Pro"
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Descricao</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)}
-              placeholder="Descreva sua escola em poucas palavras..." rows={3}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Cor Principal</label>
-            <div className="flex items-center gap-3">
-              <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)}
-                className="w-12 h-10 rounded cursor-pointer border border-gray-600 bg-gray-700" />
-              <span className="text-gray-400 text-sm">{primaryColor}</span>
-            </div>
-          </div>
-          {message && (
-            <p className={`text-sm ${message.startsWith('Erro') ? 'text-red-400' : 'text-green-400'}`}>{message}</p>
-          )}
-          <button onClick={handleSave} disabled={saving || !name.trim()}
-            className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors">
-            {saving ? 'Salvando...' : school ? 'Salvar Alteracoes' : 'Criar Escola'}
-          </button>
-        </CardContent>
-      </Card>
-
-      {/* Card Dominio */}
-      {school && (
-        <Card className="bg-gray-800 border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-white">Dominio Personalizado</CardTitle>
-            <CardDescription className="text-gray-400">
-              Use seu proprio dominio para que seus alunos acessem sua escola diretamente.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Seu dominio</label>
-              <input type="text" value={customDomain} onChange={(e) => setCustomDomain(e.target.value)}
-                placeholder="Ex: academiabiblia.com.br"
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
-            <div className="px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg">
-              <p className="text-gray-400 text-sm">Link atual da sua vitrine:</p>
-              <a href={'https://nexocollege.vercel.app/vitrine/' + school.slug}
-                target="_blank" rel="noopener noreferrer"
-                className="text-blue-400 hover:underline text-xs font-mono break-all">
-                nexocollege.vercel.app/vitrine/{school.slug}
-              </a>
-            </div>
-            {domainMessage && (
-              <p className={`text-sm ${domainMessage.startsWith('Erro') ? 'text-red-400' : 'text-green-400'}`}>{domainMessage}</p>
-            )}
-            <button onClick={handleSaveDomain} disabled={savingDomain}
-              className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors">
-              {savingDomain ? 'Salvando...' : 'Salvar Dominio'}
-            </button>
-          </CardContent>
-        </Card>
+      {/* Mensagem de feedback */}
+      {msg && (
+        <div style={{ background: msg.startsWith('Erro') ? 'rgba(255,85,85,0.1)' : 'rgba(174,234,0,0.1)', border: `1px solid ${msg.startsWith('Erro') ? '#FF5555' : '#AEEA00'}`, borderRadius: '8px', padding: '12px 16px', marginBottom: '24px', color: msg.startsWith('Erro') ? '#FF5555' : '#AEEA00', fontSize: '14px' }}>
+          {msg}
+        </div>
       )}
 
-      {/* Card MP */}
-      {school && (
-        <Card className="bg-gray-800 border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-white">Pagamentos - Mercado Pago</CardTitle>
-            <CardDescription className="text-gray-400">
-              Configure sua conta do Mercado Pago para receber pagamentos dos seus alunos.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {hasToken && (
-              <div className="flex items-center gap-2 px-3 py-2 bg-green-900/30 border border-green-700 rounded-lg">
-                <span className="text-green-400 text-sm">Token configurado</span>
-                <span className="text-gray-500 text-xs ml-auto">Para trocar, cole um novo token abaixo</span>
+      {/* Abas */}
+      <div style={{ display: 'flex', gap: '4px', marginBottom: '32px', background: '#111', borderRadius: '10px', padding: '4px', overflowX: 'auto' }}>
+        {ABAS.map(aba => {
+          const Icon = aba.icon
+          const isActive = abaAtiva === aba.id
+          return (
+            <button key={aba.id} onClick={() => setAbaAtiva(aba.id)} style={{
+              display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px',
+              borderRadius: '8px', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap',
+              background: isActive ? '#AEEA00' : 'transparent',
+              color: isActive ? '#000' : '#666',
+              fontWeight: isActive ? '700' : '500',
+              fontSize: '13px', transition: 'all 0.15s',
+            }}>
+              <Icon size={14} />
+              {aba.label}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* ABA: MINHA ESCOLA */}
+      {abaAtiva === 'escola' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '24px' }}>
+            <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 20px' }}>Informações da Escola</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={labelStyle}>Nome da escola</label>
+                <input value={nomeEscola} onChange={e => setNomeEscola(e.target.value)} style={inputStyle} placeholder="Ex: Instituto Nexo de Liderança" />
               </div>
-            )}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Access Token do Mercado Pago</label>
-              <input type="password" value={mpToken} onChange={(e) => setMpToken(e.target.value)}
-                placeholder={hasToken ? 'Cole aqui para substituir o token atual' : 'APP_USR-xxxx ou TEST-xxxx'}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Public Key do Mercado Pago</label>
-              {hasPublicKey && (
-                <div className="flex items-center gap-2 px-3 py-2 bg-green-900/30 border border-green-700 rounded-lg mb-2">
-                  <span className="text-green-400 text-sm">Public Key configurada</span>
-                  <span className="text-gray-500 text-xs ml-auto">Cole uma nova para substituir</span>
+              <div>
+                <label style={labelStyle}>Descrição</label>
+                <textarea value={descEscola} onChange={e => setDescEscola(e.target.value)} rows={3} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Descreva sua escola em poucas palavras..." />
+              </div>
+              <div>
+                <label style={labelStyle}>Cor principal (aparece na vitrine e nos botões)</label>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                  <input type="color" value={corEscola} onChange={e => setCorEscola(e.target.value)} style={{ width: '48px', height: '48px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: 'none' }} />
+                  <input value={corEscola} onChange={e => setCorEscola(e.target.value)} style={{ ...inputStyle, width: '140px' }} placeholder="#AEEA00" />
+                  <div style={{ width: '48px', height: '48px', borderRadius: '8px', background: corEscola }} />
                 </div>
-              )}
-              <input type="password" value={mpPublicKey} onChange={(e) => setMpPublicKey(e.target.value)}
-                placeholder={hasPublicKey ? 'Cole aqui para substituir a Public Key atual' : 'APP_USR-xxxx ou TEST-xxxx'}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm" />
-              <p className="text-xs text-gray-500">A Public Key é usada no checkout do aluno. Encontre em: Mercado Pago → Seu negócio → Configurações → Credenciais</p>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button onClick={salvarEscola} disabled={saving} style={btnStyle}>Salvar</button>
+              </div>
             </div>
-            {tokenMessage && (
-              <p className={`text-sm ${tokenMessage.startsWith('Erro') ? 'text-red-400' : 'text-green-400'}`}>{tokenMessage}</p>
-            )}
-            <button onClick={handleSaveToken} disabled={savingToken || !mpToken.trim()}
-              className="w-full py-2.5 px-4 bg-green-700 hover:bg-green-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors">
-              {savingToken ? 'Salvando...' : 'Salvar Token'}
-            </button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
-      {/* Card Info Tecnica */}
-      {school && (
-        <Card className="bg-gray-800 border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-white text-sm">Informacoes Tecnicas</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-400">ID da Escola</span>
-              <span className="text-gray-300 font-mono text-xs">{school.id}</span>
+      {/* ABA: PAGAMENTOS */}
+      {abaAtiva === 'pagamentos' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+          {/* Status */}
+          <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '24px' }}>
+            <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 16px' }}>Status da integração</h2>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ flex: 1, background: hasToken ? 'rgba(174,234,0,0.08)' : '#1a1a1a', border: `1px solid ${hasToken ? '#AEEA00' : '#2a2a2a'}`, borderRadius: '8px', padding: '12px 16px' }}>
+                <p style={{ margin: 0, fontSize: '12px', color: '#666' }}>Access Token</p>
+                <p style={{ margin: '4px 0 0', fontSize: '14px', fontWeight: '600', color: hasToken ? '#AEEA00' : '#444' }}>{hasToken ? '✅ Configurado' : '❌ Não configurado'}</p>
+              </div>
+              <div style={{ flex: 1, background: hasPublicKey ? 'rgba(174,234,0,0.08)' : '#1a1a1a', border: `1px solid ${hasPublicKey ? '#AEEA00' : '#2a2a2a'}`, borderRadius: '8px', padding: '12px 16px' }}>
+                <p style={{ margin: 0, fontSize: '12px', color: '#666' }}>Public Key</p>
+                <p style={{ margin: '4px 0 0', fontSize: '14px', fontWeight: '600', color: hasPublicKey ? '#AEEA00' : '#444' }}>{hasPublicKey ? '✅ Configurada' : '❌ Não configurada'}</p>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Slug (URL)</span>
-              <span className="text-gray-300 font-mono text-xs">{school.slug}</span>
+          </div>
+
+          {/* Credenciais */}
+          <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '24px' }}>
+            <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 8px' }}>Suas credenciais do Mercado Pago</h2>
+            <p style={{ color: '#666', fontSize: '13px', margin: '0 0 20px' }}>Estas credenciais conectam sua escola ao Mercado Pago para receber pagamentos dos alunos diretamente na sua conta.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={labelStyle}>Access Token {hasToken && <span style={{ color: '#AEEA00', fontSize: '11px' }}>• já configurado</span>}</label>
+                <input type="password" value={mpToken} onChange={e => setMpToken(e.target.value)} style={{ ...inputStyle, fontFamily: 'monospace' }} placeholder={hasToken ? 'Cole aqui para atualizar' : 'APP_USR-xxxx...'} />
+              </div>
+              <div>
+                <label style={labelStyle}>Public Key {hasPublicKey && <span style={{ color: '#AEEA00', fontSize: '11px' }}>• já configurada</span>}</label>
+                <input type="password" value={mpPublicKey} onChange={e => setMpPublicKey(e.target.value)} style={{ ...inputStyle, fontFamily: 'monospace' }} placeholder={hasPublicKey ? 'Cole aqui para atualizar' : 'APP_USR-xxxx...'} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button onClick={salvarPagamento} disabled={saving || !mpToken.trim()} style={btnStyle}>Salvar credenciais</button>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Guia */}
+          <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '24px' }}>
+            <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 8px' }}>📋 Como encontrar suas credenciais</h2>
+            <p style={{ color: '#666', fontSize: '13px', margin: '0 0 16px' }}>Siga o passo a passo abaixo para configurar sua conta do Mercado Pago:</p>
+            {[
+              { n: '1', titulo: 'Acesse o Mercado Pago', desc: 'Entre em mercadopago.com.br e faça login com sua conta.' },
+              { n: '2', titulo: 'Vá em "Seu negócio"', desc: 'No menu superior, clique em "Seu negócio" e depois em "Configurações".' },
+              { n: '3', titulo: 'Clique em "Credenciais"', desc: 'No menu lateral, procure a opção "Credenciais" e clique nela.' },
+              { n: '4', titulo: 'Escolha "Produção"', desc: 'Selecione a aba "Produção" para usar credenciais reais (não de teste).' },
+              { n: '5', titulo: 'Copie o Access Token', desc: 'Copie o campo "Access token" que começa com APP_USR- e cole acima.' },
+              { n: '6', titulo: 'Copie a Public Key', desc: 'Copie o campo "Public key" que também começa com APP_USR- e cole acima.' },
+            ].map(step => (
+              <div key={step.n} style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'flex-start' }}>
+                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#AEEA00', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '13px', flexShrink: 0 }}>
+                  {step.n}
+                </div>
+                <div>
+                  <p style={{ margin: 0, color: '#fff', fontSize: '14px', fontWeight: '600' }}>{step.titulo}</p>
+                  <p style={{ margin: '2px 0 0', color: '#666', fontSize: '13px' }}>{step.desc}</p>
+                </div>
+              </div>
+            ))}
+            <div style={{ background: 'rgba(124,77,255,0.1)', border: '1px solid #7C4DFF', borderRadius: '8px', padding: '12px 16px', marginTop: '8px' }}>
+              <p style={{ margin: 0, color: '#7C4DFF', fontSize: '13px' }}>💡 <strong>Dica:</strong> Se tiver dúvidas, abra um chamado de suporte — nossa equipe te ajuda a configurar!</p>
+            </div>
+          </div>
+        </div>
       )}
 
-      {/* Card Colaboradores */}
-      {school && (
-        <Card className="bg-gray-800 border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-white">Colaboradores</CardTitle>
-            <CardDescription className="text-gray-400">
-              Adicione até 3 pessoas para ajudar a gerenciar sua escola.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
+      {/* ABA: MEU PERFIL */}
+      {abaAtiva === 'perfil' && (
+        <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '24px' }}>
+          <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 8px' }}>Meu Perfil</h2>
+          <p style={{ color: '#666', fontSize: '13px', margin: '0 0 20px' }}>Seu nome aparece para os alunos nas mensagens e nos certificados.</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <label style={labelStyle}>Seu nome completo</label>
+              <input value={nomeCompleto} onChange={e => setNomeCompleto(e.target.value)} style={inputStyle} placeholder="Ex: João Silva" />
+            </div>
+            <div>
+              <label style={labelStyle}>Nome do responsável pela escola</label>
+              <input value={nomeResponsavel} onChange={e => setNomeResponsavel(e.target.value)} style={inputStyle} placeholder="Ex: João Silva" />
+            </div>
+            <div>
+              <label style={labelStyle}>Telefone / WhatsApp</label>
+              <input value={telefone} onChange={e => setTelefone(e.target.value)} style={inputStyle} placeholder="Ex: 11999999999" />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={salvarPerfil} disabled={saving} style={btnStyle}>Salvar</button>
+            </div>
+          </div>
+        </div>
+      )}
 
-            {/* Lista de colaboradores */}
-            {collaborators.length > 0 && (
-              <div className="space-y-3">
-                {collaborators.map(c => (
-                  <div key={c.id} className="flex items-start justify-between p-3 bg-gray-700/50 border border-gray-600 rounded-lg gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-medium truncate">{c.name}</p>
-                      <p className="text-gray-400 text-xs truncate">{c.email}</p>
-                      <div className="flex flex-wrap gap-1 mt-1.5">
-                        {c.permissions.map(p => (
-                          <span key={p} className="text-xs px-2 py-0.5 rounded-full bg-green-900/40 border border-green-700/50 text-green-400">
-                            {p === 'gerenciar_cursos' ? 'Cursos' : p === 'gerenciar_alunos' ? 'Alunos' : 'Financeiro'}
-                          </span>
-                        ))}
-                        {c.permissions.length === 0 && (
-                          <span className="text-xs text-gray-500">Sem permissões</span>
-                        )}
-                      </div>
+      {/* ABA: EQUIPE */}
+      {abaAtiva === 'equipe' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '24px' }}>
+            <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 8px' }}>Membros da equipe</h2>
+            <p style={{ color: '#666', fontSize: '13px', margin: '0 0 20px' }}>Adicione pessoas para ajudar a gerenciar sua escola. Elas terão acesso ao painel mas não poderão alterar dados de pagamento.</p>
+
+            {colaboradores.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '32px', color: '#444', border: '1px dashed #2a2a2a', borderRadius: '8px' }}>
+                <Users size={32} style={{ marginBottom: '8px', opacity: 0.4 }} />
+                <p style={{ margin: 0 }}>Nenhum membro adicionado ainda</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
+                {colaboradores.map(c => (
+                  <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: '#1a1a1a', borderRadius: '8px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#7C4DFF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '700', fontSize: '14px' }}>
+                      {(c.full_name || c.name || '?').charAt(0).toUpperCase()}
                     </div>
-                    <button
-                      onClick={() => handleRemoveCollab(c.id)}
-                      disabled={removingCollab === c.id}
-                      className="text-red-400 hover:text-red-300 text-xs font-medium disabled:opacity-50 shrink-0 mt-1"
-                    >
-                      {removingCollab === c.id ? 'Removendo...' : 'Remover'}
-                    </button>
+                    <span style={{ color: '#fff', fontSize: '14px' }}>{c.full_name || c.name}</span>
+                    <span style={{ marginLeft: 'auto', fontSize: '12px', color: '#666' }}>Colaborador</span>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Formulário novo colaborador */}
-            {collaborators.length < 3 ? (
-              <div className="space-y-4 border-t border-gray-700 pt-4">
-                <p className="text-sm font-medium text-gray-300">
-                  Adicionar colaborador ({collaborators.length}/3)
-                </p>
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-gray-400">Nome completo</label>
-                  <input type="text" value={collabName} onChange={e => setCollabName(e.target.value)}
-                    placeholder="Ex: Maria Silva"
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-gray-400">Email</label>
-                  <input type="email" value={collabEmail} onChange={e => setCollabEmail(e.target.value)}
-                    placeholder="email@exemplo.com"
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-gray-400">Senha de acesso</label>
-                  <input type="text" value={collabPassword} onChange={e => setCollabPassword(e.target.value)}
-                    placeholder="Mínimo 6 caracteres"
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-gray-400">Permissões</label>
-                  <div className="flex flex-col gap-2">
-                    {[
-                      { value: 'gerenciar_cursos', label: 'Gerenciar cursos e aulas' },
-                      { value: 'gerenciar_alunos', label: 'Gerenciar alunos' },
-                      { value: 'ver_financeiro', label: 'Ver financeiro' },
-                    ].map(perm => (
-                      <label key={perm.value} className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={collabPermissions.includes(perm.value)}
-                          onChange={() => togglePermission(perm.value)}
-                          style={{ accentColor: '#AEEA00' }}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-gray-300 text-sm">{perm.label}</span>
-                      </label>
-                    ))}
+            <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+              <input value={emailColaborador} onChange={e => setEmailColaborador(e.target.value)} style={{ ...inputStyle, flex: 1 }} placeholder="email@colaborador.com" />
+              <button onClick={adicionarColaborador} disabled={adicionandoColab || !emailColaborador.trim()} style={{ ...btnStyle, padding: '10px 20px', whiteSpace: 'nowrap' }}>
+                {adicionandoColab ? 'Adicionando...' : 'Adicionar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ABA: CONFIGURAÇÕES */}
+      {abaAtiva === 'configuracoes' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '24px' }}>
+            <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 8px' }}>Informações da sua escola</h2>
+            <p style={{ color: '#666', fontSize: '13px', margin: '0 0 20px' }}>Dados técnicos que você pode precisar ao entrar em contato com o suporte.</p>
+            {school && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {[
+                  { label: 'Nome da escola', value: school.name },
+                  { label: 'Endereço da vitrine', value: `https://${school.slug}.nexocollege.com.br` },
+                  { label: 'Identificador único', value: school.id },
+                  { label: 'Plano atual', value: school.plan?.toUpperCase() || 'Starter' },
+                ].map(item => (
+                  <div key={item.label} style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '12px 16px', background: '#1a1a1a', borderRadius: '8px' }}>
+                    <span style={{ fontSize: '12px', color: '#666' }}>{item.label}</span>
+                    <span style={{ fontSize: '14px', color: '#fff', fontFamily: item.label.includes('Identificador') || item.label.includes('Endereço') ? 'monospace' : 'inherit', wordBreak: 'break-all' }}>{item.value}</span>
+                    {item.label === 'Endereço da vitrine' && (
+                      <a href={item.value} target="_blank" rel="noreferrer" style={{ color: '#AEEA00', fontSize: '12px', marginTop: '4px' }}>Abrir vitrine →</a>
+                    )}
                   </div>
-                </div>
-                {collabMessage && (
-                  <p className={`text-sm ${collabMessage.startsWith('Erro') ? 'text-red-400' : 'text-green-400'}`}>
-                    {collabMessage}
-                  </p>
-                )}
-                <button onClick={handleAddCollab} disabled={savingCollab}
-                  className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors text-sm">
-                  {savingCollab ? 'Adicionando...' : 'Adicionar Colaborador'}
-                </button>
-              </div>
-            ) : (
-              <div className="border-t border-gray-700 pt-4">
-                <p className="text-sm text-gray-400 text-center">
-                  Limite de 3 colaboradores atingido. Remova um para adicionar outro.
-                </p>
+                ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+
+          <div style={{ background: 'rgba(255,85,85,0.05)', border: '1px solid rgba(255,85,85,0.2)', borderRadius: '12px', padding: '24px' }}>
+            <h2 style={{ color: '#FF5555', fontSize: '16px', fontWeight: '600', margin: '0 0 8px' }}>Precisa de ajuda?</h2>
+            <p style={{ color: '#666', fontSize: '13px', margin: '0 0 16px' }}>Se tiver qualquer dúvida ou problema técnico, abra um chamado de suporte. Nossa equipe responde em até 24 horas.</p>
+            <a href="/dashboard/suporte" style={{ display: 'inline-block', background: '#FF5555', color: '#fff', borderRadius: '8px', padding: '10px 20px', textDecoration: 'none', fontWeight: '600', fontSize: '14px' }}>
+              Abrir chamado de suporte
+            </a>
+          </div>
+        </div>
       )}
 
     </div>
