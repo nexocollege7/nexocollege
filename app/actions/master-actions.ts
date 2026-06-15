@@ -14,7 +14,7 @@ export async function getMasterStats() {
     { data: pagamentos },
   ] = await Promise.all([
     adminClient.from('schools').select('*', { count: 'exact', head: true }),
-    adminClient.from('profiles').select('*', { count: 'exact', head: true }),
+    adminClient.from('users').select('*', { count: 'exact', head: true }),
     adminClient.from('courses').select('*', { count: 'exact', head: true }),
     adminClient.from('payments').select('amount').eq('status', 'approved'),
   ])

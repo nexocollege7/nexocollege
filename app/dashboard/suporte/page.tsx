@@ -102,7 +102,7 @@ export default function SuportePage() {
   }
 
   function timeAgo(date: string) {
-    const diff = Math.floor((Date.now() - new Date(date)) / 60000)
+    const diff = Math.floor((Date.now() - new Date(date).getTime()) / 60000)
     if (diff < 1) return 'agora'
     if (diff < 60) return diff + 'min atrás'
     if (diff < 1440) return Math.floor(diff/60) + 'h atrás'
@@ -134,8 +134,8 @@ export default function SuportePage() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {tickets.map(ticket => {
-                const cat = CATEGORIES[ticket.category]
-                const st = STATUS[ticket.status]
+                const cat = CATEGORIES[ticket.category as keyof typeof CATEGORIES]
+                const st = STATUS[ticket.status as keyof typeof STATUS]
                 const isSelected = selectedTicket?.id === ticket.id
                 return (
                   <div key={ticket.id} onClick={() => setSelectedTicket(ticket)}
@@ -166,7 +166,7 @@ export default function SuportePage() {
             <div style={{ padding: '16px', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <p style={{ margin: 0, color: '#fff', fontWeight: '600', fontSize: '14px' }}>{selectedTicket.title}</p>
-                <span style={{ fontSize: '12px', color: STATUS[selectedTicket.status]?.color }}>{STATUS[selectedTicket.status]?.label}</span>
+                <span style={{ fontSize: '12px', color: STATUS[selectedTicket.status as keyof typeof STATUS]?.color }}>{STATUS[selectedTicket.status as keyof typeof STATUS]?.label}</span>
               </div>
               <button onClick={() => setSelectedTicket(null)} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer' }}><X size={18} /></button>
             </div>

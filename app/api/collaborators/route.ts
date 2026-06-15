@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
     // Criar perfil em public.users
     await adminClient.from('users').upsert({
       id: collaboratorUserId,
-      name,
+      full_name: name,
       role: 'collaborator',
       school_id: school.id,
     }, { onConflict: 'id' })

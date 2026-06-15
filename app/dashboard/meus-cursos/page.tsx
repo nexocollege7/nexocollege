@@ -25,7 +25,7 @@ export default function MeusCursosPage() {
         const courseId = (matricula as any).courses?.id
         if (!courseId) continue
         const progress = await getLessonProgress(me.id, courseId)
-        const concluidas = progress.filter((p: any) => p.is_completed).length
+        const concluidas = progress.filter((p: any) => p.completed).length
         prog[courseId] = concluidas
       }
       setProgressos(prog)

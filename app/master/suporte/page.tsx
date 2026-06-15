@@ -46,7 +46,7 @@ export default function MasterSuportePage() {
     setUserId(user.id)
 
     const { data: schoolsData } = await supabase.from('schools').select('id, name')
-    const schoolMap = {}
+    const schoolMap: Record<string, string> = {}
     schoolsData?.forEach(s => { schoolMap[s.id] = s.name })
     setSchools(schoolMap)
 
@@ -77,7 +77,7 @@ export default function MasterSuportePage() {
       .from('support_tickets')
       .update({ status: newStatus })
       .eq('id', ticketId)
-    setSelectedTicket(prev => prev ? { ...prev, status: newStatus } : null)
+    setSelectedTicket((prev: any) => prev ? { ...prev, status: newStatus } : null)
     await loadTickets()
   }
 
@@ -99,14 +99,14 @@ export default function MasterSuportePage() {
   }
 
   function timeAgo(date: string) {
-    const diff = Math.floor((Date.now() - new Date(date)) / 60000)
+    const diff = Math.floor((Date.now() - new Date(date).getTime()) / 60000)
     if (diff < 1) return 'agora'
     if (diff < 60) return diff + 'min atrás'
     if (diff < 1440) return Math.floor(diff/60) + 'h atrás'
     return Math.floor(diff/1440) + 'd atrás'
   }
 
-  const ticketsByStatus = (status) => tickets.filter(t => t.status === status)
+  const ticketsByStatus = (status: string) => tickets.filter(t => t.status === status)
 
   if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: '#888' }}>Carregando...</div>
 
@@ -142,7 +142,7 @@ export default function MasterSuportePage() {
                   {colTickets.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '24px 0', color: '#333', fontSize: '13px' }}>Nenhum chamado</div>
                   ) : colTickets.map(ticket => {
-                    const cat = CATEGORIES[ticket.category]
+                    const cat = CATEGORIES[ticket.category as keyof typeof CATEGORIES]
                     const isSelected = selectedTicket?.id === ticket.id
                     return (
                       <div key={ticket.id} onClick={() => setSelectedTicket(ticket)}

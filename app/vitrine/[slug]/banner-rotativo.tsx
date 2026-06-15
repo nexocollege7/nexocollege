@@ -18,9 +18,10 @@ type Props = {
   courses: Course[]
   slug: string
   cor: string
+  appUrl: string
 }
 
-export default function BannerRotativo({ courses, slug, cor }: Props) {
+export default function BannerRotativo({ courses, slug, cor, appUrl }: Props) {
   const [atual, setAtual] = useState(0)
   const [animando, setAnimando] = useState(false)
 
@@ -108,7 +109,7 @@ export default function BannerRotativo({ courses, slug, cor }: Props) {
           </p>
         )}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <Link href={`https://nexocollege.com.br/vitrine/${slug}/${destaque.slug}`} style={{
+          <Link href={`${appUrl}/vitrine/${slug}/${destaque.slug}`} style={{
             padding: '14px 32px', borderRadius: '8px',
             backgroundColor: cor, color: '#0D0D0D',
             fontWeight: '800', fontSize: '15px',

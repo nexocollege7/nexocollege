@@ -51,11 +51,11 @@ export default function ChamadosPage() {
 
     const { data: students } = await supabase
       .from('users')
-      .select('id, name')
+      .select('id, full_name')
       .eq('school_id', userData.school_id)
       .eq('role', 'student')
-    const nameMap = {}
-    students?.forEach(s => { nameMap[s.id] = s.name })
+    const nameMap: Record<string, string> = {}
+    students?.forEach(s => { nameMap[s.id] = s.full_name || 'Aluno' })
     setStudentNames(nameMap)
 
     await loadTickets(userData.school_id)
@@ -83,8 +83,8 @@ export default function ChamadosPage() {
 
   async function updateStatus(ticketId: string, newStatus: string) {
     await supabase.from('support_tickets').update({ status: newStatus }).eq('id', ticketId)
-    setSelectedTicket(prev => prev ? { ...prev, status: newStatus } : null)
-    await loadTickets(schoolId)
+    setSelectedTicket((prev: any) => prev ? { ...prev, status: newStatus } : null)
+    await loadTickets(schoolId ?? undefined)
   }
 
   async function sendMessage() {
@@ -105,7 +105,7 @@ export default function ChamadosPage() {
   }
 
   function timeAgo(date: string) {
-    const diff = Math.floor((Date.now() - new Date(date)) / 60000)
+    const diff = Math.floor((Date.now() - new Date(date).getTime()) / 60000)
     if (diff < 1) return 'agora'
     if (diff < 60) return diff + 'min atrás'
     if (diff < 1440) return Math.floor(diff/60) + 'h atrás'
@@ -118,7 +118,7 @@ export default function ChamadosPage() {
     return 'Aluno'
   }
 
-  const ticketsByStatus = (status) => tickets.filter(t => t.status === status)
+  const ticketsByStatus = (status: string) => tickets.filter(t => t.status === status)
 
   if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: '#888' }}>Carregando...</div>
 
@@ -150,7 +150,7 @@ export default function ChamadosPage() {
                   {colTickets.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '24px 0', color: '#333', fontSize: '13px' }}>Nenhum chamado</div>
                   ) : colTickets.map(ticket => {
-                    const cat = CATEGORIES[ticket.category]
+                    const cat = CATEGORIES[ticket.category as keyof typeof CATEGORIES]
                     const isSelected = selectedTicket?.id === ticket.id
                     return (
                       <div key={ticket.id} onClick={() => setSelectedTicket(ticket)}
@@ -179,7 +179,7 @@ export default function ChamadosPage() {
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '10px' }}>
                 <div style={{ flex: 1 }}>
                   <p style={{ margin: '0 0 2px', color: '#fff', fontWeight: '600', fontSize: '14px' }}>{selectedTicket.title}</p>
-                  <p style={{ margin: 0, fontSize: '12px', color: '#AEEA00' }}>{CATEGORIES[selectedTicket.category]?.label}</p>
+                  <p style={{ margin: 0, fontSize: '12px', color: '#AEEA00' }}>{CATEGORIES[selectedTicket.category as keyof typeof CATEGORIES]?.label}</p>
                 </div>
                 <button onClick={() => setSelectedTicket(null)} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', marginLeft: '8px' }}><X size={18} /></button>
               </div>

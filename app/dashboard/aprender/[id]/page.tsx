@@ -167,8 +167,6 @@ export default function AprenderPage() {
             </div>
           </div>
         )}
-      </div>
-
 
         {/* Materiais da aula */}
         {aulaAtual && aulaAtual.material_links && (
@@ -183,6 +181,7 @@ export default function AprenderPage() {
             </div>
           </div>
         )}
+      </div>
 
         {/* Lista de módulos e aulas */}
       <div style={{
