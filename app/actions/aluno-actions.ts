@@ -65,8 +65,8 @@ export async function getLessonProgress(studentId: string, courseId: string) {
   const supabase = await createClient()
   const { data } = await supabase
     .from('lesson_progress')
-    .select('lesson_id, completed')
-    .eq('user_id', studentId)
+    .select('lesson_id, is_completed')
+    .eq('student_id', studentId)
     .eq('course_id', courseId)
   return data || []
 }
@@ -79,12 +79,12 @@ export async function markLessonComplete(lessonId: string, courseId: string) {
   const { error } = await supabase
     .from('lesson_progress')
     .upsert({
-      user_id: user.id,
+      student_id: user.id,
       lesson_id: lessonId,
       course_id: courseId,
-      completed: true,
+      is_completed: true,
       completed_at: new Date().toISOString(),
-    }, { onConflict: 'user_id,lesson_id' })
+    }, { onConflict: 'student_id,lesson_id' })
 
   if (error) return { error: error.message }
   return { success: true }

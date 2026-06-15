@@ -1,20 +1,21 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function getSchoolBySlug(slug: string) {
-  const supabase = await createClient()
-  const { data } = await supabase
+  const adminClient = createAdminClient()
+  const { data } = await adminClient
     .from('schools')
-    .select('*')
+    .select('id, name, slug, logo_url, description, primary_color, is_active, featured_course_id, featured_course_ids')
     .eq('slug', slug)
+    .eq('is_active', true)
     .single()
   return data
 }
 
 export async function getPublishedCourses(schoolId: string) {
-  const supabase = await createClient()
-  const { data } = await supabase
+  const adminClient = createAdminClient()
+  const { data } = await adminClient
     .from('courses')
     .select('id, title, description, price, is_free, slug, status, thumbnail_url, created_at, lessons(count)')
     .eq('school_id', schoolId)
@@ -30,8 +31,8 @@ export async function getPublishedCourses(schoolId: string) {
 }
 
 export async function getCourseBySlug(courseSlug: string, schoolId: string) {
-  const supabase = await createClient()
-  const { data } = await supabase
+  const adminClient = createAdminClient()
+  const { data } = await adminClient
     .from('courses')
     .select('*')
     .eq('slug', courseSlug)

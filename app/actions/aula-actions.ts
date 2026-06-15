@@ -90,11 +90,11 @@ export async function getAulasDoAluno(courseId: string) {
   if (user) {
     const { data: progresso } = await supabase
       .from('lesson_progress')
-      .select('lesson_id, completed')
-      .eq('user_id', user.id)
+      .select('lesson_id, is_completed')
+      .eq('student_id', user.id)
 
     const progressoMap = new Map(
-      (progresso || []).map((p) => [p.lesson_id, p.completed])
+      (progresso || []).map((p) => [p.lesson_id, p.is_completed])
     )
 
     return modulos.map((m) => ({
@@ -119,12 +119,12 @@ export async function marcarAulaConcluida(lessonId: string, courseId: string) {
   const { error } = await supabase
     .from('lesson_progress')
     .upsert({
-      user_id: user.id,
+      student_id: user.id,
       lesson_id: lessonId,
       course_id: courseId,
-      completed: true,
+      is_completed: true,
       completed_at: new Date().toISOString(),
-    }, { onConflict: 'user_id,lesson_id' })
+    }, { onConflict: 'student_id,lesson_id' })
 
   if (error) return { error: error.message }
   return { success: true }
