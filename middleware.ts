@@ -26,13 +26,16 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next()
     }
     const subdomain = host.replace('.nexocollege.com.br', '')
-    // Login no subdomínio → redireciona para www com parâmetro de escola
-    if (url.pathname.startsWith('/login')) {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-      return NextResponse.redirect(new URL('/login', appUrl))
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://nexocollege.com.br'
+    // Login no subdomínio → vitrine login no domínio principal (evita problema de cookie cross-domain)
+    if (url.pathname === '/login' || url.pathname.startsWith('/login/')) {
+      return NextResponse.redirect(new URL(`/vitrine/${subdomain}/login`, appUrl))
     }
     const rewriteUrl = url.clone()
-    rewriteUrl.pathname = '/vitrine/' + subdomain + (url.pathname === '/' ? '' : url.pathname)
+    // Evitar double-rewrite: se o path já começa com /vitrine/${subdomain}, servir direto
+    if (!url.pathname.startsWith('/vitrine/' + subdomain)) {
+      rewriteUrl.pathname = '/vitrine/' + subdomain + (url.pathname === '/' ? '' : url.pathname)
+    }
     return NextResponse.rewrite(rewriteUrl)
   }
 

@@ -9,9 +9,10 @@ type Props = {
   slug: string
   cor: string
   nomeEscola: string
+  basePath: string
 }
 
-export default function HeaderVitrine({ slug, cor, nomeEscola }: Props) {
+export default function HeaderVitrine({ slug, cor, nomeEscola, basePath }: Props) {
   const [user, setUser] = useState<{ nome: string } | null>(null)
   const [menuAberto, setMenuAberto] = useState(false)
   const router = useRouter()
@@ -35,7 +36,7 @@ export default function HeaderVitrine({ slug, cor, nomeEscola }: Props) {
 
   async function handleSair() {
     await supabase.auth.signOut()
-    router.push(`/vitrine/${slug}`)
+    router.push(basePath || '/')
     router.refresh()
   }
 
@@ -139,7 +140,7 @@ export default function HeaderVitrine({ slug, cor, nomeEscola }: Props) {
           )}
         </div>
       ) : (
-        <Link href={`/vitrine/${slug}/login`} style={{
+        <Link href={`${basePath}/login`} style={{
           padding: '8px 20px', borderRadius: '8px',
           backgroundColor: cor, color: '#0D0D0D',
           fontWeight: '700', fontSize: '14px', textDecoration: 'none',
