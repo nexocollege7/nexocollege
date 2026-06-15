@@ -49,25 +49,38 @@ export async function getEscolas() {
 
   const adminClient = createAdminClient()
 
-  const { data: schools, error } = await adminClient
-    .from('schools')
-    .select(`
-      id, name, slug, plan, is_active, created_at, owner_name, owner_phone,
-      description, primary_color, custom_domain, mp_access_token,
-      courses(count),
-      enrollments(count)
-    `)
-    .order('created_at', { ascending: false })
-    .limit(200)
+  const [{ data: schools, error }, { data: enrollmentRows }] = await Promise.all([
+    adminClient
+      .from('schools')
+      .select(`
+        id, name, slug, plan, is_active, created_at, owner_name, owner_phone,
+        description, primary_color, custom_domain, mp_access_token,
+        courses(count)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(200),
+    adminClient.from('enrollments').select('school_id'),
+  ])
 
   if (error) {
     console.error('getEscolas error:', error)
     return []
   }
 
+  const enrollmentCountBySchool: Record<string, number> = {}
+  for (const row of enrollmentRows || []) {
+    if (row.school_id) {
+      enrollmentCountBySchool[row.school_id] = (enrollmentCountBySchool[row.school_id] || 0) + 1
+    }
+  }
+
   return (schools || []).map((school: any) => {
     const { mp_access_token, ...rest } = school
-    return { ...rest, has_mp_token: !!mp_access_token }
+    return {
+      ...rest,
+      has_mp_token: !!mp_access_token,
+      enrollments: [{ count: enrollmentCountBySchool[school.id] || 0 }],
+    }
   })
 }
 

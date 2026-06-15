@@ -108,7 +108,7 @@ export default function EscolasPage() {
                     </select>
                     {salvando === escola.id && <span style={{ color: '#AEEA00', fontSize: '11px' }}>Salvando...</span>}
                   </div>
-                  <a href={'https://' + escola.slug + '.nexocollege.com.br'} target="_blank" rel="noreferrer" style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #2A2A2A', backgroundColor: 'transparent', color: '#888888', fontSize: '13px', textDecoration: 'none' }}>Vitrine</a>
+                  <a href={'/vitrine/' + escola.slug} target="_blank" rel="noreferrer" style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #2A2A2A', backgroundColor: 'transparent', color: '#888888', fontSize: '13px', textDecoration: 'none' }}>Vitrine</a>
                   <button onClick={() => handleToggle(escola.id, escola.is_active)} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', backgroundColor: escola.is_active ? '#2A1A1A' : '#1A2E00', color: escola.is_active ? '#FF5555' : '#AEEA00', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>
                     {escola.is_active ? 'Suspender' : 'Reativar'}
                   </button>
