@@ -55,7 +55,7 @@ export async function getEscolas() {
       .select(`
         id, name, slug, plan, is_active, created_at, owner_name, owner_phone,
         description, primary_color, custom_domain, mp_access_token,
-        courses(count)
+        courses!school_id(count)
       `)
       .order('created_at', { ascending: false })
       .limit(200),
