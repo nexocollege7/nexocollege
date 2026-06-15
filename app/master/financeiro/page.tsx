@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react'
 import { getEscolas } from '@/app/actions/master-actions'
 
 const PLANOS: Record<string, { valor: number, label: string, cursos: string }> = {
-  starter:    { valor: 0,   label: 'Starter',    cursos: 'até 1 curso' },
-  creator:    { valor: 97,  label: 'Creator',    cursos: 'até 5 cursos' },
-  pro:        { valor: 197, label: 'Pro',         cursos: 'até 10 cursos' },
-  scale:      { valor: 297, label: 'Scale',       cursos: 'até 25 cursos' },
-  enterprise: { valor: 497, label: 'Enterprise',  cursos: 'ilimitado' },
+  starter:    { valor: 0,      label: 'Starter',    cursos: 'até 1 curso' },
+  creator:    { valor: 49.75,  label: 'Creator',    cursos: 'até 5 cursos' },
+  pro:        { valor: 99.75,  label: 'Pro',         cursos: 'até 10 cursos' },
+  scale:      { valor: 208.08, label: 'Scale',       cursos: 'até 25 cursos' },
+  enterprise: { valor: 0,      label: 'Enterprise',  cursos: 'ilimitado' },
 }
 
 export default function FinanceiroPage() {
