@@ -4,12 +4,13 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function getSchoolBySlug(slug: string) {
   const adminClient = createAdminClient()
-  const { data } = await adminClient
+  const { data, error } = await adminClient
     .from('schools')
     .select('id, name, slug, logo_url, description, primary_color, is_active, featured_course_id, featured_course_ids')
     .eq('slug', slug)
     .eq('is_active', true)
     .single()
+  if (error) console.error('[vitrine] getSchoolBySlug error for slug=' + slug + ':', error.message, error.code)
   return data
 }
 

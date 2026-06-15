@@ -11,7 +11,6 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
 
   const courses = await getPublishedCourses(school.id)
   const cor = school.primary_color || '#AEEA00'
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || ''
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#0D0D0D', fontFamily: 'sans-serif' }}>
@@ -45,7 +44,7 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
 
       {/* Hero Banner Rotativo */}
       {courses.length > 0 ? (
-        <BannerRotativo courses={courses} slug={slug} cor={cor} appUrl={appUrl} />
+        <BannerRotativo courses={courses} slug={slug} cor={cor} />
       ) : (
         <div style={{
           height: '85vh', display: 'flex', alignItems: 'center',
@@ -72,7 +71,7 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
             gap: '20px',
           }}>
             {courses.map((course) => (
-              <Link key={course.id} href={`${appUrl}/vitrine/${slug}/${course.slug}`} className="curso-card">
+              <Link key={course.id} href={`/vitrine/${slug}/${course.slug}`} className="curso-card">
                 <div style={{
                   height: '160px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
