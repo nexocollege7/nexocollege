@@ -64,6 +64,7 @@ export default function LandingPage() {
   useEffect(() => {
     const canvas = document.getElementById('dots') as HTMLCanvasElement
     if (!canvas) return
+    if (window.innerWidth <= 768) { canvas.style.display = 'none'; return }
     const ctx = canvas.getContext('2d')!
     let w = 0, h = 0, dpr = 1, particles: any[] = [], raf: number
     function resize() {
@@ -290,6 +291,13 @@ export default function LandingPage() {
           .section-head{margin-bottom:40px !important}
           .section-head h2{font-size:clamp(26px,5.5vw,36px) !important}
           .counters{margin:40px auto 0 !important}
+          .hero-glow{display:none !important}
+          .cta-bg::before,.cta-bg::after{filter:none !important;background:none !important}
+          .reveal{filter:none !important;transform:translateY(24px) !important;transition-duration:.6s !important}
+          .reveal.in{transform:none !important;filter:none !important}
+          .badge{backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
+          .counters{backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
+          header.nav.scrolled{backdrop-filter:none !important;-webkit-backdrop-filter:none !important;background:rgba(13,13,13,.97) !important}
         }
         @media(max-width:480px){
           .section{padding:56px 0 !important}
