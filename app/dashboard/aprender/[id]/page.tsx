@@ -80,7 +80,16 @@ export default function AprenderPage() {
   )
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
+    <div className="player-root" style={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .player-root { flex-direction: column !important; height: auto !important; overflow: visible !important; }
+          .player-sidebar { width: 100% !important; max-height: 40vh; border-left: none !important; border-top: 1px solid #2A2A2A !important; }
+          .player-info { padding: 12px 16px !important; }
+          .player-info h1 { font-size: 15px !important; }
+          .player-progress { padding: 8px 16px !important; }
+        }
+      `}</style>
 
       {/* Player principal */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -110,7 +119,7 @@ export default function AprenderPage() {
 
         {/* Info da aula */}
         {aulaAtual && (
-          <div style={{ padding: '20px 24px', borderBottom: '1px solid #2A2A2A' }}>
+          <div className="player-info" style={{ padding: '20px 24px', borderBottom: '1px solid #2A2A2A' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <h1 style={{ fontSize: '18px', fontWeight: '600', color: '#F0F0F0', margin: 0 }}>
                 {aulaAtual.title}
@@ -134,7 +143,7 @@ export default function AprenderPage() {
         )}
 
         {/* Barra de progresso */}
-        <div style={{ padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="player-progress" style={{ padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ flex: 1, height: '6px', backgroundColor: '#2A2A2A', borderRadius: '3px' }}>
             <div style={{
               height: '6px', backgroundColor: '#AEEA00', borderRadius: '3px',
@@ -184,7 +193,7 @@ export default function AprenderPage() {
       </div>
 
         {/* Lista de módulos e aulas */}
-      <div style={{
+      <div className="player-sidebar" style={{
         width: '320px', flexShrink: 0,
         borderLeft: '1px solid #2A2A2A',
         backgroundColor: '#111111',

@@ -277,6 +277,30 @@ export default function LandingPage() {
         .reveal.d1{transition-delay:.08s}.reveal.d2{transition-delay:.16s}.reveal.d3{transition-delay:.24s}.reveal.d4{transition-delay:.32s}
         body.force-show .reveal{opacity:1!important;transform:none!important;transition:none!important}@keyframes fadeUp{from{opacity:0;transform:translateY(32px)}to{opacity:1;transform:none}}
         @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+        @media(max-width:768px){
+          .section{padding:72px 0 !important}
+          .wrap{padding:0 20px !important}
+          .hero{padding:120px 0 70px !important}
+          .cta{margin:0 16px !important;padding:64px 24px !important}
+          .cta h2{font-size:clamp(28px,7vw,44px) !important}
+          .section-head{margin-bottom:40px !important}
+          .section-head h2{font-size:clamp(26px,5.5vw,36px) !important}
+          .counters{margin:40px auto 0 !important}
+        }
+        @media(max-width:480px){
+          .section{padding:56px 0 !important}
+          .wrap{padding:0 16px !important}
+          .hero{padding:100px 0 56px !important}
+          .hero h1{font-size:clamp(30px,9vw,42px) !important}
+          .hero-sub{font-size:clamp(15px,4vw,17px) !important}
+          .btn{padding:13px 20px !important;font-size:14px !important}
+          .hero-cta{gap:12px !important}
+          .cta{padding:48px 16px !important}
+          .dash-wrap{margin:48px auto 0 !important}
+          .plan{padding:24px 18px !important}
+          .cert{padding:28px 20px !important}
+          .cert .cfoot{flex-direction:column !important;gap:12px !important}
+        }
       `}</style>
 
       <header className="nav" id="nav">

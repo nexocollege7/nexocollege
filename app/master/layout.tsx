@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { MasterSidebar } from '@/components/layout/master-sidebar'
-import { Header } from '@/components/layout/header'
+import { MasterLayoutClient } from '@/components/layout/master-layout-client'
 
 export default async function MasterLayout({
   children,
@@ -16,14 +15,8 @@ export default async function MasterLayout({
   }
 
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: '#0D0D0D' }}>
-      <MasterSidebar />
-      <div className="flex-1 flex flex-col">
-        <Header user={{ email: user.email ?? '', role: 'master' }} />
-        <main className="flex-1 p-6">
-          {children}
-        </main>
-      </div>
-    </div>
+    <MasterLayoutClient userEmail={user.email ?? ''}>
+      {children}
+    </MasterLayoutClient>
   )
 }

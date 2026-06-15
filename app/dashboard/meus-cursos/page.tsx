@@ -69,7 +69,10 @@ export default function MeusCursosPage() {
           </p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+        <div className="meus-cursos-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+          <style>{`
+            @media (max-width: 480px) { .meus-cursos-grid { grid-template-columns: 1fr !important; } }
+          `}</style>
           {cursos.map((matricula: any) => {
             const curso = matricula.courses
             const escola = curso?.schools

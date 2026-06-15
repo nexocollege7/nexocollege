@@ -46,13 +46,19 @@ export default function FinanceiroPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <style>{`
+        @media (max-width: 768px) { .fin-cards-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+        @media (max-width: 480px) { .fin-cards-grid { grid-template-columns: 1fr !important; } }
+        .fin-table-wrap { overflow-x: auto; }
+        @media (max-width: 768px) { .fin-table-wrap .fin-row { min-width: 620px; } }
+      `}</style>
       <div>
         <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#F0F0F0', margin: 0 }}>Financeiro</h1>
         <p style={{ color: '#888888', marginTop: '4px', fontSize: '14px' }}>Visao financeira da plataforma</p>
       </div>
 
       {/* Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+      <div className="fin-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
         {cards.map((card) => (
           <div key={card.label} style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '20px' }}>
             <p style={{ color: '#888888', fontSize: '13px', margin: '0 0 8px' }}>{card.label}</p>
@@ -87,8 +93,8 @@ export default function FinanceiroPage() {
       </div>
 
       {/* Tabela */}
-      <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', overflow: 'hidden' }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid #2A2A2A', display: 'grid', gridTemplateColumns: '1fr 120px 120px 120px 140px', gap: '16px' }}>
+      <div className="fin-table-wrap" style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', overflow: 'hidden' }}>
+        <div className="fin-row" style={{ padding: '16px 20px', borderBottom: '1px solid #2A2A2A', display: 'grid', gridTemplateColumns: '1fr 120px 120px 120px 140px', gap: '16px' }}>
           {['Escola', 'Plano', 'Mensalidade', 'Status', 'Gateway MP'].map((h) => (
             <p key={h} style={{ color: '#555555', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0 }}>{h}</p>
           ))}
@@ -103,7 +109,7 @@ export default function FinanceiroPage() {
             {escolas.map((escola, index) => {
               const plano = PLANOS[escola.plan] || PLANOS.starter
               return (
-                <div key={escola.id} style={{ padding: '16px 20px', borderBottom: index < escolas.length - 1 ? '1px solid #222222' : 'none', display: 'grid', gridTemplateColumns: '1fr 120px 120px 120px 140px', gap: '16px', alignItems: 'center' }}>
+                <div key={escola.id} className="fin-row" style={{ padding: '16px 20px', borderBottom: index < escolas.length - 1 ? '1px solid #222222' : 'none', display: 'grid', gridTemplateColumns: '1fr 120px 120px 120px 140px', gap: '16px', alignItems: 'center' }}>
                   <div>
                     <p style={{ color: '#F0F0F0', fontSize: '14px', fontWeight: '500', margin: 0 }}>{escola.name}</p>
                     {escola.owner_name && <p style={{ color: '#555555', fontSize: '12px', margin: '2px 0 0' }}>{escola.owner_name}</p>}
@@ -124,7 +130,7 @@ export default function FinanceiroPage() {
               )
             })}
             {/* Rodapé total */}
-            <div style={{ padding: '16px 20px', borderTop: '1px solid #2A2A2A', display: 'grid', gridTemplateColumns: '1fr 120px 120px 120px 140px', gap: '16px', alignItems: 'center', backgroundColor: '#111111' }}>
+            <div className="fin-row" style={{ padding: '16px 20px', borderTop: '1px solid #2A2A2A', display: 'grid', gridTemplateColumns: '1fr 120px 120px 120px 140px', gap: '16px', alignItems: 'center', backgroundColor: '#111111' }}>
               <p style={{ color: '#888888', fontSize: '13px', fontWeight: '600', margin: 0 }}>{escolas.length} escola{escolas.length !== 1 ? 's' : ''} no total</p>
               <span />
               <p style={{ color: '#AEEA00', fontSize: '15px', fontWeight: '800', margin: 0 }}>R$ {receitaMensal.toLocaleString('pt-BR')}/mes</p>

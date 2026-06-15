@@ -102,6 +102,9 @@ export function AdminLayout({ children, user, title }: AdminLayoutProps) {
           .mobile-sidebar { transform: ${mobileOpen ? 'translateX(0)' : 'translateX(-100%)'}; }
           main { padding: 16px !important; }
         }
+        @media (max-width: 480px) {
+          main { padding: 12px !important; }
+        }
         @media (min-width: 769px) {
           .desktop-sidebar { display: block; }
           .mobile-topbar { display: none !important; }

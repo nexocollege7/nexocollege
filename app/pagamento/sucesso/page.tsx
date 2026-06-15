@@ -16,7 +16,8 @@ function PagamentoSucessoConteudo() {
       alignItems: 'center',
       justifyContent: 'center',
     }}>
-      <div style={{
+      <style>{`@media(max-width:480px){.sucesso-card{padding:32px 20px !important}}`}</style>
+      <div className="sucesso-card" style={{
         backgroundColor: '#1A1A1A',
         border: '1px solid #2A2A2A',
         borderRadius: '16px',

@@ -32,6 +32,10 @@ export default function MasterDashboard() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <style>{`
+        @media (max-width: 768px) { .master-stats-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+        @media (max-width: 480px) { .master-stats-grid { grid-template-columns: 1fr !important; } }
+      `}</style>
       <div>
         <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#F0F0F0', margin: 0 }}>
           Painel Master
@@ -42,7 +46,7 @@ export default function MasterDashboard() {
       </div>
 
       {/* Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+      <div className="master-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
         {cards.map((card) => {
           const Icon = card.icon
           return (

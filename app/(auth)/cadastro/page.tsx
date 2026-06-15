@@ -141,6 +141,7 @@ function Modal({ titulo, conteudo, onFechar }: { titulo: string; conteudo: strin
           backgroundColor: '#1A1A1A', borderRadius: '16px', border: '1px solid #2A2A2A',
           width: '100%', maxWidth: '640px', maxHeight: '80vh',
           display: 'flex', flexDirection: 'column',
+          margin: '0 8px',
         }}
       >
         {/* Header */}
@@ -286,7 +287,14 @@ function CadastroContent() {
             </p>
           </div>
 
-          <div style={{ backgroundColor: '#1A1A1A', borderRadius: '16px', padding: '36px', border: '1px solid #2A2A2A' }}>
+          <style>{`
+          @media (max-width: 480px) {
+            .cadastro-card { padding: 24px 16px !important; }
+            .termos-btns { flex-direction: column !important; }
+            .termos-btns button { width: 100% !important; }
+          }
+        `}</style>
+        <div className="cadastro-card" style={{ backgroundColor: '#1A1A1A', borderRadius: '16px', padding: '36px', border: '1px solid #2A2A2A' }}>
 
             {error && (
               <div style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '8px', padding: '12px 16px', marginBottom: '24px', fontSize: '14px' }}>
@@ -329,7 +337,7 @@ function CadastroContent() {
                 <p style={{ color: '#888888', fontSize: '12px', margin: '0 0 12px', lineHeight: '1.6' }}>
                   Ao criar sua escola no NexoCollege você concorda com nossos documentos abaixo. Seus dados são protegidos conforme a LGPD (Lei 13.709/2018).
                 </p>
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                <div className="termos-btns" style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
                   <button
                     onClick={() => setModalAberto('termos')}
                     style={{

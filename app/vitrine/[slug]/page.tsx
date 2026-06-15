@@ -31,6 +31,14 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
           transform: scale(1.03);
           border-color: ${cor};
         }
+        @media (max-width: 768px) {
+          .vitrine-grid-section { padding: 32px 20px 60px !important; }
+          .vitrine-footer { padding: 20px !important; }
+        }
+        @media (max-width: 480px) {
+          .vitrine-grid-section { padding: 24px 16px 48px !important; }
+          .vitrine-cursos-grid { grid-template-columns: 1fr !important; }
+        }
       `}</style>
 
       <HeaderVitrine slug={slug} cor={cor} nomeEscola={school.name} />
@@ -50,7 +58,7 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
 
       {/* Grid de Cursos */}
       {courses.length > 0 && (
-        <div style={{ padding: '48px 48px 80px' }}>
+        <div className="vitrine-grid-section" style={{ padding: '48px 48px 80px' }}>
           <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#F0F0F0', margin: '0 0 24px' }}>
             Todos os cursos
             <span style={{ color: '#555555', fontSize: '15px', fontWeight: '400', marginLeft: '12px' }}>
@@ -58,7 +66,7 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
             </span>
           </h2>
 
-          <div style={{
+          <div className="vitrine-cursos-grid" style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
             gap: '20px',
@@ -118,7 +126,7 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
       )}
 
       {/* Footer */}
-      <footer style={{ borderTop: '1px solid #1A1A1A', padding: '24px 48px', textAlign: 'center' }}>
+      <footer className="vitrine-footer" style={{ borderTop: '1px solid #1A1A1A', padding: '24px 48px', textAlign: 'center' }}>
         <p style={{ color: '#333333', fontSize: '13px' }}>
           Powered by <span style={{ color: '#555555', fontWeight: '600' }}>NexoCollege</span>
         </p>

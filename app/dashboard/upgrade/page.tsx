@@ -128,6 +128,12 @@ export default function UpgradePage() {
 
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 24px' }}>
+      <style>{`
+        @media (max-width: 480px) {
+          .upgrade-enterprise { flex-direction: column !important; padding: 24px 16px !important; }
+          .upgrade-enterprise > div { min-width: unset !important; }
+        }
+      `}</style>
       <div style={{ textAlign: 'center', marginBottom: '48px' }}>
         <h1 style={{ fontSize: '32px', fontWeight: '800', color: '#F0F0F0', marginBottom: '12px' }}>
           Faça upgrade da sua escola
@@ -225,7 +231,7 @@ export default function UpgradePage() {
       </div>
 
       {/* Enterprise */}
-      <div style={{
+      <div className="upgrade-enterprise" style={{
         marginTop: '32px', background: 'linear-gradient(135deg, #141414, #1a1f00)',
         border: '1px solid #2a3500', borderRadius: '20px', padding: '36px 48px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '24px',

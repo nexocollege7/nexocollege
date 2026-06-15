@@ -60,6 +60,18 @@ export default function BannerRotativo({ courses, slug, cor, appUrl }: Props) {
       backgroundColor: '#111111',
       overflow: 'hidden',
     }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .banner-conteudo { padding: 0 24px 60px !important; }
+          .banner-titulo { font-size: 36px !important; }
+          .banner-dots { right: 24px !important; bottom: 24px !important; }
+        }
+        @media (max-width: 480px) {
+          .banner-conteudo { padding: 0 16px 48px !important; }
+          .banner-titulo { font-size: 28px !important; }
+          .banner-btns { flex-direction: column !important; align-items: flex-start !important; }
+        }
+      `}</style>
       {/* Imagem de fundo */}
       {destaque.thumbnail_url && (
         <div style={{
@@ -81,7 +93,7 @@ export default function BannerRotativo({ courses, slug, cor, appUrl }: Props) {
       }} />
 
       {/* Conteúdo */}
-      <div style={{
+      <div className="banner-conteudo" style={{
         position: 'relative', zIndex: 2, padding: '0 48px 80px', maxWidth: '600px',
         opacity: animando ? 0 : 1,
         transition: 'opacity 0.8s ease',
@@ -93,7 +105,7 @@ export default function BannerRotativo({ courses, slug, cor, appUrl }: Props) {
         }}>
           EM DESTAQUE
         </div>
-        <h1 style={{
+        <h1 className="banner-titulo" style={{
           fontSize: '52px', fontWeight: '800', color: '#F0F0F0',
           lineHeight: '1.1', margin: '0 0 16px',
           textShadow: '0 2px 20px rgba(0,0,0,0.8)',
@@ -108,7 +120,7 @@ export default function BannerRotativo({ courses, slug, cor, appUrl }: Props) {
             {destaque.description}
           </p>
         )}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+        <div className="banner-btns" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <Link href={`${appUrl}/vitrine/${slug}/${destaque.slug}`} style={{
             padding: '14px 32px', borderRadius: '8px',
             backgroundColor: cor, color: '#0D0D0D',
@@ -136,7 +148,7 @@ export default function BannerRotativo({ courses, slug, cor, appUrl }: Props) {
 
       {/* Bolinhas indicadoras */}
       {courses.length > 1 && (
-        <div style={{
+        <div className="banner-dots" style={{
           position: 'absolute', bottom: '32px', right: '48px',
           zIndex: 3, display: 'flex', gap: '8px',
         }}>

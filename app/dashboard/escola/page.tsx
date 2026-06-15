@@ -164,6 +164,12 @@ export default function EscolaPage() {
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px 24px' }}>
+      <style>{`
+        @media (max-width: 480px) {
+          .escola-page-root { padding: 16px !important; }
+          .escola-tab-btn { padding: 8px 10px !important; font-size: 12px !important; gap: 4px !important; }
+        }
+      `}</style>
 
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
@@ -184,7 +190,7 @@ export default function EscolaPage() {
           const Icon = aba.icon
           const isActive = abaAtiva === aba.id
           return (
-            <button key={aba.id} onClick={() => setAbaAtiva(aba.id)} style={{
+            <button key={aba.id} onClick={() => setAbaAtiva(aba.id)} className="escola-tab-btn" style={{
               display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px',
               borderRadius: '8px', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap',
               background: isActive ? '#AEEA00' : 'transparent',

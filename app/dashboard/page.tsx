@@ -81,6 +81,9 @@ export default async function DashboardPage() {
           .dashboard-header a { width: 100% !important; text-align: center !important; }
           .matriculas-grid { grid-template-columns: 1fr !important; }
         }
+        @media (max-width: 480px) {
+          .cards-grid { grid-template-columns: 1fr !important; }
+        }
       `}</style>
 
       {/* Banner de Upgrade — aparece só para plano Starter */}

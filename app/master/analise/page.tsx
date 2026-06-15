@@ -31,13 +31,22 @@ export default function AnalisePage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .analise-cards { grid-template-columns: repeat(2, 1fr) !important; }
+          .analise-charts { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 480px) {
+          .analise-cards { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
       <div>
         <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#F0F0F0', margin: 0 }}>Analise Comercial</h1>
         <p style={{ color: '#888888', marginTop: '4px', fontSize: '14px' }}>Performance e crescimento da plataforma</p>
       </div>
 
       {/* Cards de performance */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+      <div className="analise-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
         {[
           { label: 'Total de Escolas', value: data.total, color: '#F0F0F0', sub: 'cadastradas' },
           { label: 'Escolas Pagas', value: data.pagas, color: '#AEEA00', sub: 'Pro + Enterprise' },
@@ -52,7 +61,7 @@ export default function AnalisePage() {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+      <div className="analise-charts" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
 
         {/* Grafico de barras — escolas por mes */}
         <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '24px' }}>

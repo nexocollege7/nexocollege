@@ -44,6 +44,13 @@ export default function EscolasPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .escola-card-inner { flex-direction: column !important; align-items: flex-start !important; }
+          .escola-acoes { flex-wrap: wrap !important; width: 100% !important; margin-top: 12px; }
+          .escola-acoes a, .escola-acoes button { flex: 1 1 auto !important; text-align: center !important; justify-content: center !important; }
+        }
+      `}</style>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#F0F0F0', margin: 0 }}>Escolas</h1>
@@ -67,7 +74,7 @@ export default function EscolasPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {escolas.map((escola) => (
             <div key={escola.id} style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '20px 24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+              <div className="escola-card-inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
                   <div style={{ width: '48px', height: '48px', minWidth: '48px', borderRadius: '10px', backgroundColor: escola.is_active ? '#1A2E00' : '#2A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: '700', color: escola.is_active ? '#AEEA00' : '#555555' }}>
@@ -96,7 +103,7 @@ export default function EscolasPage() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="escola-acoes" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
                     <label style={{ color: '#555555', fontSize: '11px' }}>Plano</label>
                     <select value={escola.plan ?? 'starter'} disabled={salvando === escola.id} onChange={(e) => handlePlano(escola.id, e.target.value)} style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid #2A2A2A', backgroundColor: '#0D0D0D', color: '#7C4DFF', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', opacity: salvando === escola.id ? 0.5 : 1 }}>
