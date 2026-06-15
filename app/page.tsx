@@ -73,7 +73,7 @@ export default function LandingPage() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     }
     function init() {
-      particles = Array.from({ length: 80 }, () => ({
+      particles = Array.from({ length: 40 }, () => ({
         x: Math.random() * w, y: Math.random() * h,
         vx: (Math.random() - .5) * .25, vy: (Math.random() - .5) * .25,
         r: Math.random() * 1.3 + .5, c: Math.random() > .7 ? '124,77,255' : '174,234,0'
@@ -101,7 +101,12 @@ export default function LandingPage() {
     resize(); init(); draw()
     const onResize = () => { resize(); init() }
     window.addEventListener('resize', onResize)
-    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', onResize) }
+    const onVisibility = () => {
+      if (document.hidden) cancelAnimationFrame(raf)
+      else { resize(); draw() }
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', onResize); document.removeEventListener('visibilitychange', onVisibility) }
   }, [])
 
   const fmt = (n: number) => n.toLocaleString('pt-BR')
@@ -109,11 +114,10 @@ export default function LandingPage() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@700;800&display=swap');
         :root{--neon:#AEEA00;--neon-soft:rgba(174,234,0,.15);--purple:#7C4DFF;--purple-soft:rgba(124,77,255,.15);--bg:#0D0D0D;--card:#111111;--card2:#1A1A1A;--border:#2A2A2A;--text:#F0F0F0;--muted:#888888;--radius:18px;--maxw:1200px;--ease:cubic-bezier(.22,1,.36,1)}
         *{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
-        body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-        h1,h2,h3,h4{font-family:'Sora','Inter',sans-serif;line-height:1.05;letter-spacing:-.02em}
+        body{background:var(--bg);color:var(--text);font-family:var(--font-inter),'Inter',system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+        h1,h2,h3,h4{font-family:var(--font-sora),'Sora','Inter',sans-serif;line-height:1.05;letter-spacing:-.02em}
         .neon{color:var(--neon)}a{color:inherit;text-decoration:none}
         .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
         .eyebrow{font-size:13px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:18px;display:flex;align-items:center;gap:10px}
@@ -121,14 +125,14 @@ export default function LandingPage() {
         .section{padding:120px 0;position:relative}.section-head{max-width:680px;margin-bottom:64px}
         .section-head h2{font-size:clamp(30px,4.4vw,52px);font-weight:800;margin-bottom:18px}
         .section-head p{font-size:18px;color:var(--muted);max-width:560px}
-        .btn{display:inline-flex;align-items:center;gap:10px;font-family:'Inter';font-weight:600;font-size:16px;padding:15px 26px;border-radius:14px;border:1px solid transparent;cursor:pointer;transition:transform .25s var(--ease),box-shadow .25s var(--ease),background .25s;white-space:nowrap}
+        .btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--font-inter),'Inter';font-weight:600;font-size:16px;padding:15px 26px;border-radius:14px;border:1px solid transparent;cursor:pointer;transition:transform .25s var(--ease),box-shadow .25s var(--ease),background .25s;white-space:nowrap}
         .btn-primary{background:var(--neon);color:#0a0a0a}.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(174,234,0,.28)}
         .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border)}.btn-ghost:hover{border-color:var(--neon);color:var(--neon)}
         .btn svg{width:18px;height:18px}
         header.nav{position:fixed;top:0;left:0;right:0;z-index:50;transition:background .3s,border-color .3s;border-bottom:1px solid transparent}
         header.nav.scrolled{background:rgba(13,13,13,.85);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
         .nav-inner{display:flex;align-items:center;justify-content:space-between;height:72px}
-        .logo{display:flex;align-items:center;gap:11px;font-family:'Sora';font-weight:800;font-size:20px;letter-spacing:-.02em}
+        .logo{display:flex;align-items:center;gap:11px;font-family:var(--font-sora),'Sora';font-weight:800;font-size:20px;letter-spacing:-.02em}
         .logo-mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--neon),var(--purple));display:grid;place-items:center;color:#0a0a0a;font-weight:800;font-size:17px;box-shadow:0 0 24px rgba(174,234,0,.35)}
         .nav-links{display:flex;align-items:center;gap:34px}
         .nav-links a{font-size:14.5px;color:var(--muted);font-weight:500;transition:color .2s}.nav-links a:hover{color:var(--text)}
@@ -150,7 +154,7 @@ export default function LandingPage() {
         .hero-note{font-size:13.5px;color:var(--muted)}.hero-note span{color:var(--neon)}
         .counters{display:flex;justify-content:center;flex-wrap:wrap;margin:70px auto 0;max-width:760px;border:1px solid var(--border);border-radius:20px;background:rgba(17,17,17,.6);backdrop-filter:blur(10px);overflow:hidden}
         .counter{flex:1;min-width:180px;padding:30px 24px;text-align:center;border-right:1px solid var(--border)}.counter:last-child{border-right:none}
-        .counter .num{font-family:'Sora';font-weight:800;font-size:clamp(30px,4vw,44px);color:var(--neon)}
+        .counter .num{font-family:var(--font-sora),'Sora';font-weight:800;font-size:clamp(30px,4vw,44px);color:var(--neon)}
         .counter .num .plus{color:var(--text);font-weight:700}
         .counter .lbl{font-size:13.5px;color:var(--muted);margin-top:6px}
         @media(max-width:560px){.counter{border-right:none;border-bottom:1px solid var(--border)}.counter:last-child{border-bottom:none}}
@@ -164,11 +168,11 @@ export default function LandingPage() {
         .dash-side .si{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;font-size:13.5px;color:var(--muted);margin-bottom:4px}
         .dash-side .si svg{width:16px;height:16px;flex:none}.dash-side .si.active{background:var(--neon-soft);color:var(--neon)}
         .dash-main{padding:24px;text-align:left}
-        .dh{font-family:'Sora';font-weight:700;font-size:18px;margin-bottom:4px}
+        .dh{font-family:var(--font-sora),'Sora';font-weight:700;font-size:18px;margin-bottom:4px}
         .dhsub{font-size:12.5px;color:var(--muted);margin-bottom:20px}
         .dstats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
         .dstat{border:1px solid var(--border);border-radius:12px;padding:16px;background:#141414}
-        .dstat .v{font-family:'Sora';font-weight:700;font-size:24px}.dstat .v.neon{color:var(--neon)}
+        .dstat .v{font-family:var(--font-sora),'Sora';font-weight:700;font-size:24px}.dstat .v.neon{color:var(--neon)}
         .dstat .k{font-size:11.5px;color:var(--muted);margin-top:3px}
         .dchart{border:1px solid var(--border);border-radius:12px;padding:18px;background:#141414;height:150px}
         .dchart .ct{font-size:12px;color:var(--muted);margin-bottom:14px}
@@ -191,7 +195,7 @@ export default function LandingPage() {
         .vit-banner{height:160px;position:relative;overflow:hidden;background:linear-gradient(120deg,#15140f,#171425);display:flex;align-items:flex-end;padding:20px}
         .vit-banner::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 75% 20%,rgba(174,234,0,.22),transparent 55%),radial-gradient(circle at 15% 90%,rgba(124,77,255,.28),transparent 55%)}
         .vit-banner .bt{position:relative;z-index:2}.vit-banner .bt .tag{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--neon)}
-        .vit-banner .bt .tt{font-family:'Sora';font-weight:700;font-size:22px;margin-top:4px}
+        .vit-banner .bt .tt{font-family:var(--font-sora),'Sora';font-weight:700;font-size:22px;margin-top:4px}
         .vit-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:18px}
         .vcard{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#141414}
         .vcard .thumb{height:84px;background:linear-gradient(135deg,#1c1b16,#1a1726);position:relative}
@@ -217,7 +221,7 @@ export default function LandingPage() {
         .timeline{max-width:760px;margin:0 auto;position:relative;padding-left:8px}
         .timeline::before{content:"";position:absolute;left:31px;top:14px;bottom:14px;width:1px;background:linear-gradient(var(--neon),var(--purple))}
         .tl-item{display:grid;grid-template-columns:64px 1fr;gap:26px;padding:18px 0}
-        .tl-num{width:56px;height:56px;border-radius:50%;border:1px solid var(--border);background:var(--card);display:grid;place-items:center;font-family:'Sora';font-weight:700;font-size:19px;color:var(--neon);position:relative;z-index:2}
+        .tl-num{width:56px;height:56px;border-radius:50%;border:1px solid var(--border);background:var(--card);display:grid;place-items:center;font-family:var(--font-sora),'Sora';font-weight:700;font-size:19px;color:var(--neon);position:relative;z-index:2}
         .tl-item:hover .tl-num{border-color:var(--neon);box-shadow:0 0 24px rgba(174,234,0,.2)}
         .tl-body{padding-top:7px}.tl-body h3{font-size:19px;font-weight:700;margin-bottom:6px}.tl-body p{font-size:15px;color:var(--muted)}
         .tl-body .pill{display:inline-block;font-size:12px;color:var(--purple);background:var(--purple-soft);padding:3px 11px;border-radius:100px;margin-top:9px;font-weight:600}
@@ -228,9 +232,9 @@ export default function LandingPage() {
         .plan:hover{transform:translateY(-6px);border-color:#3a3a3a}
         .plan.featured{border-color:var(--neon);box-shadow:0 0 50px rgba(174,234,0,.12);background:#101006}
         .plan .badge-top{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--neon);color:#0a0a0a;font-size:11.5px;font-weight:700;letter-spacing:.04em;padding:5px 14px;border-radius:100px;white-space:nowrap}
-        .plan .pn{font-family:'Sora';font-weight:700;font-size:19px;margin-bottom:14px}
-        .plan .pp{font-family:'Sora';font-weight:800;font-size:32px;margin-bottom:2px}
-        .plan .pp small{font-size:14px;color:var(--muted);font-weight:500;font-family:'Inter'}
+        .plan .pn{font-family:var(--font-sora),'Sora';font-weight:700;font-size:19px;margin-bottom:14px}
+        .plan .pp{font-family:var(--font-sora),'Sora';font-weight:800;font-size:32px;margin-bottom:2px}
+        .plan .pp small{font-size:14px;color:var(--muted);font-weight:500;font-family:var(--font-inter),'Inter'}
         .plan .pfree{color:var(--neon)}.plan .pper{font-size:12.5px;color:var(--muted);margin-bottom:22px}
         .plan ul{list-style:none;display:flex;flex-direction:column;gap:13px;margin-bottom:26px;flex:1}
         .plan li{display:flex;align-items:center;gap:11px;font-size:14px}
@@ -243,14 +247,14 @@ export default function LandingPage() {
         .cert .seal{position:absolute;top:30px;right:30px;width:60px;height:60px;border-radius:50%;border:1px solid var(--neon);display:grid;place-items:center;color:var(--neon)}
         .cert .seal svg{width:28px;height:28px}.cert .ctop{display:flex;align-items:center;gap:10px;margin-bottom:auto}
         .cert .ctop .lm{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--neon),var(--purple));display:grid;place-items:center;color:#0a0a0a;font-weight:800;font-size:13px}
-        .cert .ctop span{font-family:'Sora';font-weight:700;font-size:14px}
+        .cert .ctop span{font-family:var(--font-sora),'Sora';font-weight:700;font-size:14px}
         .cert .ck-label{font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
-        .cert .cname{font-family:'Sora';font-weight:800;font-size:clamp(26px,4vw,40px);margin-bottom:14px;letter-spacing:-.02em}
+        .cert .cname{font-family:var(--font-sora),'Sora';font-weight:800;font-size:clamp(26px,4vw,40px);margin-bottom:14px;letter-spacing:-.02em}
         .cert .cdesc{font-size:14px;color:var(--muted);max-width:80%;margin-bottom:auto}.cert .cdesc b{color:var(--neon);font-weight:600}
         .cert .cfoot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:26px;gap:20px}
         .cert .cfoot .fi .l{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
         .cert .cfoot .fi .v{font-size:13px;font-weight:600}.cert .cfoot .fi .v.mono{font-family:monospace;color:var(--neon);font-size:12px}
-        .cert .sig{border-top:1px solid var(--border);padding-top:7px;min-width:140px;text-align:center;font-family:'Sora';font-style:italic;font-size:15px}
+        .cert .sig{border-top:1px solid var(--border);padding-top:7px;min-width:140px;text-align:center;font-family:var(--font-sora),'Sora';font-style:italic;font-size:15px}
         .cert-text h2{font-size:clamp(28px,3.6vw,44px);font-weight:800;margin-bottom:20px}
         .diffs{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
         @media(max-width:880px){.diffs{grid-template-columns:1fr}}
@@ -531,7 +535,7 @@ export default function LandingPage() {
           <div className="reveal" style={{marginTop:24,border:'1px solid #2a3500',borderRadius:22,padding:'40px 48px',background:'linear-gradient(135deg,#141414,#1a1f00)',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:32}}>
             <div style={{flex:1,minWidth:280}}>
               <div style={{fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'.14em',color:'var(--neon)',marginBottom:12}}>Enterprise</div>
-              <div style={{fontSize:32,fontWeight:900,fontFamily:'Sora',marginBottom:8}}>Para grandes operações</div>
+              <div style={{fontSize:32,fontWeight:900,fontFamily:'var(--font-sora),Sora,sans-serif',marginBottom:8}}>Para grandes operações</div>
               <div style={{fontSize:16,color:'var(--muted)'}}>Volume ilimitado. Suporte dedicado. Proposta sob medida.</div>
             </div>
             <div style={{textAlign:'center',minWidth:200}}>
