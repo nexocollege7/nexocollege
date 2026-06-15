@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
   try {
+    // Verificar autenticação
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+
     const formData = await request.formData()
     const file = formData.get('thumbnail') as File
     const courseId = formData.get('courseId') as string
@@ -16,6 +22,21 @@ export async function POST(request: NextRequest) {
     }
 
     const adminClient = createAdminClient()
+
+    // Verificar que o curso pertence à escola do usuário
+    const [courseResult, profileResult] = await Promise.all([
+      adminClient.from('courses').select('school_id').eq('id', courseId).single(),
+      adminClient.from('users').select('school_id').eq('id', user.id).single(),
+    ])
+
+    if (
+      !courseResult.data ||
+      !profileResult.data ||
+      courseResult.data.school_id !== profileResult.data.school_id
+    ) {
+      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
+    }
+
     const ext = file.name.split('.').pop()
     const fileName = `${courseId}-${Date.now()}.${ext}`
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, Suspense } from 'react'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -279,7 +280,7 @@ function CadastroContent() {
         <div style={{ width: '100%', maxWidth: '460px' }}>
 
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <img src="/logo.png" alt="NexoCollege" style={{ height: '48px', mixBlendMode: 'lighten', display: 'inline-block', marginBottom: '12px' }} />
+            <Image src="/logo.png" alt="NexoCollege" width={140} height={48} priority style={{ height: '48px', width: 'auto', mixBlendMode: 'lighten' as any, display: 'inline-block', marginBottom: '12px' }} />
             <p style={{ color: '#888888', fontSize: '15px', margin: 0 }}>
               Crie sua escola online gratuitamente
             </p>

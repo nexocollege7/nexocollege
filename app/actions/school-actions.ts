@@ -164,9 +164,11 @@ export async function getMpTokenStatus() {
 }
 
 function getLimitePorPlano(plan: string): number {
+  if (plan === 'creator') return 5
   if (plan === 'pro') return 10
+  if (plan === 'scale') return 25
   if (plan === 'enterprise') return Infinity
-  return 1
+  return 1 // starter
 }
 
 export async function verificarLimiteCurso(schoolId: string): Promise<{

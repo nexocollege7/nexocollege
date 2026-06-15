@@ -28,6 +28,7 @@ export async function getEnrollments() {
     `)
     .eq('school_id', school.id)
     .order('enrolled_at', { ascending: false })
+    .limit(500)
 
   // Filtrar apenas alunos reais (excluir admin e collaborator)
   const alunosApenas = (data || []).filter((e: any) => {

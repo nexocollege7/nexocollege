@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { getMeuscursos, getLessonProgress } from '@/app/actions/aluno-actions'
 import Link from 'next/link'
 
@@ -93,10 +94,10 @@ export default function MeusCursosPage() {
                   justifyContent: 'center',
                   fontSize: '40px',
                   overflow: 'hidden',
+                  position: 'relative',
                 }}>
                   {curso?.thumbnail_url ? (
-                    <img src={curso.thumbnail_url} alt={curso.title}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <Image src={curso.thumbnail_url} alt={curso.title} fill style={{ objectFit: 'cover' }} />
                   ) : '📖'}
                 </div>
 

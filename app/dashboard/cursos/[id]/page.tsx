@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import Image from 'next/image'
 import { useParams, useRouter } from 'next/navigation'
 import { getCourse, updateCourse } from '@/app/actions/course-actions'
 import { getModulos, criarModulo, deletarModulo } from '@/app/actions/modulo-actions'
@@ -172,8 +173,7 @@ export default function EditarCursoPage() {
                   }}
                 >
                   {curso.thumbnail_url ? (
-                    <img src={curso.thumbnail_url} alt="Thumbnail"
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <Image src={curso.thumbnail_url} alt="Thumbnail" fill style={{ objectFit: 'cover' }} />
                   ) : (
                     <div style={{ textAlign: 'center' }}>
                       <p style={{ fontSize: '24px', margin: 0 }}>🖼️</p>

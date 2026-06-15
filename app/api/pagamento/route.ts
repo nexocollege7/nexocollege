@@ -10,6 +10,10 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
+    if (!user) {
+      return NextResponse.json({ error: 'Você precisa estar logado para comprar um curso.' }, { status: 401 })
+    }
+
     // Busca o school_id do curso
     const { data: course, error: courseError } = await supabase
       .from('courses')
@@ -58,7 +62,7 @@ export async function POST(request: NextRequest) {
             currency_id: 'BRL',
           }
         ],
-        external_reference: `${courseId}|${user?.id || 'guest'}`,
+        external_reference: `${courseId}|${user.id}`,
       }
     })
 

@@ -31,7 +31,7 @@ export default function NovaEscolaPage() {
     setErro('')
     const result = await criarEscola(form)
     setLoading(false)
-    if (result.error) {
+    if ('error' in result && result.error) {
       setErro(result.error)
       return
     }

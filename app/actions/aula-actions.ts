@@ -22,6 +22,9 @@ export async function criarAula(
   materialLinks: string = ''
 ) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
   const { data: existing } = await supabase
     .from('lessons')
     .select('position')
@@ -50,8 +53,9 @@ export async function criarAula(
 
 export async function deletarAula(aulaId: string) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
 
-  // Busca o course_id antes de deletar
   const { data: aula } = await supabase
     .from('lessons')
     .select('course_id')
@@ -128,6 +132,9 @@ export async function marcarAulaConcluida(lessonId: string, courseId: string) {
 
 export async function salvarMateriais(aulaId: string, links: string) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
   const { error } = await supabase
     .from('lessons')
     .update({ material_links: links || null })

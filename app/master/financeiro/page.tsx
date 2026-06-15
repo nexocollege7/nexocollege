@@ -5,7 +5,9 @@ import { getEscolas } from '@/app/actions/master-actions'
 
 const PLANOS: Record<string, { valor: number, label: string, cursos: string }> = {
   starter:    { valor: 0,   label: 'Starter',    cursos: 'até 1 curso' },
+  creator:    { valor: 97,  label: 'Creator',    cursos: 'até 5 cursos' },
   pro:        { valor: 197, label: 'Pro',         cursos: 'até 10 cursos' },
+  scale:      { valor: 297, label: 'Scale',       cursos: 'até 25 cursos' },
   enterprise: { valor: 497, label: 'Enterprise',  cursos: 'ilimitado' },
 }
 
@@ -61,7 +63,7 @@ export default function FinanceiroPage() {
       </div>
 
       {/* Resumo por plano */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
         {Object.entries(PLANOS).map(([key, plano]) => {
           const count = escolas.filter((e) => (e.plan || 'starter') === key).length
           return (
@@ -115,8 +117,8 @@ export default function FinanceiroPage() {
                   <span style={{ fontSize: '12px', fontWeight: '600', padding: '4px 10px', borderRadius: '20px', display: 'inline-block', backgroundColor: escola.is_active ? '#1A2E00' : '#2A1A1A', color: escola.is_active ? '#AEEA00' : '#FF5555' }}>
                     {escola.is_active ? 'Ativa' : 'Suspensa'}
                   </span>
-                  <span style={{ fontSize: '12px', fontWeight: '600', padding: '4px 10px', borderRadius: '20px', display: 'inline-block', backgroundColor: escola.mp_access_token ? '#1A2E00' : '#2A1A1A', color: escola.mp_access_token ? '#AEEA00' : '#888888' }}>
-                    {escola.mp_access_token ? 'Configurado' : 'Pendente'}
+                  <span style={{ fontSize: '12px', fontWeight: '600', padding: '4px 10px', borderRadius: '20px', display: 'inline-block', backgroundColor: escola.has_mp_token ? '#1A2E00' : '#2A1A1A', color: escola.has_mp_token ? '#AEEA00' : '#888888' }}>
+                    {escola.has_mp_token ? 'Configurado' : 'Pendente'}
                   </span>
                 </div>
               )

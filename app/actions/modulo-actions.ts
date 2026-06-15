@@ -15,6 +15,9 @@ export async function getModulos(courseId: string) {
 
 export async function criarModulo(courseId: string, title: string) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
   const { data: existing } = await supabase
     .from('modules')
     .select('position')
@@ -33,6 +36,9 @@ export async function criarModulo(courseId: string, title: string) {
 
 export async function deletarModulo(moduloId: string) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
   const { error } = await supabase
     .from('modules')
     .delete()

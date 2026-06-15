@@ -18,6 +18,7 @@ export async function getConversations() {
     `)
     .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
     .order('sent_at', { ascending: false })
+    .limit(100)
 
   return data || []
 }

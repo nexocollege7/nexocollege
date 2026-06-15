@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -280,7 +281,7 @@ export default function LandingPage() {
 
       <header className="nav" id="nav">
         <div className="wrap nav-inner">
-          <Link className="logo" href="/"><img src="/logo.png" alt="NexoCollege" style={{height:'38px',mixBlendMode:'lighten' as any}}/></Link>
+          <Link className="logo" href="/"><Image src="/logo.png" alt="NexoCollege" width={120} height={38} priority style={{height:'38px',width:'auto',mixBlendMode:'lighten' as any}}/></Link>
           <nav className="nav-links">
             <a href="#como">Como funciona</a><a href="#vitrine">Vitrine</a>
             <a href="#painel">Painel</a><a href="#planos">Planos</a><a href="#certificados">Certificados</a>
@@ -556,7 +557,7 @@ export default function LandingPage() {
 
       <footer>
         <div className="wrap foot-inner">
-          <img src="/logo.png" alt="NexoCollege" style={{height:'30px',mixBlendMode:'lighten' as any}}/>
+          <Image src="/logo.png" alt="NexoCollege" width={100} height={30} style={{height:'30px',width:'auto',mixBlendMode:'lighten' as any}}/>
           <div className="foot-links"><a href="#como">Como funciona</a><a href="#planos">Planos</a><Link href="/login">Acessar escola</Link></div>
           <p className="foot-copy">© 2026 NexoCollege. Todos os direitos reservados.</p>
         </div>

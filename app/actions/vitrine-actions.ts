@@ -16,24 +16,17 @@ export async function getPublishedCourses(schoolId: string) {
   const supabase = await createClient()
   const { data } = await supabase
     .from('courses')
-    .select('id, title, description, price, is_free, slug, status, thumbnail_url, created_at')
+    .select('id, title, description, price, is_free, slug, status, thumbnail_url, created_at, lessons(count)')
     .eq('school_id', schoolId)
     .eq('status', 'published')
     .order('created_at', { ascending: false })
-  
+
   if (!data) return []
 
-  const coursesWithLessons = await Promise.all(
-    data.map(async (course) => {
-      const { count } = await supabase
-        .from('lessons')
-        .select('*', { count: 'exact', head: true })
-        .eq('course_id', course.id)
-      return { ...course, total_lessons: count || 0 }
-    })
-  )
-
-  return coursesWithLessons
+  return data.map((course: any) => {
+    const { lessons, ...rest } = course
+    return { ...rest, total_lessons: lessons?.[0]?.count || 0 }
+  })
 }
 
 export async function getCourseBySlug(courseSlug: string, schoolId: string) {

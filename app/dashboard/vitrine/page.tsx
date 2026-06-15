@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { getMySchool } from '@/app/actions/school-actions'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
@@ -104,8 +105,8 @@ export default function VitrinePage() {
             {cursos.map((curso) => (
               <label key={curso.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '10px', border: '1px solid ' + (featuredIds.includes(curso.id) ? '#AEEA00' : '#2A2A2A'), backgroundColor: featuredIds.includes(curso.id) ? '#1A2E00' : '#111111', cursor: 'pointer' }}>
                 <input type="checkbox" checked={featuredIds.includes(curso.id)} onChange={(e) => { if (e.target.checked) { setFeaturedIds([...featuredIds, curso.id]) } else { setFeaturedIds(featuredIds.filter(id => id !== curso.id)) } }} style={{ accentColor: '#AEEA00' }} />
-                <div style={{ width: '48px', height: '36px', borderRadius: '6px', backgroundColor: '#2A2A2A', overflow: 'hidden', flexShrink: 0 }}>
-                  {curso.thumbnail_url && <img src={curso.thumbnail_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                <div style={{ width: '48px', height: '36px', borderRadius: '6px', backgroundColor: '#2A2A2A', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
+                  {curso.thumbnail_url && <Image src={curso.thumbnail_url} alt="" fill style={{ objectFit: 'cover' }} />}
                 </div>
                 <div style={{ flex: 1 }}>
                   <p style={{ color: '#F0F0F0', fontSize: '14px', fontWeight: '500', margin: 0 }}>{curso.title}</p>

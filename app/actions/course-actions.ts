@@ -53,17 +53,13 @@ export async function createCourse(formData: {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autenticado' }
 
-  console.log('userId:', user.id)
-
   const schoolId = await getSchoolId(user.id)
-  console.log('schoolId:', schoolId)
-
   if (!schoolId) return { error: 'Escola não encontrada. Crie sua escola primeiro.' }
 
   const slug = formData.title
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
 
@@ -96,6 +92,22 @@ export async function updateCourse(id: string, formData: {
   status: string
 }) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const schoolId = await getSchoolId(user.id)
+  if (!schoolId) return { error: 'Escola não encontrada' }
+
+  // Verificar que o curso pertence à escola do usuário
+  const { data: existing } = await supabase
+    .from('courses')
+    .select('school_id')
+    .eq('id', id)
+    .single()
+
+  if (!existing || existing.school_id !== schoolId) {
+    return { error: 'Acesso negado' }
+  }
 
   const { error } = await supabase
     .from('courses')
@@ -117,6 +129,23 @@ export async function updateCourse(id: string, formData: {
 
 export async function deleteCourse(id: string) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const schoolId = await getSchoolId(user.id)
+  if (!schoolId) return { error: 'Escola não encontrada' }
+
+  // Verificar que o curso pertence à escola do usuário
+  const { data: existing } = await supabase
+    .from('courses')
+    .select('school_id')
+    .eq('id', id)
+    .single()
+
+  if (!existing || existing.school_id !== schoolId) {
+    return { error: 'Acesso negado' }
+  }
+
   const { error } = await supabase.from('courses').delete().eq('id', id)
   if (error) return { error: error.message }
   revalidatePath('/dashboard/cursos')

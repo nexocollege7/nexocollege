@@ -4,7 +4,19 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
+async function verifyMaster(): Promise<{ error: string } | null> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autorizado' }
+  const masterEmail = process.env.MASTER_EMAIL || process.env.NEXT_PUBLIC_MASTER_EMAIL
+  if (user.email !== masterEmail) return { error: 'Acesso negado' }
+  return null
+}
+
 export async function getMasterStats() {
+  const authError = await verifyMaster()
+  if (authError) return null
+
   const adminClient = createAdminClient()
 
   const [
@@ -32,42 +44,31 @@ export async function getMasterStats() {
 }
 
 export async function getEscolas() {
+  const authError = await verifyMaster()
+  if (authError) return []
+
   const adminClient = createAdminClient()
 
-  // Buscar escolas
   const { data: schools, error } = await adminClient
     .from('schools')
-    .select('*')
+    .select(`
+      id, name, slug, plan, is_active, created_at, owner_name, owner_phone,
+      description, primary_color, custom_domain, mp_access_token,
+      courses(count),
+      enrollments(count)
+    `)
     .order('created_at', { ascending: false })
+    .limit(200)
 
   if (error) {
     console.error('getEscolas error:', error)
     return []
   }
-  if (!schools || schools.length === 0) return []
 
-  // Buscar contagem de cursos e alunos para cada escola
-  const result = await Promise.all(
-    schools.map(async (school) => {
-      const [{ count: cursosCount }, { count: alunosCount }] = await Promise.all([
-        adminClient
-          .from('courses')
-          .select('*', { count: 'exact', head: true })
-          .eq('school_id', school.id),
-        adminClient
-          .from('enrollments')
-          .select('*', { count: 'exact', head: true })
-          .eq('school_id', school.id),
-      ])
-      return {
-        ...school,
-        courses: [{ count: cursosCount ?? 0 }],
-        enrollments: [{ count: alunosCount ?? 0 }],
-      }
-    })
-  )
-
-  return result
+  return (schools || []).map((school: any) => {
+    const { mp_access_token, ...rest } = school
+    return { ...rest, has_mp_token: !!mp_access_token }
+  })
 }
 
 export async function criarEscola(formData: {
@@ -78,21 +79,21 @@ export async function criarEscola(formData: {
   plano: string
   cor: string
 }) {
-  const supabase = await createClient()
+  const authError = await verifyMaster()
+  if (authError) return authError
+
   const adminClient = createAdminClient()
 
-  // 1. Criar usuário no Supabase Auth
-  const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
+  const { data: authData, error: authError2 } = await adminClient.auth.admin.createUser({
     email: formData.email,
     password: formData.senha,
     email_confirm: true,
   })
 
-  if (authError) return { error: authError.message }
+  if (authError2) return { error: authError2.message }
 
   const userId = authData.user.id
 
-  // 2. Criar perfil do usuário
   await adminClient.from('users').upsert({
     id: userId,
     email: formData.email,
@@ -100,11 +101,10 @@ export async function criarEscola(formData: {
     role: 'admin',
   })
 
-  // 3. Criar a escola
   const slug = formData.nome
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
 
@@ -128,18 +128,25 @@ export async function criarEscola(formData: {
 }
 
 export async function toggleEscolaStatus(escolaId: string, isActive: boolean) {
-  const supabase = await createClient()
-  const { error } = await supabase
+  const authError = await verifyMaster()
+  if (authError) return authError
+
+  const adminClient = createAdminClient()
+  const { error } = await adminClient
     .from('schools')
     .update({ is_active: isActive })
     .eq('id', escolaId)
   if (error) return { error: error.message }
   return { success: true }
 }
-export async function alterarPlanoEscola(escolaId: string, plano: 'starter' | 'creator' | 'pro' | 'scale' | 'enterprise') {
-  const supabase = createAdminClient()
 
-  const { error } = await supabase
+export async function alterarPlanoEscola(escolaId: string, plano: 'starter' | 'creator' | 'pro' | 'scale' | 'enterprise') {
+  const authError = await verifyMaster()
+  if (authError) return authError
+
+  const adminClient = createAdminClient()
+
+  const { error } = await adminClient
     .from('schools')
     .update({ plan: plano })
     .eq('id', escolaId)
@@ -151,16 +158,19 @@ export async function alterarPlanoEscola(escolaId: string, plano: 'starter' | 'c
 }
 
 export async function getAnaliseComercial() {
+  const authError = await verifyMaster()
+  if (authError) return null
+
   const supabase = await createClient()
 
   const { data: escolas } = await supabase
     .from('schools')
     .select('id, name, plan, created_at, is_active')
     .order('created_at', { ascending: true })
+    .limit(500)
 
   if (!escolas) return null
 
-  // Escolas por mes (ultimos 6 meses)
   const agora = new Date()
   const meses = []
   for (let i = 5; i >= 0; i--) {
@@ -173,7 +183,6 @@ export async function getAnaliseComercial() {
     meses.push({ label, count })
   }
 
-  // Distribuicao por plano
   const porPlano = {
     starter: escolas.filter((e) => (e.plan || 'starter') === 'starter').length,
     creator: escolas.filter((e) => e.plan === 'creator').length,
@@ -182,7 +191,6 @@ export async function getAnaliseComercial() {
     enterprise: escolas.filter((e) => e.plan === 'enterprise').length,
   }
 
-  // Buscar precos dos planos na tabela plans
   const { data: plansData } = await supabase
     .from('plans')
     .select('slug, price_yearly')
@@ -193,7 +201,6 @@ export async function getAnaliseComercial() {
     precoMensal[p.slug] = p.price_yearly > 0 ? Math.round(p.price_yearly / 12) : 0
   })
 
-  // Metricas
   const total = escolas.length
   const pagas = porPlano.creator + porPlano.pro + porPlano.scale + porPlano.enterprise
   const taxaConversao = total > 0 ? Math.round((pagas / total) * 100) : 0

@@ -79,12 +79,12 @@ export async function markLessonComplete(lessonId: string, courseId: string) {
   const { error } = await supabase
     .from('lesson_progress')
     .upsert({
-      student_id: user.id,
+      user_id: user.id,
       lesson_id: lessonId,
       course_id: courseId,
-      is_completed: true,
+      completed: true,
       completed_at: new Date().toISOString(),
-    }, { onConflict: 'student_id,lesson_id' })
+    }, { onConflict: 'user_id,lesson_id' })
 
   if (error) return { error: error.message }
   return { success: true }

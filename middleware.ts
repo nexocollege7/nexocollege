@@ -85,7 +85,7 @@ export async function middleware(request: NextRequest) {
       redirect.pathname = '/login'
       return NextResponse.redirect(redirect)
     }
-    const masterEmail = process.env.NEXT_PUBLIC_MASTER_EMAIL
+    const masterEmail = process.env.MASTER_EMAIL || process.env.NEXT_PUBLIC_MASTER_EMAIL
     if (user.email !== masterEmail) {
       const redirect = url.clone()
       redirect.pathname = '/dashboard'
@@ -106,7 +106,8 @@ export async function middleware(request: NextRequest) {
     const masterEmail = process.env.NEXT_PUBLIC_MASTER_EMAIL
 
     // Master não deve acessar dashboard
-    if (user.email === masterEmail) {
+    const masterEmailCheck = process.env.MASTER_EMAIL || process.env.NEXT_PUBLIC_MASTER_EMAIL
+    if (user.email === masterEmailCheck) {
       const redirect = url.clone()
       redirect.pathname = '/master'
       return NextResponse.redirect(redirect)
