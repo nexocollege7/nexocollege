@@ -25,7 +25,7 @@ export default function EscolasPage() {
 
   async function handlePlano(escolaId: string, plano: string) {
     setSalvando(escolaId)
-    await alterarPlanoEscola(escolaId, plano as 'starter' | 'pro' | 'enterprise')
+    await alterarPlanoEscola(escolaId, plano as 'starter' | 'creator' | 'pro' | 'scale' | 'enterprise')
     setEscolas(escolas.map((e) => e.id === escolaId ? { ...e, plan: plano } : e))
     setSalvando(null)
   }
@@ -101,7 +101,9 @@ export default function EscolasPage() {
                     <label style={{ color: '#555555', fontSize: '11px' }}>Plano</label>
                     <select value={escola.plan ?? 'starter'} disabled={salvando === escola.id} onChange={(e) => handlePlano(escola.id, e.target.value)} style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid #2A2A2A', backgroundColor: '#0D0D0D', color: '#7C4DFF', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', opacity: salvando === escola.id ? 0.5 : 1 }}>
                       <option value="starter">Starter</option>
+                      <option value="creator">Creator</option>
                       <option value="pro">Pro</option>
+                      <option value="scale">Scale</option>
                       <option value="enterprise">Enterprise</option>
                     </select>
                     {salvando === escola.id && <span style={{ color: '#AEEA00', fontSize: '11px' }}>Salvando...</span>}

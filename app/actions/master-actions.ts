@@ -136,7 +136,7 @@ export async function toggleEscolaStatus(escolaId: string, isActive: boolean) {
   if (error) return { error: error.message }
   return { success: true }
 }
-export async function alterarPlanoEscola(escolaId: string, plano: 'starter' | 'pro' | 'enterprise') {
+export async function alterarPlanoEscola(escolaId: string, plano: 'starter' | 'creator' | 'pro' | 'scale' | 'enterprise') {
   const supabase = createAdminClient()
 
   const { error } = await supabase
@@ -176,15 +176,32 @@ export async function getAnaliseComercial() {
   // Distribuicao por plano
   const porPlano = {
     starter: escolas.filter((e) => (e.plan || 'starter') === 'starter').length,
+    creator: escolas.filter((e) => e.plan === 'creator').length,
     pro: escolas.filter((e) => e.plan === 'pro').length,
+    scale: escolas.filter((e) => e.plan === 'scale').length,
     enterprise: escolas.filter((e) => e.plan === 'enterprise').length,
   }
 
+  // Buscar precos dos planos na tabela plans
+  const { data: plansData } = await supabase
+    .from('plans')
+    .select('slug, price_yearly')
+    .in('slug', ['creator', 'pro', 'scale', 'enterprise'])
+
+  const precoMensal: Record<string, number> = {}
+  plansData?.forEach((p) => {
+    precoMensal[p.slug] = p.price_yearly > 0 ? Math.round(p.price_yearly / 12) : 0
+  })
+
   // Metricas
   const total = escolas.length
-  const pagas = porPlano.pro + porPlano.enterprise
+  const pagas = porPlano.creator + porPlano.pro + porPlano.scale + porPlano.enterprise
   const taxaConversao = total > 0 ? Math.round((pagas / total) * 100) : 0
-  const receitaMensal = porPlano.pro * 197 + porPlano.enterprise * 497
+  const receitaMensal =
+    porPlano.creator * (precoMensal['creator'] ?? 0) +
+    porPlano.pro * (precoMensal['pro'] ?? 197) +
+    porPlano.scale * (precoMensal['scale'] ?? 0) +
+    porPlano.enterprise * (precoMensal['enterprise'] ?? 497)
   const ticketMedio = pagas > 0 ? Math.round(receitaMensal / pagas) : 0
 
   return { meses, porPlano, total, pagas, taxaConversao, receitaMensal, ticketMedio }
