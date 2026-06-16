@@ -23,19 +23,70 @@ export async function getMyCertificates() {
   return data || []
 }
 
+export async function getCoursesWithProgress() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data: enrollments } = await supabase
+    .from('enrollments')
+    .select(`
+      id,
+      course_id,
+      courses (
+        id,
+        title,
+        total_lessons,
+        schools!courses_school_id_fkey ( name )
+      )
+    `)
+    .eq('student_id', user.id)
+    .eq('status', 'active')
+
+  if (!enrollments?.length) return []
+
+  const courseIds = enrollments.map((e: any) => e.course_id as string)
+
+  const [progressResult, certsResult] = await Promise.all([
+    supabase
+      .from('lesson_progress')
+      .select('course_id')
+      .eq('student_id', user.id)
+      .eq('is_completed', true)
+      .in('course_id', courseIds),
+    supabase
+      .from('certificates')
+      .select('course_id, unique_code, issued_at, id')
+      .eq('student_id', user.id)
+      .in('course_id', courseIds),
+  ])
+
+  const progress = progressResult.data ?? []
+  const certs = certsResult.data ?? []
+
+  return enrollments.map((enrollment: any) => {
+    const course = enrollment.courses as any
+    const total = (course?.total_lessons as number) ?? 0
+    const completed = progress.filter((p: any) => p.course_id === enrollment.course_id).length
+    const cert = certs.find((c: any) => c.course_id === enrollment.course_id) ?? null
+
+    return {
+      enrollmentId: enrollment.id as string,
+      courseId: enrollment.course_id as string,
+      courseTitle: (course?.title as string) ?? '',
+      schoolName: (course?.schools as any)?.name as string ?? '',
+      totalLessons: total,
+      completedLessons: completed,
+      isComplete: total > 0 && completed >= total,
+      certificate: cert as { id: string; unique_code: string; issued_at: string } | null,
+    }
+  })
+}
+
 export async function issueCertificate(courseId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autenticado' }
-
-  // Buscar school_id do curso
-  const { data: course } = await supabase
-    .from('courses')
-    .select('school_id, title, total_lessons')
-    .eq('id', courseId)
-    .single()
-
-  if (!course) return { error: 'Curso não encontrado' }
 
   // Verificar se já tem certificado
   const { data: existing } = await supabase
@@ -46,6 +97,32 @@ export async function issueCertificate(courseId: string) {
     .single()
 
   if (existing) return { success: true, code: existing.unique_code, already: true }
+
+  // Buscar curso
+  const { data: course } = await supabase
+    .from('courses')
+    .select('school_id, title, total_lessons')
+    .eq('id', courseId)
+    .single()
+
+  if (!course) return { error: 'Curso não encontrado' }
+
+  // Verificar 100% de conclusão
+  const total = course.total_lessons ?? 0
+  if (total > 0) {
+    const { count } = await supabase
+      .from('lesson_progress')
+      .select('*', { count: 'exact', head: true })
+      .eq('student_id', user.id)
+      .eq('course_id', courseId)
+      .eq('is_completed', true)
+
+    if ((count ?? 0) < total) {
+      return {
+        error: `Conclua todas as aulas para liberar seu certificado (${count ?? 0}/${total} concluídas)`,
+      }
+    }
+  }
 
   // Emitir certificado
   const { data, error } = await supabase

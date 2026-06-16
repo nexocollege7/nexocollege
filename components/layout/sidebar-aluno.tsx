@@ -90,6 +90,7 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
         justifyContent: collapsed ? 'center' : 'space-between',
         gap: '8px',
         cursor: escola ? 'pointer' : 'default',
+        position: 'relative',
       }}
         onClick={() => escola && window.open(`https://${escola.slug}.nexocollege.com.br`, '_blank')}
         title={escola ? 'Ver vitrine da escola' : ''}
@@ -124,10 +125,20 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
             </div>
           )
         )}
-        <button onClick={(e) => { e.stopPropagation(); setCollapsed(!collapsed) }} style={{
-          background: 'none', border: 'none', cursor: 'pointer',
-          color: '#555555', fontSize: '18px', padding: '4px', flexShrink: 0,
-        }}>
+        {/* Botão de colapsar — absoluto quando colapsado para não deslocar a logo do centro */}
+        <button
+          onClick={(e) => { e.stopPropagation(); setCollapsed(!collapsed) }}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: '#555555', fontSize: '18px', padding: '4px', flexShrink: 0,
+            ...(collapsed ? {
+              position: 'absolute' as const,
+              bottom: '6px',
+              right: '8px',
+              fontSize: '14px',
+            } : {}),
+          }}
+        >
           {collapsed ? '>' : '☰'}
         </button>
       </div>

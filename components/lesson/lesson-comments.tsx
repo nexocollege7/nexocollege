@@ -8,6 +8,8 @@ interface Comment {
   content: string
   created_at: string
   user_name: string
+  reply_content: string | null
+  reply_at: string | null
 }
 
 function formatDate(iso: string) {
@@ -92,19 +94,48 @@ export function LessonComments({ lessonId }: { lessonId: string }) {
           Nenhum comentário ainda. Seja o primeiro!
         </p>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {comments.map(c => (
-            <div key={c.id} style={{ background: '#1A1A1A', borderRadius: '10px', padding: '14px 16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#AEEA00', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700', color: '#0D0D0D', flexShrink: 0 }}>
-                  {c.user_name.charAt(0).toUpperCase()}
+            <div key={c.id}>
+              {/* Comentário do aluno */}
+              <div style={{ background: '#1A1A1A', borderRadius: '10px', padding: '14px 16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#AEEA00', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700', color: '#0D0D0D', flexShrink: 0 }}>
+                    {c.user_name.charAt(0).toUpperCase()}
+                  </div>
+                  <span style={{ fontSize: '13px', fontWeight: '600', color: '#F0F0F0' }}>{c.user_name}</span>
+                  <span style={{ fontSize: '11px', color: '#555555', marginLeft: 'auto' }}>{formatDate(c.created_at)}</span>
                 </div>
-                <span style={{ fontSize: '13px', fontWeight: '600', color: '#F0F0F0' }}>{c.user_name}</span>
-                <span style={{ fontSize: '11px', color: '#555555', marginLeft: 'auto' }}>{formatDate(c.created_at)}</span>
+                <p style={{ fontSize: '13px', color: '#CCCCCC', margin: 0, lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                  {c.content}
+                </p>
               </div>
-              <p style={{ fontSize: '13px', color: '#CCCCCC', margin: 0, lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
-                {c.content}
-              </p>
+
+              {/* Resposta do professor (se houver) */}
+              {c.reply_content && (
+                <div style={{
+                  marginLeft: '20px',
+                  marginTop: '4px',
+                  backgroundColor: '#0D1500',
+                  border: '1px solid #1A3A00',
+                  borderRadius: '10px',
+                  padding: '12px 16px',
+                  position: 'relative',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                    <div style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: '#1A3A00', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <span style={{ fontSize: '10px' }}>👨‍🏫</span>
+                    </div>
+                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#AEEA00' }}>Professor</span>
+                    {c.reply_at && (
+                      <span style={{ fontSize: '11px', color: '#444444', marginLeft: 'auto' }}>{formatDate(c.reply_at)}</span>
+                    )}
+                  </div>
+                  <p style={{ fontSize: '13px', color: '#CCCCCC', margin: 0, lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                    {c.reply_content}
+                  </p>
+                </div>
+              )}
             </div>
           ))}
         </div>

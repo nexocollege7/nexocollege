@@ -38,7 +38,7 @@ export async function getDashboardStats() {
     { data: pagamentos },
     { data: matriculasRecentes },
   ] = await Promise.all([
-    supabase.from('enrollments').select('*', { count: 'exact', head: true }).eq('school_id', schoolId).eq('status', 'active'),
+    supabase.from('users').select('*', { count: 'exact', head: true }).eq('school_id', schoolId).eq('role', 'student'),
     supabase.from('courses').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
     supabase.from('certificates').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
     supabase.from('payments').select('amount, paid_at, status').eq('school_id', schoolId).eq('status', 'approved').order('paid_at', { ascending: false }).limit(5),

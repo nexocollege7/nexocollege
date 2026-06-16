@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { AdminLayout } from '@/components/layout/admin-layout'
+import { getPendingDocuments } from '@/app/actions/legal-actions'
 
 export default async function DashboardLayout({
   children,
@@ -30,6 +31,13 @@ export default async function DashboardLayout({
     .single()
 
   const role = profile?.role || 'student'
+
+  // Verificar se há documentos LGPD pendentes de aceite
+  const docRole = role === 'student' ? 'student' : 'school'
+  const pendingDocs = await getPendingDocuments(user.id, docRole)
+  if (pendingDocs.length > 0) {
+    redirect('/aceitar-termos')
+  }
 
   // Busca dados da escola para exibir logo no dashboard
   let schoolName: string | null = null

@@ -98,6 +98,38 @@ export async function revokeEnrollment(enrollmentId: string) {
   return { success: true }
 }
 
+export async function liberarCurso(studentId: string, courseId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const { data: school } = await supabase
+    .from('schools')
+    .select('id')
+    .eq('owner_id', user.id)
+    .single()
+
+  if (!school) return { error: 'Escola não encontrada' }
+
+  const { error } = await supabase
+    .from('enrollments')
+    .insert({
+      school_id: school.id,
+      course_id: courseId,
+      student_id: studentId,
+      status: 'active',
+      payment_status: 'manual',
+    })
+
+  if (error) {
+    if (error.code === '23505') return { error: 'Aluno já matriculado neste curso' }
+    return { error: error.message }
+  }
+
+  revalidatePath('/dashboard/alunos')
+  return { success: true }
+}
+
 export async function getSchoolStudents() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

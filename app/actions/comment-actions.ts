@@ -10,7 +10,7 @@ export async function getLessonComments(lessonId: string) {
 
   const { data } = await supabase
     .from('lesson_comments')
-    .select('id, content, created_at, users(full_name)')
+    .select('id, content, created_at, reply_content, reply_at, users(full_name)')
     .eq('lesson_id', lessonId)
     .order('created_at', { ascending: true })
 
@@ -19,6 +19,8 @@ export async function getLessonComments(lessonId: string) {
     content: c.content as string,
     created_at: c.created_at as string,
     user_name: (c.users?.full_name as string) || 'Aluno',
+    reply_content: (c.reply_content as string) || null,
+    reply_at: (c.reply_at as string) || null,
   }))
 }
 
@@ -65,7 +67,7 @@ export async function getAllSchoolComments() {
 
   const { data } = await adminClient
     .from('lesson_comments')
-    .select('id, content, created_at, users(full_name), lessons(title)')
+    .select('id, content, created_at, reply_content, reply_at, users(full_name), lessons(title)')
     .eq('school_id', profile.school_id)
     .order('created_at', { ascending: false })
 
@@ -75,5 +77,29 @@ export async function getAllSchoolComments() {
     created_at: c.created_at as string,
     user_name: (c.users?.full_name as string) || 'Aluno',
     lesson_title: (c.lessons?.title as string) || 'Aula',
+    reply_content: (c.reply_content as string) || null,
+    reply_at: (c.reply_at as string) || null,
   }))
+}
+
+export async function replyToComment(commentId: string, replyContent: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  if (!replyContent.trim()) return { error: 'Resposta não pode ser vazia' }
+
+  const adminClient = createAdminClient()
+
+  const { error } = await adminClient
+    .from('lesson_comments')
+    .update({
+      reply_content: replyContent.trim(),
+      reply_at: new Date().toISOString(),
+      replied_by: user.id,
+    })
+    .eq('id', commentId)
+
+  if (error) return { error: error.message }
+  return { success: true }
 }
