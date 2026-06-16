@@ -44,8 +44,6 @@ export function LessonComments({ lessonId }: { lessonId: string }) {
 
     if (!data) return
 
-    console.log('[LessonComments] carregados:', data.length, 'lessonId:', lessonId)
-
     // Tenta buscar nomes dos usuários; se RLS bloquear, cai no fallback 'Aluno'
     const userIds = [...new Set(data.map((c: any) => c.user_id as string))]
     const { data: usersData } = await supabase

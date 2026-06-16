@@ -63,8 +63,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true })
     }
 
-    // FLUXO 2: Compra de curso (external_reference: "courseId|userId")
-    if (parts.length === 2 && parts[0] && parts[1]) {
+    // FLUXO 2: Compra de curso (external_reference: "courseId|userId" ou "courseId|userId|cupom|desconto")
+    const isCourseRef = (parts.length === 2 || parts.length === 4) && parts[0] && parts[1] && parts[0] !== 'upgrade'
+    if (isCourseRef) {
       const courseId = parts[0]
       const studentId = parts[1]
 
@@ -99,6 +100,7 @@ export async function POST(request: NextRequest) {
             course_id: courseId,
             school_id: course.school_id,
             status: 'active',
+            payment_status: 'paid',
           })
 
         if (enrollError) {
