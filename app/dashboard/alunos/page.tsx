@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getEnrollments, getSchoolStudents, revokeEnrollment, liberarCurso } from '@/app/actions/matricula-actions'
-import { getMyCourses } from '@/app/actions/course-actions'
+import { getEnrollments, getSchoolStudents, liberarCurso, deletarMatriculaManual, getCursosEscola } from '@/app/actions/matricula-actions'
 import { getStudentLgpdData } from '@/app/actions/legal-actions'
 
 type Student = {
@@ -129,27 +128,28 @@ async function generateLgpdPdf(details: StudentDetails, schoolName: string) {
 function StudentModal({
   studentId,
   schoolName,
-  courses,
   onClose,
   onUpdated,
 }: {
   studentId: string
   schoolName: string
-  courses: any[]
   onClose: () => void
   onUpdated: () => void
 }) {
   const [details, setDetails] = useState<StudentDetails | null>(null)
+  const [modalCourses, setModalCourses] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [generatingPdf, setGeneratingPdf] = useState(false)
-  const [liberando, setLiberando] = useState(false)
-  const [selectedCourse, setSelectedCourse] = useState(courses[0]?.id ?? '')
-  const [liberarMsg, setLiberarMsg] = useState('')
-  const [revokingId, setRevokingId] = useState<string | null>(null)
+  const [actioningCourseId, setActioningCourseId] = useState<string | null>(null)
+  const [courseMsg, setCourseMsg] = useState('')
 
   async function reload() {
-    const d = await getStudentLgpdData(studentId)
+    const [d, c] = await Promise.all([
+      getStudentLgpdData(studentId),
+      getCursosEscola(),
+    ])
     setDetails(d as StudentDetails)
+    setModalCourses(c as any[])
     setLoading(false)
   }
 
@@ -162,34 +162,36 @@ function StudentModal({
     setGeneratingPdf(false)
   }
 
-  async function handleLiberarCurso() {
-    if (!selectedCourse) return
-    setLiberando(true)
-    setLiberarMsg('')
-    const result = await liberarCurso(studentId, selectedCourse)
+  async function handleLiberarCurso(courseId: string) {
+    setActioningCourseId(courseId)
+    setCourseMsg('')
+    const result = await liberarCurso(studentId, courseId)
     if (result?.error) {
-      setLiberarMsg('Erro: ' + result.error)
+      setCourseMsg('Erro: ' + result.error)
     } else {
-      setLiberarMsg('Curso liberado com sucesso!')
       await reload()
       onUpdated()
     }
-    setLiberando(false)
+    setActioningCourseId(null)
   }
 
-  async function handleRevoke(enrollmentId: string) {
-    if (!confirm('Revogar acesso deste aluno neste curso?')) return
-    setRevokingId(enrollmentId)
-    await revokeEnrollment(enrollmentId)
-    await reload()
-    onUpdated()
-    setRevokingId(null)
+  async function handleRevogar(enrollmentId: string) {
+    if (!confirm('Revogar acesso manual deste aluno neste curso?')) return
+    setActioningCourseId(enrollmentId)
+    setCourseMsg('')
+    const result = await deletarMatriculaManual(enrollmentId)
+    if (result?.error) {
+      setCourseMsg('Erro: ' + result.error)
+    } else {
+      await reload()
+      onUpdated()
+    }
+    setActioningCourseId(null)
   }
 
-  const activeEnrollmentCourseIds = new Set(
-    details?.enrollments.filter(e => e.status === 'active').map((e: any) => e.course_id) ?? []
+  const activeEnrollmentMap = new Map<string, any>(
+    (details?.enrollments.filter(e => e.status === 'active') ?? []).map((e: any) => [e.course_id, e])
   )
-  const availableCourses = courses.filter(c => !activeEnrollmentCourseIds.has(c.id))
 
   return (
     <div
@@ -215,114 +217,110 @@ function StudentModal({
         <div style={{ overflowY: 'auto', padding: '24px', flex: 1 }}>
           {loading ? (
             <p style={{ color: '#555555', textAlign: 'center', padding: '32px 0' }}>Carregando...</p>
-          ) : !details ? (
-            <p style={{ color: '#FF5555', textAlign: 'center', padding: '32px 0' }}>Erro ao carregar dados.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
               {/* Dados pessoais */}
-              <div>
-                <p style={{ fontSize: '11px', fontWeight: '700', color: '#555555', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 10px' }}>Dados Pessoais</p>
-                <div style={{ backgroundColor: '#111111', borderRadius: '10px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <span style={{ color: '#555555', fontSize: '13px', minWidth: '90px' }}>Cadastro</span>
-                    <span style={{ color: '#CCCCCC', fontSize: '13px' }}>{new Date(details.created_at).toLocaleDateString('pt-BR')}</span>
-                  </div>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <span style={{ color: '#555555', fontSize: '13px', minWidth: '90px' }}>Escola</span>
-                    <span style={{ color: '#CCCCCC', fontSize: '13px' }}>{schoolName}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Cursos ativos + revogar */}
-              <div>
-                <p style={{ fontSize: '11px', fontWeight: '700', color: '#555555', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 10px' }}>
-                  Cursos Matriculados ({details.enrollments.filter(e => e.status === 'active').length})
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {details.enrollments.filter(e => e.status === 'active').length === 0 ? (
-                    <p style={{ color: '#444444', fontSize: '13px', margin: 0 }}>Nenhum curso liberado ainda.</p>
-                  ) : (
-                    details.enrollments.filter(e => e.status === 'active').map((enr: any) => (
-                      <div key={enr.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#111111', borderRadius: '8px', padding: '10px 14px' }}>
-                        <div>
-                          <span style={{ color: '#CCCCCC', fontSize: '13px' }}>{(enr.courses as any)?.title ?? '—'}</span>
-                          {enr.payment_status === 'manual' && (
-                            <span style={{ display: 'inline-block', marginLeft: '8px', fontSize: '10px', color: '#7C4DFF', backgroundColor: 'rgba(124,77,255,0.1)', padding: '1px 6px', borderRadius: '10px' }}>
-                              Manual
-                            </span>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => handleRevoke(enr.id)}
-                          disabled={revokingId === enr.id}
-                          style={{ padding: '4px 10px', borderRadius: '6px', border: '1px solid rgba(255,85,85,0.3)', backgroundColor: 'transparent', color: '#FF5555', fontSize: '11px', cursor: 'pointer', fontFamily: 'inherit' }}
-                        >
-                          {revokingId === enr.id ? '...' : 'Revogar'}
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* Liberar Curso */}
-              {availableCourses.length > 0 && (
+              {details && (
                 <div>
-                  <p style={{ fontSize: '11px', fontWeight: '700', color: '#555555', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 10px' }}>Liberar Curso</p>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    <select
-                      value={selectedCourse}
-                      onChange={(e) => setSelectedCourse(e.target.value)}
-                      style={{ flex: 1, padding: '10px 12px', borderRadius: '8px', border: '1px solid #2A2A2A', backgroundColor: '#111111', color: '#F0F0F0', fontSize: '13px', outline: 'none', fontFamily: 'inherit' }}
-                    >
-                      {availableCourses.map(c => (
-                        <option key={c.id} value={c.id}>{c.title}</option>
-                      ))}
-                    </select>
-                    <button
-                      onClick={handleLiberarCurso}
-                      disabled={liberando || !selectedCourse}
-                      style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#7C4DFF', color: '#fff', fontWeight: '700', fontSize: '13px', cursor: liberando ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: liberando ? 0.7 : 1, whiteSpace: 'nowrap' }}
-                    >
-                      {liberando ? 'Liberando...' : '+ Liberar'}
-                    </button>
+                  <p style={{ fontSize: '11px', fontWeight: '700', color: '#555555', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 10px' }}>Dados Pessoais</p>
+                  <div style={{ backgroundColor: '#111111', borderRadius: '10px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <span style={{ color: '#555555', fontSize: '13px', minWidth: '90px' }}>Cadastro</span>
+                      <span style={{ color: '#CCCCCC', fontSize: '13px' }}>{new Date(details.created_at).toLocaleDateString('pt-BR')}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <span style={{ color: '#555555', fontSize: '13px', minWidth: '90px' }}>Escola</span>
+                      <span style={{ color: '#CCCCCC', fontSize: '13px' }}>{schoolName}</span>
+                    </div>
                   </div>
-                  {liberarMsg && (
-                    <p style={{ fontSize: '12px', color: liberarMsg.startsWith('Erro') ? '#FF5555' : '#AEEA00', margin: '8px 0 0' }}>
-                      {liberarMsg}
-                    </p>
-                  )}
                 </div>
               )}
 
-              {/* Aceites LGPD */}
+              {/* Cursos da escola — liberar / revogar / pago */}
               <div>
                 <p style={{ fontSize: '11px', fontWeight: '700', color: '#555555', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 10px' }}>
-                  Aceites LGPD ({details.acceptances.length})
+                  Cursos ({modalCourses.length})
                 </p>
-                {details.acceptances.length === 0 ? (
-                  <p style={{ color: '#444444', fontSize: '13px', margin: 0 }}>Nenhum aceite registrado.</p>
+                {modalCourses.length === 0 ? (
+                  <p style={{ color: '#444444', fontSize: '13px', margin: 0 }}>Nenhum curso criado ainda.</p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {details.acceptances.map((acc: any) => {
-                      const docInfo = acc.legal_documents as any
+                    {modalCourses.map((course: any) => {
+                      const enr = activeEnrollmentMap.get(course.id)
+                      // 'paid' = pago via MP; 'manual' ou null = liberado pelo admin (revogável)
+                      const isPaid = enr?.payment_status === 'paid'
+                      const isActioning = actioningCourseId === course.id || actioningCourseId === enr?.id
                       return (
-                        <div key={acc.id} style={{ backgroundColor: '#111111', borderRadius: '8px', padding: '10px 14px' }}>
-                          <p style={{ color: '#AEEA00', fontSize: '13px', fontWeight: '600', margin: '0 0 2px' }}>
-                            {DOC_TYPE_LABELS[docInfo?.type] ?? docInfo?.title} {docInfo?.version ? `v${docInfo.version}` : ''}
-                          </p>
-                          <p style={{ color: '#555555', fontSize: '11px', margin: 0 }}>
-                            {new Date(acc.accepted_at).toLocaleString('pt-BR')}
-                            {acc.ip_address ? ` · IP: ${acc.ip_address}` : ''}
-                          </p>
+                        <div key={course.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#111111', borderRadius: '8px', padding: '10px 14px', gap: '12px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                            <span style={{ color: '#CCCCCC', fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {course.title}
+                            </span>
+                            {enr && !isPaid && (
+                              <span style={{ flexShrink: 0, fontSize: '10px', color: '#7C4DFF', backgroundColor: 'rgba(124,77,255,0.1)', padding: '1px 6px', borderRadius: '10px' }}>Manual</span>
+                            )}
+                            {enr && isPaid && (
+                              <span style={{ flexShrink: 0, fontSize: '10px', color: '#00B8D4', backgroundColor: 'rgba(0,184,212,0.1)', padding: '1px 6px', borderRadius: '10px' }}>Pago</span>
+                            )}
+                          </div>
+                          {!enr ? (
+                            <button
+                              onClick={() => handleLiberarCurso(course.id)}
+                              disabled={isActioning}
+                              style={{ flexShrink: 0, padding: '4px 12px', borderRadius: '6px', border: '1px solid rgba(0,200,83,0.4)', backgroundColor: 'rgba(0,200,83,0.08)', color: '#00C853', fontSize: '11px', fontWeight: '700', cursor: isActioning ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: isActioning ? 0.6 : 1, whiteSpace: 'nowrap' }}
+                            >
+                              {isActioning ? '...' : '+ Liberar'}
+                            </button>
+                          ) : !isPaid ? (
+                            <button
+                              onClick={() => handleRevogar(enr.id)}
+                              disabled={isActioning}
+                              style={{ flexShrink: 0, padding: '4px 12px', borderRadius: '6px', border: '1px solid rgba(255,85,85,0.3)', backgroundColor: 'transparent', color: '#FF5555', fontSize: '11px', cursor: isActioning ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: isActioning ? 0.6 : 1, whiteSpace: 'nowrap' }}
+                            >
+                              {isActioning ? '...' : 'Revogar acesso'}
+                            </button>
+                          ) : null}
                         </div>
                       )
                     })}
                   </div>
                 )}
+                {courseMsg && (
+                  <p style={{ fontSize: '12px', color: courseMsg.startsWith('Erro') ? '#FF5555' : '#AEEA00', margin: '8px 0 0' }}>
+                    {courseMsg}
+                  </p>
+                )}
               </div>
+
+              {/* Aceites LGPD */}
+              {details && (
+                <div>
+                  <p style={{ fontSize: '11px', fontWeight: '700', color: '#555555', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 10px' }}>
+                    Aceites LGPD ({details.acceptances.length})
+                  </p>
+                  {details.acceptances.length === 0 ? (
+                    <p style={{ color: '#444444', fontSize: '13px', margin: 0 }}>Nenhum aceite registrado.</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {details.acceptances.map((acc: any) => {
+                        const docInfo = acc.legal_documents as any
+                        return (
+                          <div key={acc.id} style={{ backgroundColor: '#111111', borderRadius: '8px', padding: '10px 14px' }}>
+                            <p style={{ color: '#AEEA00', fontSize: '13px', fontWeight: '600', margin: '0 0 2px' }}>
+                              {DOC_TYPE_LABELS[docInfo?.type] ?? docInfo?.title} {docInfo?.version ? `v${docInfo.version}` : ''}
+                            </p>
+                            <p style={{ color: '#555555', fontSize: '11px', margin: 0 }}>
+                              {new Date(acc.accepted_at).toLocaleString('pt-BR')}
+                              {acc.ip_address ? ` · IP: ${acc.ip_address}` : ''}
+                            </p>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
 
             </div>
           )}
@@ -353,16 +351,14 @@ function StudentModal({
 export default function AlunosPage() {
   const [students, setStudents] = useState<Student[]>([])
   const [enrollments, setEnrollments] = useState<any[]>([])
-  const [courses, setCourses] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
   const [schoolName, setSchoolName] = useState('')
 
   async function load() {
-    const [s, e, c] = await Promise.all([getSchoolStudents(), getEnrollments(), getMyCourses()])
+    const [s, e] = await Promise.all([getSchoolStudents(), getEnrollments()])
     setStudents(s as Student[])
     setEnrollments(e)
-    setCourses(c)
     setLoading(false)
   }
 
@@ -398,7 +394,6 @@ export default function AlunosPage() {
         <StudentModal
           studentId={selectedStudentId}
           schoolName={schoolName}
-          courses={courses}
           onClose={() => setSelectedStudentId(null)}
           onUpdated={load}
         />

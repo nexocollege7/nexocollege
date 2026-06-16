@@ -50,7 +50,7 @@ export async function getSchoolAnnouncements() {
 
   const { data } = await adminClient
     .from('school_announcements')
-    .select('id, title, content, created_at, users(full_name)')
+    .select('id, title, content, created_at, updated_at, users(full_name)')
     .eq('school_id', profile.school_id)
     .order('created_at', { ascending: false })
 
@@ -59,8 +59,63 @@ export async function getSchoolAnnouncements() {
     title: a.title as string,
     content: a.content as string,
     created_at: a.created_at as string,
+    updated_at: (a.updated_at as string) || null,
     author: (a.users?.full_name as string) || 'Admin',
   }))
+}
+
+export async function updateAnnouncement(id: string, title: string, content: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const adminClient = createAdminClient()
+  const { data: profile } = await adminClient
+    .from('users')
+    .select('school_id, role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.school_id) return { error: 'Escola não encontrada' }
+  if (!['admin', 'collaborator'].includes(profile.role)) return { error: 'Sem permissão' }
+
+  const { error } = await adminClient
+    .from('school_announcements')
+    .update({ title: title.trim(), content: content.trim(), updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('school_id', profile.school_id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/dashboard/comunicados')
+  return { success: true }
+}
+
+export async function deleteAnnouncement(id: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const adminClient = createAdminClient()
+  const { data: profile } = await adminClient
+    .from('users')
+    .select('school_id, role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.school_id) return { error: 'Escola não encontrada' }
+  if (!['admin', 'collaborator'].includes(profile.role)) return { error: 'Sem permissão' }
+
+  const { error } = await adminClient
+    .from('school_announcements')
+    .delete()
+    .eq('id', id)
+    .eq('school_id', profile.school_id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/dashboard/comunicados')
+  return { success: true }
 }
 
 export async function getMyAnnouncements() {

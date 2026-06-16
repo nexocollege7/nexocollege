@@ -44,12 +44,16 @@ export async function getDashboardStats() {
     supabase.from('payments').select('amount, paid_at, status').eq('school_id', schoolId).eq('status', 'approved').order('paid_at', { ascending: false }).limit(5),
     supabase.from('enrollments').select(`
       enrolled_at,
-      users ( full_name ),
+      users!enrollments_student_id_fkey ( full_name, role ),
       courses ( title )
-    `).eq('school_id', schoolId).order('enrolled_at', { ascending: false }).limit(5),
+    `).eq('school_id', schoolId).order('enrolled_at', { ascending: false }).limit(20),
   ])
 
   const receita = (pagamentos || []).reduce((acc: number, p: any) => acc + Number(p.amount), 0)
+
+  const matriculasFiltradas = (matriculasRecentes || [])
+    .filter((e: any) => e.users !== null && e.users?.role === 'student')
+    .slice(0, 5)
 
   return {
     totalAlunos: totalAlunos || 0,
@@ -57,6 +61,6 @@ export async function getDashboardStats() {
     totalCertificados: totalCertificados || 0,
     receita,
     pagamentos: pagamentos || [],
-    matriculasRecentes: matriculasRecentes || [],
+    matriculasRecentes: matriculasFiltradas,
   }
 }

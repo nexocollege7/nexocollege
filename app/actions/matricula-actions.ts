@@ -1,7 +1,44 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+
+export async function getCursosEscola() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  // Tenta owner primeiro, depois collaborador (mesmo padrão de getEnrollments)
+  let schoolId: string | null = null
+
+  const { data: ownedSchool } = await supabase
+    .from('schools')
+    .select('id')
+    .eq('owner_id', user.id)
+    .single()
+
+  if (ownedSchool) {
+    schoolId = ownedSchool.id
+  } else {
+    const { data: profile } = await supabase
+      .from('users')
+      .select('school_id')
+      .eq('id', user.id)
+      .single()
+    schoolId = profile?.school_id ?? null
+  }
+
+  if (!schoolId) return []
+
+  const { data } = await supabase
+    .from('courses')
+    .select('id, title, is_free, price')
+    .eq('school_id', schoolId)
+    .order('title')
+
+  return data || []
+}
 
 export async function getEnrollments() {
   const supabase = await createClient()
@@ -23,6 +60,7 @@ export async function getEnrollments() {
       status,
       enrolled_at,
       student_id,
+      payment_status,
       users!enrollments_student_id_fkey ( id, full_name, role ),
       courses ( id, title )
     `)
@@ -125,6 +163,43 @@ export async function liberarCurso(studentId: string, courseId: string) {
     if (error.code === '23505') return { error: 'Aluno já matriculado neste curso' }
     return { error: error.message }
   }
+
+  revalidatePath('/dashboard/alunos')
+  return { success: true }
+}
+
+export async function deletarMatriculaManual(enrollmentId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const adminClient = createAdminClient()
+
+  const { data: school } = await adminClient
+    .from('schools')
+    .select('id')
+    .eq('owner_id', user.id)
+    .single()
+
+  if (!school) return { error: 'Escola não encontrada' }
+
+  const { data: enrollment } = await adminClient
+    .from('enrollments')
+    .select('id, payment_status, school_id')
+    .eq('id', enrollmentId)
+    .single()
+
+  if (!enrollment) return { error: 'Matrícula não encontrada' }
+  if (enrollment.school_id !== school.id) return { error: 'Acesso negado' }
+  // Apenas matrículas pagas via MP não podem ser removidas; null (legado) e 'manual' podem
+  if (enrollment.payment_status === 'paid') return { error: 'Matrículas pagas não podem ser removidas manualmente' }
+
+  const { error } = await adminClient
+    .from('enrollments')
+    .delete()
+    .eq('id', enrollmentId)
+
+  if (error) return { error: error.message }
 
   revalidatePath('/dashboard/alunos')
   return { success: true }

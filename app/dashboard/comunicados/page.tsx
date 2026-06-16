@@ -1,13 +1,19 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createAnnouncement, getSchoolAnnouncements } from '@/app/actions/announcement-actions'
+import {
+  createAnnouncement,
+  getSchoolAnnouncements,
+  updateAnnouncement,
+  deleteAnnouncement,
+} from '@/app/actions/announcement-actions'
 
 interface Announcement {
   id: string
   title: string
   content: string
   created_at: string
+  updated_at: string | null
   author: string
 }
 
@@ -25,9 +31,19 @@ export default function ComunicadosPage() {
   const [sending, setSending] = useState(false)
   const [msg, setMsg] = useState('')
 
-  useEffect(() => {
-    getSchoolAnnouncements().then(setAnnouncements)
-  }, [])
+  // edição inline
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editContent, setEditContent] = useState('')
+  const [editSaving, setEditSaving] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  async function load() {
+    const data = await getSchoolAnnouncements()
+    setAnnouncements(data as Announcement[])
+  }
+
+  useEffect(() => { load() }, [])
 
   async function handleSend() {
     if (!title.trim() || !content.trim()) return
@@ -39,12 +55,42 @@ export default function ComunicadosPage() {
     } else {
       setTitle('')
       setContent('')
-      const updated = await getSchoolAnnouncements()
-      setAnnouncements(updated)
+      await load()
       setMsg('✅ Comunicado enviado para todos os alunos!')
       setTimeout(() => setMsg(''), 4000)
     }
     setSending(false)
+  }
+
+  function startEdit(a: Announcement) {
+    setEditingId(a.id)
+    setEditTitle(a.title)
+    setEditContent(a.content)
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+    setEditTitle('')
+    setEditContent('')
+  }
+
+  async function handleSaveEdit(id: string) {
+    if (!editTitle.trim() || !editContent.trim()) return
+    setEditSaving(true)
+    const result = await updateAnnouncement(id, editTitle, editContent)
+    if (!result?.error) {
+      await load()
+      cancelEdit()
+    }
+    setEditSaving(false)
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm('Tem certeza? O comunicado será removido para todos os alunos.')) return
+    setDeletingId(id)
+    await deleteAnnouncement(id)
+    await load()
+    setDeletingId(null)
   }
 
   const inputStyle: React.CSSProperties = {
@@ -65,7 +111,7 @@ export default function ComunicadosPage() {
         </p>
       </div>
 
-      {/* Formulário */}
+      {/* Formulário de novo comunicado */}
       <div style={{ backgroundColor: '#111111', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '24px', marginBottom: '28px' }}>
         <h2 style={{ fontSize: '15px', fontWeight: '600', color: '#F0F0F0', margin: '0 0 20px' }}>
           Novo comunicado
@@ -75,33 +121,18 @@ export default function ComunicadosPage() {
             <label style={{ color: '#888888', fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '6px' }}>
               Título
             </label>
-            <input
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              style={inputStyle}
-              placeholder="Ex: Atualização dos horários de aula"
-            />
+            <input value={title} onChange={e => setTitle(e.target.value)} style={inputStyle} placeholder="Ex: Atualização dos horários de aula" />
           </div>
           <div>
             <label style={{ color: '#888888', fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '6px' }}>
               Mensagem
             </label>
-            <textarea
-              value={content}
-              onChange={e => setContent(e.target.value)}
-              rows={5}
-              style={{ ...inputStyle, resize: 'vertical' }}
-              placeholder="Escreva o comunicado aqui..."
-            />
+            <textarea value={content} onChange={e => setContent(e.target.value)} rows={5} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Escreva o comunicado aqui..." />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             {msg ? (
-              <p style={{ fontSize: '13px', color: msg.startsWith('Erro') ? '#FF5555' : '#AEEA00', margin: 0 }}>
-                {msg}
-              </p>
-            ) : (
-              <span />
-            )}
+              <p style={{ fontSize: '13px', color: msg.startsWith('Erro') ? '#FF5555' : '#AEEA00', margin: 0 }}>{msg}</p>
+            ) : <span />}
             <button
               onClick={handleSend}
               disabled={sending || !title.trim() || !content.trim()}
@@ -134,20 +165,67 @@ export default function ComunicadosPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {announcements.map(a => (
             <div key={a.id} style={{ backgroundColor: '#111111', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '16px 20px' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '8px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#F0F0F0', margin: 0 }}>
-                  {a.title}
-                </h3>
-                <span style={{ fontSize: '11px', color: '#444444', flexShrink: 0 }}>
-                  {formatDate(a.created_at)}
-                </span>
-              </div>
-              <p style={{ fontSize: '13px', color: '#888888', margin: '0 0 8px', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
-                {a.content}
-              </p>
-              <p style={{ fontSize: '11px', color: '#444444', margin: 0 }}>
-                por {a.author}
-              </p>
+              {editingId === a.id ? (
+                /* Modo de edição inline */
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <input
+                    value={editTitle}
+                    onChange={e => setEditTitle(e.target.value)}
+                    style={{ ...inputStyle, background: '#0D0D0D', fontSize: '14px', fontWeight: '700' }}
+                    placeholder="Título"
+                  />
+                  <textarea
+                    value={editContent}
+                    onChange={e => setEditContent(e.target.value)}
+                    rows={5}
+                    style={{ ...inputStyle, background: '#0D0D0D', resize: 'vertical' }}
+                    placeholder="Conteúdo"
+                  />
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <button
+                      onClick={cancelEdit}
+                      style={{ padding: '7px 16px', borderRadius: '6px', border: '1px solid #333333', backgroundColor: 'transparent', color: '#888888', fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={() => handleSaveEdit(a.id)}
+                      disabled={editSaving || !editTitle.trim() || !editContent.trim()}
+                      style={{ padding: '7px 16px', borderRadius: '6px', border: 'none', backgroundColor: '#AEEA00', color: '#0D0D0D', fontSize: '13px', fontWeight: '700', cursor: editSaving ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: editSaving ? 0.7 : 1 }}
+                    >
+                      {editSaving ? 'Salvando...' : 'Salvar'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Modo de visualização */
+                <>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '8px' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#F0F0F0', margin: 0 }}>{a.title}</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+                      <span style={{ fontSize: '11px', color: '#444444' }}>{formatDate(a.created_at)}</span>
+                      <button
+                        onClick={() => startEdit(a)}
+                        style={{ padding: '3px 10px', borderRadius: '5px', border: '1px solid #333333', backgroundColor: 'transparent', color: '#888888', fontSize: '11px', cursor: 'pointer', fontFamily: 'inherit' }}
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleDelete(a.id)}
+                        disabled={deletingId === a.id}
+                        style={{ padding: '3px 10px', borderRadius: '5px', border: '1px solid rgba(255,85,85,0.3)', backgroundColor: 'transparent', color: '#FF5555', fontSize: '11px', cursor: deletingId === a.id ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: deletingId === a.id ? 0.6 : 1 }}
+                      >
+                        {deletingId === a.id ? '...' : 'Excluir'}
+                      </button>
+                    </div>
+                  </div>
+                  <p style={{ fontSize: '13px', color: '#888888', margin: '0 0 8px', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{a.content}</p>
+                  <p style={{ fontSize: '11px', color: '#444444', margin: 0 }}>
+                    por {a.author}
+                    {a.updated_at && <span style={{ marginLeft: '8px', color: '#333333' }}>· editado em {formatDate(a.updated_at)}</span>}
+                  </p>
+                </>
+              )}
             </div>
           ))}
         </div>

@@ -33,7 +33,8 @@ export default async function DashboardLayout({
   const role = profile?.role || 'student'
 
   // Verificar se há documentos LGPD pendentes de aceite
-  const docRole = role === 'student' ? 'student' : 'school'
+  // Usa mesma lógica de aceitar-termos/page.tsx: null/desconhecido = 'school'
+  const docRole = profile?.role === 'student' ? 'student' : 'school'
   const pendingDocs = await getPendingDocuments(user.id, docRole)
   if (pendingDocs.length > 0) {
     redirect('/aceitar-termos')

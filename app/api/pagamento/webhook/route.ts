@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
         course_id: courseId,
         student_id: studentId,
         status: 'active',
+        payment_status: 'paid',
       }, { onConflict: 'course_id,student_id' })
 
     // Registrar pagamento
