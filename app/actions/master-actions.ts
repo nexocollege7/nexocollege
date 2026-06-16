@@ -257,7 +257,11 @@ export async function deleteEscola(id: string): Promise<{ success: true } | { er
   // 15. users da escola (alunos e professores)
   await adminClient.from('users').delete().eq('school_id', id)
 
-  // 16. owner da escola (não tem school_id em users)
+  // 16. escola
+  const { error } = await adminClient.from('schools').delete().eq('id', id)
+  if (error) return { error: error.message }
+
+  // 17. owner da escola (não tem school_id em users)
   const { error: ownerError } = await adminClient
     .from('users')
     .delete()
@@ -267,10 +271,6 @@ export async function deleteEscola(id: string): Promise<{ success: true } | { er
     console.error('Erro ao deletar owner:', ownerError)
     return { error: ownerError.message }
   }
-
-  // 17. escola
-  const { error } = await adminClient.from('schools').delete().eq('id', id)
-  if (error) return { error: error.message }
 
   revalidatePath('/master/escolas')
   return { success: true }
