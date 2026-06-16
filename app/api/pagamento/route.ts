@@ -5,7 +5,9 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
 
 export async function POST(request: NextRequest) {
   try {
-    const { courseId } = await request.json()
+    const body = await request.json()
+    const { courseId } = body
+    const couponCode: string | undefined = body.couponCode
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -22,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     const { data: course, error: courseError } = await adminClient
       .from('courses')
-      .select('school_id, title, price, is_free')
+      .select('school_id, title, price, is_free, coupon_code, coupon_discount_percent')
       .eq('id', courseId)
       .single()
 
@@ -37,6 +39,19 @@ export async function POST(request: NextRequest) {
     const coursePrice = Number(course.price)
     if (!coursePrice || coursePrice <= 0) {
       return NextResponse.json({ error: 'Este curso não tem preço configurado.' }, { status: 400 })
+    }
+
+    // Aplicar cupom se fornecido — desconto vem sempre do banco, nunca do cliente
+    let finalPrice = coursePrice
+    let appliedCoupon = ''
+    let appliedDiscount = 0
+
+    if (couponCode && course.coupon_code && course.coupon_discount_percent) {
+      if (course.coupon_code.toUpperCase() === couponCode.trim().toUpperCase()) {
+        appliedDiscount = course.coupon_discount_percent
+        finalPrice = Math.round(coursePrice * (1 - appliedDiscount / 100) * 100) / 100
+        appliedCoupon = course.coupon_code.toUpperCase()
+      }
     }
 
     // Busca o token da escola
@@ -67,11 +82,11 @@ export async function POST(request: NextRequest) {
             id: courseId,
             title: course.title,
             quantity: 1,
-            unit_price: coursePrice,
+            unit_price: finalPrice,
             currency_id: 'BRL',
           }
         ],
-        external_reference: `${courseId}|${user.id}`,
+        external_reference: `${courseId}|${user.id}|${appliedCoupon}|${appliedDiscount}`,
       }
     })
 

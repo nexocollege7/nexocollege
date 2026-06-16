@@ -42,6 +42,8 @@ export default function EditarCursoPage() {
       price: curso.is_free ? 0 : curso.price,
       is_free: curso.is_free,
       status: curso.status,
+      coupon_code: curso.coupon_code || null,
+      coupon_discount_percent: curso.coupon_discount_percent || null,
     })
     setSalvando(false)
     router.push('/dashboard/cursos')
@@ -262,6 +264,57 @@ export default function EditarCursoPage() {
                 </label>
                 <input style={{ ...input, maxWidth: '200px' }} type="number" value={curso.price || 0}
                   onChange={(e) => setCurso({ ...curso, price: parseFloat(e.target.value) })} />
+              </div>
+            )}
+
+            {/* Cupom de desconto — só para cursos pagos */}
+            {!curso.is_free && (
+              <div style={{ backgroundColor: '#0D0D0D', border: '1px solid #2A2A2A', borderRadius: '10px', padding: '16px' }}>
+                <p style={{ fontSize: '12px', fontWeight: '700', color: '#555555', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 14px' }}>
+                  Cupom de Desconto (opcional)
+                </p>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: '160px' }}>
+                    <label style={{ color: '#888888', fontSize: '12px', display: 'block', marginBottom: '6px' }}>
+                      Código do cupom
+                    </label>
+                    <input
+                      style={{ ...input, textTransform: 'uppercase' }}
+                      type="text"
+                      value={curso.coupon_code || ''}
+                      onChange={(e) => setCurso({ ...curso, coupon_code: e.target.value.toUpperCase() })}
+                      placeholder="Ex: PASTOR10"
+                      maxLength={30}
+                    />
+                  </div>
+                  <div style={{ width: '140px' }}>
+                    <label style={{ color: '#888888', fontSize: '12px', display: 'block', marginBottom: '6px' }}>
+                      Desconto (%)
+                    </label>
+                    <input
+                      style={{ ...input }}
+                      type="number"
+                      min={1}
+                      max={100}
+                      value={curso.coupon_discount_percent || ''}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value)
+                        setCurso({ ...curso, coupon_discount_percent: (!isNaN(v) && v >= 1 && v <= 100) ? v : null })
+                      }}
+                      placeholder="Ex: 10"
+                    />
+                  </div>
+                </div>
+                {curso.coupon_code && curso.coupon_discount_percent && curso.price > 0 && (
+                  <p style={{ fontSize: '12px', color: '#AEEA00', margin: '10px 0 0' }}>
+                    Com cupom {curso.coupon_code}: de R${Number(curso.price).toFixed(2).replace('.', ',')} por R${(Number(curso.price) * (1 - curso.coupon_discount_percent / 100)).toFixed(2).replace('.', ',')}
+                  </p>
+                )}
+                {curso.coupon_code && !curso.coupon_discount_percent && (
+                  <p style={{ fontSize: '12px', color: '#FF8800', margin: '10px 0 0' }}>
+                    Informe o percentual de desconto para ativar o cupom.
+                  </p>
+                )}
               </div>
             )}
 

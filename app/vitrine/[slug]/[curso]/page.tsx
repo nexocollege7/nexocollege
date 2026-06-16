@@ -106,6 +106,7 @@ export default async function CursoDetalhePage({
                 schoolSlug={slug}
                 courseSlug={course.slug}
                 primaryColor={school.primary_color || '#22c55e'}
+                hasCoupon={!!(course as any).coupon_code}
               />
 
               <p className="text-gray-500 text-xs text-center mt-3">

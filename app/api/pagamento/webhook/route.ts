@@ -21,7 +21,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true })
     }
 
-    const [courseId, studentId] = (data.external_reference || '').split('|')
+    const parts = (data.external_reference || '').split('|')
+    const [courseId, studentId, couponUsed, discountUsed] = parts
     if (!courseId || !studentId || studentId === 'guest') {
       return NextResponse.json({ ok: true })
     }
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest) {
         method: 'pix',
         mp_payment_id: String(data.id),
         paid_at: new Date().toISOString(),
+        ...(couponUsed ? { coupon_code: couponUsed, discount_percent: Number(discountUsed) || 0 } : {}),
       })
 
     return NextResponse.json({ ok: true })

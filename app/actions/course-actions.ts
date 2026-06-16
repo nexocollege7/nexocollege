@@ -90,6 +90,8 @@ export async function updateCourse(id: string, formData: {
   price: number
   is_free: boolean
   status: string
+  coupon_code?: string | null
+  coupon_discount_percent?: number | null
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -118,6 +120,8 @@ export async function updateCourse(id: string, formData: {
       is_free: formData.is_free,
       status: formData.status,
       updated_at: new Date().toISOString(),
+      coupon_code: formData.coupon_code ? formData.coupon_code.trim().toUpperCase() : null,
+      coupon_discount_percent: formData.coupon_discount_percent || null,
     })
     .eq('id', id)
 
