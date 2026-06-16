@@ -170,6 +170,68 @@ export async function alterarPlanoEscola(escolaId: string, plano: 'starter' | 'c
   return { success: true }
 }
 
+export async function getEscolaDetalhe(id: string): Promise<{
+  id: string
+  name: string
+  slug: string | null
+  plan: string | null
+  is_active: boolean
+  phone: string | null
+  created_at: string
+  owner_id: string | null
+  ownerEmail: string | null
+  totalAlunos: number
+  totalCursos: number
+} | null> {
+  const authError = await verifyMaster()
+  if (authError) return null
+
+  const adminClient = createAdminClient()
+
+  const { data: school, error } = await adminClient
+    .from('schools')
+    .select('id, name, slug, plan, is_active, phone, created_at, owner_id')
+    .eq('id', id)
+    .single()
+
+  if (error || !school) return null
+
+  const [
+    { count: totalAlunos },
+    { count: totalCursos },
+    ownerResult,
+  ] = await Promise.all([
+    adminClient
+      .from('users')
+      .select('*', { count: 'exact', head: true })
+      .eq('school_id', id)
+      .eq('role', 'student'),
+    adminClient
+      .from('courses')
+      .select('*', { count: 'exact', head: true })
+      .eq('school_id', id),
+    school.owner_id
+      ? adminClient.auth.admin.getUserById(school.owner_id)
+      : Promise.resolve({ data: { user: null }, error: null }),
+  ])
+
+  const ownerEmail = ownerResult.data?.user?.email ?? null
+
+  return {
+    id: school.id,
+    name: school.name,
+    slug: school.slug,
+    plan: school.plan,
+    is_active: school.is_active,
+    phone: school.phone,
+    created_at: school.created_at,
+    owner_id: school.owner_id,
+    ownerEmail,
+    totalAlunos: totalAlunos ?? 0,
+    totalCursos: totalCursos ?? 0,
+  }
+}
+
 export async function getAnaliseComercial() {
   const authError = await verifyMaster()
   if (authError) return null
