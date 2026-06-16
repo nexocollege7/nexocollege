@@ -26,7 +26,7 @@ export async function getMasterStats() {
     { data: pagamentos },
   ] = await Promise.all([
     adminClient.from('schools').select('*', { count: 'exact', head: true }),
-    adminClient.from('users').select('*', { count: 'exact', head: true }),
+    adminClient.from('users').select('*', { count: 'exact', head: true }).eq('role', 'student'),
     adminClient.from('courses').select('*', { count: 'exact', head: true }),
     adminClient.from('payments').select('amount').eq('status', 'approved'),
   ])
@@ -176,7 +176,13 @@ export async function deleteEscola(id: string): Promise<{ success: true } | { er
 
   const adminClient = createAdminClient()
 
-  // 1. Buscar courses da escola primeiro (necessário para múltiplas etapas)
+  // 1. Buscar owner_id e courses da escola
+  const { data: escolaData } = await adminClient
+    .from('schools')
+    .select('owner_id')
+    .eq('id', id)
+    .single()
+
   const { data: courses } = await adminClient
     .from('courses')
     .select('id')
@@ -251,7 +257,18 @@ export async function deleteEscola(id: string): Promise<{ success: true } | { er
   // 15. users da escola (alunos e professores)
   await adminClient.from('users').delete().eq('school_id', id)
 
-  // 16. escola
+  // 16. owner da escola (não tem school_id em users)
+  const { error: ownerError } = await adminClient
+    .from('users')
+    .delete()
+    .eq('id', escolaData?.owner_id)
+
+  if (ownerError) {
+    console.error('Erro ao deletar owner:', ownerError)
+    return { error: ownerError.message }
+  }
+
+  // 17. escola
   const { error } = await adminClient.from('schools').delete().eq('id', id)
   if (error) return { error: error.message }
 
