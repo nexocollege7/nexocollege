@@ -92,12 +92,12 @@ export default function AprenderPage() {
         }
       `}</style>
 
-      {/* Player principal */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+      {/* Player principal — overflow:hidden na coluna; comentários têm scroll próprio */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
-        {/* Vídeo */}
-        <div style={{ padding: '16px 16px 0' }}>
-        <div style={{ backgroundColor: '#000000', aspectRatio: '16/9', width: '100%', flexShrink: 0, borderRadius: '16px', overflow: 'hidden' }}>
+        {/* Vídeo — flexShrink:0 para nunca encolher */}
+        <div style={{ flexShrink: 0, padding: '16px 16px 0' }}>
+        <div style={{ backgroundColor: '#000000', aspectRatio: '16/9', width: '100%', borderRadius: '16px', overflow: 'hidden' }}>
           {aulaAtual?.video_url ? (
             <iframe
               src={getEmbedUrl(aulaAtual.video_url)}
@@ -122,7 +122,7 @@ export default function AprenderPage() {
 
         {/* Info da aula */}
         {aulaAtual && (
-          <div className="player-info" style={{ padding: '20px 24px', borderBottom: '1px solid #2A2A2A' }}>
+          <div className="player-info" style={{ flexShrink: 0, padding: '20px 24px', borderBottom: '1px solid #2A2A2A' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <h1 style={{ fontSize: '18px', fontWeight: '600', color: '#F0F0F0', margin: 0 }}>
                 {aulaAtual.title}
@@ -146,7 +146,7 @@ export default function AprenderPage() {
         )}
 
         {/* Barra de progresso */}
-        <div className="player-progress" style={{ padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="player-progress" style={{ flexShrink: 0, padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ flex: 1, height: '6px', backgroundColor: '#2A2A2A', borderRadius: '3px' }}>
             <div style={{
               height: '6px', backgroundColor: '#AEEA00', borderRadius: '3px',
@@ -161,6 +161,7 @@ export default function AprenderPage() {
         {/* Curso concluído */}
         {progresso === 100 && (
           <div style={{
+            flexShrink: 0,
             margin: '0 24px 16px',
             padding: '16px 20px',
             backgroundColor: '#1A2E00',
@@ -182,7 +183,7 @@ export default function AprenderPage() {
 
         {/* Materiais da aula */}
         {aulaAtual && aulaAtual.material_links && (
-          <div style={{ padding: '16px 24px', borderBottom: '1px solid #2A2A2A' }}>
+          <div style={{ flexShrink: 0, padding: '16px 24px', borderBottom: '1px solid #2A2A2A' }}>
             <p style={{ color: '#888888', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 12px' }}>Materiais desta aula</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {aulaAtual.material_links.split('\n').filter((l: string) => l.trim()).map((link: string, i: number) => (
@@ -194,8 +195,13 @@ export default function AprenderPage() {
           </div>
         )}
 
-        {/* Comentários da aula */}
-        {aulaAtual && <LessonComments lessonId={aulaAtual.id} />}
+        {/* Comentários — flex:1 + overflowY:auto: ocupa espaço restante e rola internamente */}
+        {/* O textarea/botão fica sempre visível no topo; a lista de comentários fica abaixo */}
+        {aulaAtual && (
+          <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+            <LessonComments lessonId={aulaAtual.id} />
+          </div>
+        )}
       </div>
 
         {/* Lista de módulos e aulas */}

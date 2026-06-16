@@ -8,20 +8,30 @@ export async function getLessonComments(lessonId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
 
-  // adminClient bypassa a RLS que usa users.school_id (null para alunos matriculados pelo admin)
   const adminClient = createAdminClient()
 
-  const { data } = await adminClient
+  // Queries separadas: evita dependência da auto-detecção de FK do PostgREST
+  const { data: comments } = await adminClient
     .from('lesson_comments')
-    .select('id, content, created_at, reply_content, reply_at, users(full_name)')
+    .select('id, content, created_at, reply_content, reply_at, user_id')
     .eq('lesson_id', lessonId)
     .order('created_at', { ascending: true })
 
-  return (data || []).map((c: any) => ({
+  if (!comments || comments.length === 0) return []
+
+  const userIds = [...new Set(comments.map((c: any) => c.user_id as string))]
+  const { data: users } = await adminClient
+    .from('users')
+    .select('id, full_name')
+    .in('id', userIds)
+
+  const userMap = new Map((users || []).map((u: any) => [u.id as string, u.full_name as string]))
+
+  return comments.map((c: any) => ({
     id: c.id as string,
     content: c.content as string,
     created_at: c.created_at as string,
-    user_name: (c.users?.full_name as string) || 'Aluno',
+    user_name: userMap.get(c.user_id) || 'Aluno',
     reply_content: (c.reply_content as string) || null,
     reply_at: (c.reply_at as string) || null,
   }))
@@ -31,26 +41,33 @@ export async function addLessonComment(lessonId: string, content: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autenticado' }
+  if (!content.trim()) return { error: 'Comentário vazio' }
 
   const adminClient = createAdminClient()
 
-  // Busca school_id via lessons.course_id → courses.school_id
-  // (não usa users.school_id que é null para alunos matriculados pelo admin)
-  const { data: lessonData } = await adminClient
+  // Dois queries explícitos: mais robusto que join PostgREST (que depende de auto-detecção de FK)
+  const { data: lesson, error: lessonErr } = await adminClient
     .from('lessons')
-    .select('courses(school_id)')
+    .select('course_id')
     .eq('id', lessonId)
     .single()
 
-  const schoolId = (lessonData as any)?.courses?.school_id
-  if (!schoolId) return { error: 'Escola não encontrada' }
+  if (lessonErr || !lesson?.course_id) return { error: 'Aula não encontrada' }
+
+  const { data: course, error: courseErr } = await adminClient
+    .from('courses')
+    .select('school_id')
+    .eq('id', lesson.course_id)
+    .single()
+
+  if (courseErr || !course?.school_id) return { error: 'Escola não encontrada' }
 
   const { error } = await adminClient
     .from('lesson_comments')
     .insert({
       lesson_id: lessonId,
       user_id: user.id,
-      school_id: schoolId,
+      school_id: course.school_id,
       content: content.trim(),
     })
 
@@ -87,18 +104,31 @@ export async function getAllSchoolComments() {
 
   if (!schoolId) return []
 
-  const { data } = await adminClient
+  const { data: comments } = await adminClient
     .from('lesson_comments')
-    .select('id, content, created_at, reply_content, reply_at, users(full_name), lessons(title)')
+    .select('id, content, created_at, reply_content, reply_at, user_id, lesson_id')
     .eq('school_id', schoolId)
     .order('created_at', { ascending: false })
 
-  return (data || []).map((c: any) => ({
+  if (!comments || comments.length === 0) return []
+
+  const userIds = [...new Set(comments.map((c: any) => c.user_id as string))]
+  const lessonIds = [...new Set(comments.map((c: any) => c.lesson_id as string))]
+
+  const [usersResult, lessonsResult] = await Promise.all([
+    adminClient.from('users').select('id, full_name').in('id', userIds),
+    adminClient.from('lessons').select('id, title').in('id', lessonIds),
+  ])
+
+  const userMap = new Map((usersResult.data || []).map((u: any) => [u.id as string, u.full_name as string]))
+  const lessonMap = new Map((lessonsResult.data || []).map((l: any) => [l.id as string, l.title as string]))
+
+  return comments.map((c: any) => ({
     id: c.id as string,
     content: c.content as string,
     created_at: c.created_at as string,
-    user_name: (c.users?.full_name as string) || 'Aluno',
-    lesson_title: (c.lessons?.title as string) || 'Aula',
+    user_name: userMap.get(c.user_id) || 'Aluno',
+    lesson_title: lessonMap.get(c.lesson_id) || 'Aula',
     reply_content: (c.reply_content as string) || null,
     reply_at: (c.reply_at as string) || null,
   }))
