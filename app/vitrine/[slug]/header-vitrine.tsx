@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 
 type Props = {
   slug: string
@@ -16,7 +15,6 @@ type Props = {
 export default function HeaderVitrine({ slug, cor, nomeEscola, basePath, logoUrl }: Props) {
   const [user, setUser] = useState<{ nome: string, avatar_url: string | null } | null>(null)
   const [menuAberto, setMenuAberto] = useState(false)
-  const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
@@ -40,8 +38,7 @@ export default function HeaderVitrine({ slug, cor, nomeEscola, basePath, logoUrl
 
   async function handleSair() {
     await supabase.auth.signOut()
-    router.push(basePath || '/')
-    router.refresh()
+    window.location.href = `${basePath}/login`
   }
 
   return (

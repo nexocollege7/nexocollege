@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -17,14 +17,12 @@ const menuMaster = [
 
 export function MasterSidebar() {
   const pathname = usePathname()
-  const router = useRouter()
   const supabase = createClient()
   const [collapsed, setCollapsed] = useState(false)
   const [pendentes, setPendentes] = useState(0)
 
   useEffect(() => {
     async function loadPendentes() {
-      const supabase = createClient()
       const { data } = await supabase
         .from('support_tickets')
         .select('id')
@@ -39,8 +37,7 @@ export function MasterSidebar() {
 
   async function handleSair() {
     await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
+    window.location.href = '/login'
   }
 
   return (

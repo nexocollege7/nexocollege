@@ -33,6 +33,7 @@ export default function PerfilPage() {
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    if (file.size > 5 * 1024 * 1024) { setMsg('Arquivo muito grande. Máximo: 5 MB'); return }
     setMsg('')
     setUploading(true)
 

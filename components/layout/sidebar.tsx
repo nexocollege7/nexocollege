@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useState, useEffect } from 'react'
 import { getUnreadCount } from '@/app/actions/chat-actions'
@@ -25,9 +25,8 @@ const masterItems = [
   { href: '/dashboard/master/planos', label: 'Planos', icon: '💎' },
 ]
 
-export function Sidebar({ onClose }: { onClose?: () => void } = {}) {
+export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, onClose?: () => void } = {}) {
   const pathname = usePathname()
-  const router = useRouter()
   const supabase = createClient()
   const [collapsed, setCollapsed] = useState(false)
   const [unread, setUnread] = useState(0)
@@ -53,8 +52,7 @@ export function Sidebar({ onClose }: { onClose?: () => void } = {}) {
 
   async function handleSair() {
     await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
+    window.location.href = schoolSlug ? `/vitrine/${schoolSlug}/login` : '/login'
   }
 
   return (

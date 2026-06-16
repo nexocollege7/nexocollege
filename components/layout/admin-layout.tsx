@@ -15,6 +15,7 @@ interface AdminLayoutProps {
     avatar_url?: string | null
     school_name?: string | null
     school_logo_url?: string | null
+    school_slug?: string | null
   }
   title?: string
 }
@@ -51,13 +52,13 @@ export function AdminLayout({ children, user, title }: AdminLayoutProps) {
       >
         {isAluno
           ? <SidebarAluno onClose={() => setMobileOpen(false)} />
-          : <Sidebar onClose={() => setMobileOpen(false)} />
+          : <Sidebar schoolSlug={user.school_slug ?? null} onClose={() => setMobileOpen(false)} />
         }
       </div>
 
       {/* SIDEBAR DESKTOP — sempre visível acima de 768px */}
       <div className="desktop-sidebar">
-        {isAluno ? <SidebarAluno /> : <Sidebar />}
+        {isAluno ? <SidebarAluno /> : <Sidebar schoolSlug={user.school_slug ?? null} />}
       </div>
 
       {/* CONTEÚDO PRINCIPAL */}

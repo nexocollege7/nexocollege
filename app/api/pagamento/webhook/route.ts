@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { MercadoPagoConfig, Payment } from 'mercadopago'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MP_ACCESS_TOKEN!
@@ -26,9 +26,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true })
     }
 
-    const supabase = await createClient()
+    // Admin client bypasses RLS — webhook não tem sessão de usuário
+    const adminClient = createAdminClient()
 
-    const { data: course } = await supabase
+    const { data: course } = await adminClient
       .from('courses')
       .select('school_id, title')
       .eq('id', courseId)
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
     if (!course) return NextResponse.json({ ok: true })
 
     // Criar matrícula automaticamente
-    await supabase
+    await adminClient
       .from('enrollments')
       .upsert({
         school_id: course.school_id,
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
       }, { onConflict: 'course_id,student_id' })
 
     // Registrar pagamento
-    await supabase
+    await adminClient
       .from('payments')
       .insert({
         school_id: course.school_id,

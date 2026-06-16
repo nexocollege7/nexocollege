@@ -34,14 +34,16 @@ export default async function DashboardLayout({
   // Busca dados da escola para exibir logo no dashboard
   let schoolName: string | null = null
   let schoolLogoUrl: string | null = null
+  let schoolSlug: string | null = null
   if (profile?.school_id) {
     const { data: school } = await adminClient
       .from('schools')
-      .select('name, logo_url')
+      .select('name, logo_url, slug')
       .eq('id', profile.school_id)
       .single()
     schoolName = school?.name ?? null
     schoolLogoUrl = school?.logo_url ?? null
+    schoolSlug = school?.slug ?? null
   }
 
   return (
@@ -53,6 +55,7 @@ export default async function DashboardLayout({
         avatar_url: profile?.avatar_url ?? null,
         school_name: schoolName,
         school_logo_url: schoolLogoUrl,
+        school_slug: schoolSlug,
       }}
     >
       {children}

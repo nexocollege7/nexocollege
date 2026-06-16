@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useState, useEffect } from 'react'
 import { getUnreadCount } from '@/app/actions/chat-actions'
@@ -15,7 +15,6 @@ const menuAluno = [
 
 export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
   const pathname = usePathname()
-  const router = useRouter()
   const supabase = createClient()
   const [collapsed, setCollapsed] = useState(false)
   const [unread, setUnread] = useState(0)
@@ -27,21 +26,18 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
       const count = await getUnreadCount()
       setUnread(count)
 
-      // Buscar tickets de ajuda pendentes
-      const { data: { user: currentUser } } = await supabase.auth.getUser()
-      if (currentUser) {
-        const { data: pendentes } = await supabase
-          .from('support_tickets')
-          .select('id')
-          .eq('ticket_type', 'aluno_escola')
-          .eq('status', 'em_andamento')
-        setAjudaPendente(pendentes?.length || 0)
-      }
-
-      // Buscar escola do aluno
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
+      // Buscar tickets de ajuda pendentes
+      const { data: pendentes } = await supabase
+        .from('support_tickets')
+        .select('id')
+        .eq('ticket_type', 'aluno_escola')
+        .eq('status', 'em_andamento')
+      setAjudaPendente(pendentes?.length || 0)
+
+      // Buscar escola do aluno
       const { data: profile } = await supabase
         .from('users')
         .select('school_id')
@@ -68,8 +64,7 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
 
   async function handleSair() {
     await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
+    window.location.href = escola?.slug ? `/vitrine/${escola.slug}/login` : '/login'
   }
 
   const corEscola = escola?.primary_color || '#AEEA00'

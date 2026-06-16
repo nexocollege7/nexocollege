@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { getMySchool, updateSchool, saveMpToken, getMpTokenStatus, saveOwnerContact, updateSchoolLogoUrl, ensureSchoolLogosBucket } from '@/app/actions/school-actions'
+import { getMySchool, updateSchool, saveMpToken, getMpTokenStatus, saveOwnerContact, updateSchoolLogoUrl, ensureSchoolLogosBucket, updateMyName } from '@/app/actions/school-actions'
 import { School, CreditCard, User, Users, Settings } from 'lucide-react'
 
 const ABAS = [
@@ -42,7 +42,9 @@ export default function EscolaPage() {
 
   // Equipe
   const [colaboradores, setColaboradores] = useState<any[]>([])
+  const [nomeColaborador, setNomeColaborador] = useState('')
   const [emailColaborador, setEmailColaborador] = useState('')
+  const [senhaColaborador, setSenhaColaborador] = useState('')
   const [adicionandoColab, setAdicionandoColab] = useState(false)
 
   useEffect(() => { loadData(); ensureSchoolLogosBucket() }, [])
@@ -99,6 +101,7 @@ export default function EscolaPage() {
   async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    if (file.size > 5 * 1024 * 1024) { showMsg('Arquivo muito grande. Máximo: 5 MB'); return }
     setUploadingLogo(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { showMsg('Sessão expirada'); setUploadingLogo(false); return }
@@ -147,24 +150,43 @@ export default function EscolaPage() {
 
   async function salvarPerfil() {
     setSaving(true)
-    const result = await saveOwnerContact(nomeResponsavel, telefone)
+    const [r1, r2] = await Promise.all([
+      saveOwnerContact(nomeResponsavel, telefone),
+      updateMyName(nomeCompleto),
+    ])
     setSaving(false)
-    if ((result as any)?.error) showMsg('Erro: ' + (result as any).error)
+    if ((r1 as any)?.error || (r2 as any)?.error) showMsg('Erro ao salvar perfil')
     else showMsg('✅ Perfil atualizado!')
   }
 
   async function adicionarColaborador() {
-    if (!emailColaborador.trim()) return
+    if (!nomeColaborador.trim() || !emailColaborador.trim() || !senhaColaborador.trim()) return
+    if (senhaColaborador.length < 6) { showMsg('A senha precisa ter pelo menos 6 caracteres'); return }
     setAdicionandoColab(true)
-    // Busca o usuário pelo email
-    const { data: users } = await supabase
-      .from('users')
-      .select('id, full_name, name')
-      .eq('role', 'collaborator')
-
-    // Simplificado: apenas mostra mensagem por ora
-    showMsg('✅ Convite enviado para ' + emailColaborador)
-    setEmailColaborador('')
+    try {
+      const res = await fetch('/api/collaborators', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: nomeColaborador.trim(),
+          email: emailColaborador.trim(),
+          password: senhaColaborador,
+          permissions: [],
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        showMsg('Erro: ' + (data.error || 'Tente novamente'))
+      } else {
+        showMsg('✅ Colaborador adicionado!')
+        setNomeColaborador('')
+        setEmailColaborador('')
+        setSenhaColaborador('')
+        loadData()
+      }
+    } catch {
+      showMsg('Erro de conexão. Tente novamente.')
+    }
     setAdicionandoColab(false)
   }
 
@@ -406,11 +428,30 @@ export default function EscolaPage() {
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
-              <input value={emailColaborador} onChange={e => setEmailColaborador(e.target.value)} style={{ ...inputStyle, flex: 1 }} placeholder="email@colaborador.com" />
-              <button onClick={adicionarColaborador} disabled={adicionandoColab || !emailColaborador.trim()} style={{ ...btnStyle, padding: '10px 20px', whiteSpace: 'nowrap' }}>
-                {adicionandoColab ? 'Adicionando...' : 'Adicionar'}
-              </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>Nome</label>
+                  <input value={nomeColaborador} onChange={e => setNomeColaborador(e.target.value)} style={inputStyle} placeholder="Nome completo" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>Email</label>
+                  <input value={emailColaborador} onChange={e => setEmailColaborador(e.target.value)} style={inputStyle} placeholder="email@colaborador.com" />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>Senha inicial (mín. 6 caracteres)</label>
+                  <input type="password" value={senhaColaborador} onChange={e => setSenhaColaborador(e.target.value)} style={inputStyle} placeholder="••••••••" />
+                </div>
+                <button
+                  onClick={adicionarColaborador}
+                  disabled={adicionandoColab || !nomeColaborador.trim() || !emailColaborador.trim() || !senhaColaborador.trim()}
+                  style={{ ...btnStyle, padding: '10px 20px', whiteSpace: 'nowrap', flexShrink: 0 }}
+                >
+                  {adicionandoColab ? 'Adicionando...' : 'Adicionar'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

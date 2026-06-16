@@ -31,6 +31,17 @@ export async function POST(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    // Valida que a escola existe antes de associar
+    const { data: school } = await adminClient
+      .from('schools')
+      .select('id')
+      .eq('id', schoolId)
+      .single()
+
+    if (!school) {
+      return NextResponse.json({ error: 'Escola não encontrada' }, { status: 404 })
+    }
+
     const { error } = await adminClient
       .from('users')
       .update({ school_id: schoolId, full_name: fullName, role: 'student' })
