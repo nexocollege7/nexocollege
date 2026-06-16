@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { getMySchool, updateSchool, saveMpToken, getMpTokenStatus, saveOwnerContact } from '@/app/actions/school-actions'
+import { getMySchool, updateSchool, saveMpToken, getMpTokenStatus, saveOwnerContact, updateSchoolLogoUrl, ensureSchoolLogosBucket } from '@/app/actions/school-actions'
 import { School, CreditCard, User, Users, Settings } from 'lucide-react'
 
 const ABAS = [
@@ -25,6 +25,9 @@ export default function EscolaPage() {
   const [nomeEscola, setNomeEscola] = useState('')
   const [descEscola, setDescEscola] = useState('')
   const [corEscola, setCorEscola] = useState('#AEEA00')
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+  const logoInputRef = useRef<HTMLInputElement>(null)
 
   // Pagamentos
   const [mpToken, setMpToken] = useState('')
@@ -42,7 +45,7 @@ export default function EscolaPage() {
   const [emailColaborador, setEmailColaborador] = useState('')
   const [adicionandoColab, setAdicionandoColab] = useState(false)
 
-  useEffect(() => { loadData() }, [])
+  useEffect(() => { loadData(); ensureSchoolLogosBucket() }, [])
 
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -67,6 +70,7 @@ export default function EscolaPage() {
       setNomeEscola(schoolData.name || '')
       setDescEscola(schoolData.description || '')
       setCorEscola(schoolData.primary_color || '#AEEA00')
+      setLogoUrl(schoolData.logo_url || null)
       setNomeResponsavel(schoolData.owner_name || '')
       setTelefone(schoolData.owner_phone || '')
     }
@@ -90,6 +94,32 @@ export default function EscolaPage() {
   function showMsg(m: string) {
     setMsg(m)
     setTimeout(() => setMsg(''), 3000)
+  }
+
+  async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingLogo(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { showMsg('Sessão expirada'); setUploadingLogo(false); return }
+
+    const ext = file.name.split('.').pop()
+    const path = `${school?.id}/logo.${ext}`
+    const { error: upErr } = await supabase.storage
+      .from('school-logos')
+      .upload(path, file, { upsert: true, contentType: file.type })
+
+    if (upErr) { showMsg('Erro ao enviar logo: ' + upErr.message); setUploadingLogo(false); return }
+
+    const { data: urlData } = supabase.storage.from('school-logos').getPublicUrl(path)
+    const publicUrl = urlData.publicUrl + `?t=${Date.now()}`
+
+    const result = await updateSchoolLogoUrl(publicUrl)
+    if ((result as any)?.error) { showMsg('Erro ao salvar: ' + (result as any).error); setUploadingLogo(false); return }
+
+    setLogoUrl(publicUrl)
+    showMsg('✅ Logo atualizada!')
+    setUploadingLogo(false)
   }
 
   async function salvarEscola() {
@@ -208,6 +238,29 @@ export default function EscolaPage() {
       {/* ABA: MINHA ESCOLA */}
       {abaAtiva === 'escola' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+          {/* Logo da escola */}
+          <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '24px' }}>
+            <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 16px' }}>Logo da Escola</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt="Logo" style={{ width: '64px', height: '64px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #2a2a2a' }} />
+              ) : (
+                <div style={{ width: '64px', height: '64px', borderRadius: '8px', backgroundColor: corEscola, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: '800', color: '#0D0D0D', flexShrink: 0 }}>
+                  {nomeEscola.charAt(0).toUpperCase() || 'N'}
+                </div>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml" style={{ display: 'none' }} onChange={handleLogoChange} />
+                <button onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo} style={{ ...btnStyle, opacity: uploadingLogo ? 0.6 : 1 }}>
+                  {uploadingLogo ? 'Enviando...' : logoUrl ? 'Alterar logo' : 'Enviar logo'}
+                </button>
+                <p style={{ color: '#555', fontSize: '12px', margin: 0 }}>JPG, PNG, WebP ou SVG · máx. 5 MB</p>
+              </div>
+            </div>
+          </div>
+
           <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '24px' }}>
             <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 20px' }}>Informações da Escola</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

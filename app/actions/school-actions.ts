@@ -276,6 +276,44 @@ export async function saveCustomDomain(domain: string) {
   return { success: true, domain: cleanDomain }
 }
 
+export async function updateSchoolLogoUrl(logoUrl: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Nao autenticado' }
+
+  const adminClient = createAdminClient()
+  const { data: profile } = await adminClient
+    .from('users')
+    .select('school_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.school_id) return { error: 'Escola nao encontrada' }
+
+  const { error } = await adminClient
+    .from('schools')
+    .update({ logo_url: logoUrl })
+    .eq('id', profile.school_id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/dashboard/escola')
+  revalidatePath('/dashboard', 'layout')
+  return { success: true }
+}
+
+export async function ensureSchoolLogosBucket() {
+  const admin = createAdminClient()
+  const { data: bucket } = await admin.storage.getBucket('school-logos')
+  if (!bucket) {
+    await admin.storage.createBucket('school-logos', {
+      public: true,
+      fileSizeLimit: 5 * 1024 * 1024,
+      allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
+    })
+  }
+}
+
 export async function saveOwnerContact(ownerName: string, ownerPhone: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

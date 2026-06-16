@@ -10,9 +10,10 @@ type Props = {
   cor: string
   nomeEscola: string
   basePath: string
+  logoUrl?: string | null
 }
 
-export default function HeaderVitrine({ slug, cor, nomeEscola, basePath }: Props) {
+export default function HeaderVitrine({ slug, cor, nomeEscola, basePath, logoUrl }: Props) {
   const [user, setUser] = useState<{ nome: string } | null>(null)
   const [menuAberto, setMenuAberto] = useState(false)
   const router = useRouter()
@@ -56,14 +57,19 @@ export default function HeaderVitrine({ slug, cor, nomeEscola, basePath }: Props
       `}</style>
       {/* Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
-        <div style={{
-          width: '32px', height: '32px', borderRadius: '8px', flexShrink: 0,
-          backgroundColor: cor,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '14px', fontWeight: '700', color: '#0D0D0D',
-        }}>
-          {nomeEscola.charAt(0).toUpperCase()}
-        </div>
+        {logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logoUrl} alt={nomeEscola} style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} />
+        ) : (
+          <div style={{
+            width: '32px', height: '32px', borderRadius: '8px', flexShrink: 0,
+            backgroundColor: cor,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '14px', fontWeight: '700', color: '#0D0D0D',
+          }}>
+            {nomeEscola.charAt(0).toUpperCase()}
+          </div>
+        )}
         <span className="vitrine-nome" style={{ fontSize: '14px', fontWeight: '700', color: '#F0F0F0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {nomeEscola}
         </span>

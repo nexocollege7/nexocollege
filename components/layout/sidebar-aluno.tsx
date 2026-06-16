@@ -20,7 +20,7 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
   const [collapsed, setCollapsed] = useState(false)
   const [unread, setUnread] = useState(0)
   const [ajudaPendente, setAjudaPendente] = useState(0)
-  const [escola, setEscola] = useState<{ name: string, slug: string, primary_color: string } | null>(null)
+  const [escola, setEscola] = useState<{ name: string, slug: string, primary_color: string, logo_url: string | null } | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -51,7 +51,7 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
       if (profile?.school_id) {
         const { data: schoolData } = await supabase
           .from('schools')
-          .select('name, slug, primary_color')
+          .select('name, slug, primary_color, logo_url')
           .eq('id', profile.school_id)
           .single()
 
@@ -100,24 +100,34 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
         title={escola ? 'Ver vitrine da escola' : ''}
       >
         {!collapsed && (
-          <div>
-            <span style={{ fontSize: '18px', fontWeight: '800', color: corEscola, letterSpacing: '-0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '160px', display: 'block' }}>
-              {escola ? escola.name : 'NexoCollege'}
-            </span>
-            <div style={{ fontSize: '11px', color: '#555555', marginTop: '2px', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Area do Aluno
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+            {escola?.logo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={escola.logo_url} alt={escola.name} style={{ width: '36px', height: '36px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} />
+            ) : (
+              <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: corEscola, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '800', color: '#0D0D0D', flexShrink: 0 }}>
+                {escola ? escola.name.charAt(0).toUpperCase() : 'N'}
+              </div>
+            )}
+            <div style={{ minWidth: 0 }}>
+              <span style={{ fontSize: '14px', fontWeight: '700', color: corEscola, letterSpacing: '-0.3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px', display: 'block' }}>
+                {escola ? escola.name : 'NexoCollege'}
+              </span>
+              <div style={{ fontSize: '10px', color: '#555555', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Área do Aluno
+              </div>
             </div>
           </div>
         )}
         {collapsed && (
-          <div style={{
-            width: '36px', height: '36px', borderRadius: '8px',
-            backgroundColor: corEscola + '22',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '16px', fontWeight: '800', color: corEscola,
-          }}>
-            {escola ? escola.name.charAt(0).toUpperCase() : 'N'}
-          </div>
+          escola?.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={escola.logo_url} alt={escola.name} style={{ width: '36px', height: '36px', borderRadius: '8px', objectFit: 'cover' }} />
+          ) : (
+            <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: corEscola, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '800', color: '#0D0D0D' }}>
+              {escola ? escola.name.charAt(0).toUpperCase() : 'N'}
+            </div>
+          )
         )}
         <button onClick={(e) => { e.stopPropagation(); setCollapsed(!collapsed) }} style={{
           background: 'none', border: 'none', cursor: 'pointer',

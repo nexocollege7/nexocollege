@@ -45,7 +45,7 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
         }
       `}</style>
 
-      <HeaderVitrine slug={slug} cor={cor} nomeEscola={school.name} basePath={basePath} />
+      <HeaderVitrine slug={slug} cor={cor} nomeEscola={school.name} basePath={basePath} logoUrl={school.logo_url ?? null} />
 
       {/* Hero Banner Rotativo */}
       {courses.length > 0 ? (
