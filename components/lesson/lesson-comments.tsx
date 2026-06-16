@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getLessonComments, addLessonComment } from '@/app/actions/comment-actions'
 
 interface Comment {
@@ -24,7 +24,6 @@ export function LessonComments({ lessonId }: { lessonId: string }) {
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [msg, setMsg] = useState('')
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     if (!lessonId) return
@@ -55,7 +54,6 @@ export function LessonComments({ lessonId }: { lessonId: string }) {
       {/* Input */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
         <textarea
-          ref={textareaRef}
           value={text}
           onChange={e => setText(e.target.value)}
           rows={3}

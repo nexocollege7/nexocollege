@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { revalidatePath } from 'next/cache'
 
 export async function getLessonComments(lessonId: string) {
   const supabase = await createClient()
@@ -10,14 +11,13 @@ export async function getLessonComments(lessonId: string) {
 
   const adminClient = createAdminClient()
 
-  // Queries separadas: evita dependência da auto-detecção de FK do PostgREST
-  const { data: comments } = await adminClient
+  const { data: comments, error: commentsErr } = await adminClient
     .from('lesson_comments')
     .select('id, content, created_at, reply_content, reply_at, user_id')
     .eq('lesson_id', lessonId)
     .order('created_at', { ascending: true })
 
-  if (!comments || comments.length === 0) return []
+  if (commentsErr || !comments || comments.length === 0) return []
 
   const userIds = [...new Set(comments.map((c: any) => c.user_id as string))]
   const { data: users } = await adminClient
@@ -45,7 +45,6 @@ export async function addLessonComment(lessonId: string, content: string) {
 
   const adminClient = createAdminClient()
 
-  // Dois queries explícitos: mais robusto que join PostgREST (que depende de auto-detecção de FK)
   const { data: lesson, error: lessonErr } = await adminClient
     .from('lessons')
     .select('course_id')
@@ -62,7 +61,7 @@ export async function addLessonComment(lessonId: string, content: string) {
 
   if (courseErr || !course?.school_id) return { error: 'Escola não encontrada' }
 
-  const { error } = await adminClient
+  const { error: insertErr } = await adminClient
     .from('lesson_comments')
     .insert({
       lesson_id: lessonId,
@@ -71,7 +70,9 @@ export async function addLessonComment(lessonId: string, content: string) {
       content: content.trim(),
     })
 
-  if (error) return { error: error.message }
+  if (insertErr) return { error: insertErr.message }
+
+  revalidatePath('/dashboard/aprender', 'layout')
   return { success: true }
 }
 
@@ -82,7 +83,6 @@ export async function getAllSchoolComments() {
 
   const adminClient = createAdminClient()
 
-  // Tenta owner primeiro; fallback para collaborador (users.school_id)
   let schoolId: string | null = null
 
   const { data: ownedSchool } = await adminClient
@@ -104,13 +104,13 @@ export async function getAllSchoolComments() {
 
   if (!schoolId) return []
 
-  const { data: comments } = await adminClient
+  const { data: comments, error: commentsErr } = await adminClient
     .from('lesson_comments')
     .select('id, content, created_at, reply_content, reply_at, user_id, lesson_id')
     .eq('school_id', schoolId)
     .order('created_at', { ascending: false })
 
-  if (!comments || comments.length === 0) return []
+  if (commentsErr || !comments || comments.length === 0) return []
 
   const userIds = [...new Set(comments.map((c: any) => c.user_id as string))]
   const lessonIds = [...new Set(comments.map((c: any) => c.lesson_id as string))]
@@ -138,7 +138,6 @@ export async function replyToComment(commentId: string, replyContent: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autenticado' }
-
   if (!replyContent.trim()) return { error: 'Resposta não pode ser vazia' }
 
   const adminClient = createAdminClient()
