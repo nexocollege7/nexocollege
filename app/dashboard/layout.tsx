@@ -25,18 +25,19 @@ export default async function DashboardLayout({
   const adminClient = createAdminClient()
   const { data: profile } = await adminClient
     .from('users')
-    .select('role, full_name')
+    .select('role, full_name, avatar_url')
     .eq('id', user.id)
     .single()
 
   const role = profile?.role || 'student'
 
-  // Aluno acessando /dashboard vai para /meus-cursos
   return (
     <AdminLayout
       user={{
         email: user.email ?? '',
         role: role,
+        full_name: profile?.full_name ?? '',
+        avatar_url: profile?.avatar_url ?? null,
       }}
     >
       {children}

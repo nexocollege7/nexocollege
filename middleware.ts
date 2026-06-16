@@ -8,6 +8,7 @@ const ROTAS_ALUNO = [
   '/dashboard/certificados',
   '/dashboard/mensagens',
   '/dashboard/ajuda',
+  '/dashboard/perfil',
 ]
 
 function alunoTemAcesso(pathname: string): boolean {

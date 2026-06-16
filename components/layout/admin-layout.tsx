@@ -11,6 +11,8 @@ interface AdminLayoutProps {
   user: {
     email: string
     role?: string
+    full_name?: string
+    avatar_url?: string | null
   }
   title?: string
 }
