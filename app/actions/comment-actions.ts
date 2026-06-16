@@ -126,6 +126,41 @@ export async function getAllSchoolComments() {
   })
 }
 
+export async function getPendingCommentsCount(): Promise<number> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return 0
+
+  const adminClient = createAdminClient()
+
+  const { data: ownedSchool } = await adminClient
+    .from('schools')
+    .select('id')
+    .eq('owner_id', user.id)
+    .maybeSingle()
+
+  let schoolId: string | null = ownedSchool?.id ?? null
+
+  if (!schoolId) {
+    const { data: profile } = await adminClient
+      .from('users')
+      .select('school_id')
+      .eq('id', user.id)
+      .single()
+    schoolId = profile?.school_id ?? null
+  }
+
+  if (!schoolId) return 0
+
+  const { count } = await adminClient
+    .from('lesson_comments')
+    .select('*', { count: 'exact', head: true })
+    .eq('school_id', schoolId)
+    .is('reply_content', null)
+
+  return count ?? 0
+}
+
 export async function deleteComment(commentId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

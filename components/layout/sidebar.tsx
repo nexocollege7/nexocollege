@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useState, useEffect } from 'react'
 import { getUnreadCount } from '@/app/actions/chat-actions'
+import { getPendingCommentsCount } from '@/app/actions/comment-actions'
 
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: '⊞' },
@@ -30,6 +31,7 @@ export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, o
   const supabase = createClient()
   const [collapsed, setCollapsed] = useState(false)
   const [unread, setUnread] = useState(0)
+  const [pendingComments, setPendingComments] = useState(0)
   const [userEmail, setUserEmail] = useState('')
 
   useEffect(() => {
@@ -40,6 +42,21 @@ export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, o
     loadUnread()
     const interval = setInterval(loadUnread, 30000)
     return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    async function loadPendingComments() {
+      const count = await getPendingCommentsCount()
+      setPendingComments(count)
+    }
+    loadPendingComments()
+    const interval = setInterval(loadPendingComments, 30000)
+    const handler = () => loadPendingComments()
+    window.addEventListener('commentsUpdated', handler)
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('commentsUpdated', handler)
+    }
   }, [])
 
   useEffect(() => {
@@ -92,6 +109,7 @@ export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, o
         {menuItems.map((item) => {
           const isActive = pathname === item.href
           const isMensagens = item.href === '/dashboard/mensagens'
+          const isComentarios = item.href === '/dashboard/comentarios'
           return (
             <Link key={item.href} href={item.href} title={collapsed ? item.label : undefined} style={{
               display: 'flex',
@@ -124,6 +142,18 @@ export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, o
                     {unread > 9 ? '9+' : unread}
                   </span>
                 )}
+                {isComentarios && pendingComments > 0 && (
+                  <span style={{
+                    position: 'absolute', top: '-4px', right: '-6px',
+                    backgroundColor: '#FF5555', color: '#fff',
+                    fontSize: '9px', fontWeight: '700',
+                    borderRadius: '10px', padding: '1px 4px',
+                    minWidth: '14px', textAlign: 'center',
+                    lineHeight: '14px',
+                  }}>
+                    {pendingComments > 9 ? '9+' : pendingComments}
+                  </span>
+                )}
               </span>
               {!collapsed && item.label}
               {!collapsed && isMensagens && unread > 0 && (
@@ -135,6 +165,17 @@ export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, o
                   minWidth: '18px', textAlign: 'center',
                 }}>
                   {unread > 9 ? '9+' : unread}
+                </span>
+              )}
+              {!collapsed && isComentarios && pendingComments > 0 && (
+                <span style={{
+                  marginLeft: 'auto',
+                  backgroundColor: '#FF5555', color: '#fff',
+                  fontSize: '10px', fontWeight: '700',
+                  borderRadius: '10px', padding: '1px 6px',
+                  minWidth: '18px', textAlign: 'center',
+                }}>
+                  {pendingComments > 9 ? '9+' : pendingComments}
                 </span>
               )}
             </Link>
