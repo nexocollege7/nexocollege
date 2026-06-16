@@ -39,6 +39,7 @@ export default function EscolaPage() {
   const [nomeResponsavel, setNomeResponsavel] = useState('')
   const [telefone, setTelefone] = useState('')
   const [nomeCompleto, setNomeCompleto] = useState('')
+  const [emailUsuario, setEmailUsuario] = useState('')
 
   // Equipe
   const [colaboradores, setColaboradores] = useState<any[]>([])
@@ -52,6 +53,7 @@ export default function EscolaPage() {
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
+    setEmailUsuario(user.email ?? '')
 
     // Busca perfil e school_id
     const { data: profileData, error: profileError } = await supabase
@@ -383,6 +385,15 @@ export default function EscolaPage() {
           <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 8px' }}>Meu Perfil</h2>
           <p style={{ color: '#666', fontSize: '13px', margin: '0 0 20px' }}>Seu nome aparece para os alunos nas mensagens e nos certificados.</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <label style={labelStyle}>
+                E-mail de cadastro{' '}
+                <span style={{ color: '#555', fontSize: '11px', fontWeight: '400' }}>🔒 somente leitura</span>
+              </label>
+              <div style={{ ...inputStyle, background: '#1A1A1A', border: '1px solid #2A2A2A', color: '#888', cursor: 'default', userSelect: 'text' as const }}>
+                {emailUsuario}
+              </div>
+            </div>
             <div>
               <label style={labelStyle}>Seu nome completo</label>
               <input value={nomeCompleto} onChange={e => setNomeCompleto(e.target.value)} style={inputStyle} placeholder="Ex: João Silva" />
