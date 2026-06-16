@@ -13,6 +13,8 @@ interface AdminLayoutProps {
     role?: string
     full_name?: string
     avatar_url?: string | null
+    school_name?: string | null
+    school_logo_url?: string | null
   }
   title?: string
 }
@@ -83,13 +85,35 @@ export function AdminLayout({ children, user, title }: AdminLayoutProps) {
           >
             ☰
           </button>
-          <span style={{
-            fontSize: '14px', fontWeight: '700', color: '#AEEA00',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            flex: 1, textAlign: 'center', padding: '0 8px',
-          }}>
-            Nexo<span style={{ color: '#F0F0F0' }}>College</span>
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flex: 1, overflow: 'hidden', padding: '0 8px' }}>
+            {isAluno && user.school_logo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.school_logo_url}
+                alt={user.school_name ?? ''}
+                style={{ width: '28px', height: '28px', borderRadius: '6px', objectFit: 'cover', flexShrink: 0 }}
+              />
+            ) : isAluno && user.school_name ? (
+              <div style={{
+                width: '28px', height: '28px', borderRadius: '6px', flexShrink: 0,
+                backgroundColor: '#AEEA00',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '12px', fontWeight: '800', color: '#0D0D0D',
+              }}>
+                {user.school_name.charAt(0).toUpperCase()}
+              </div>
+            ) : null}
+            <span style={{
+              fontSize: '14px', fontWeight: '700',
+              color: isAluno && user.school_name ? '#F0F0F0' : '#AEEA00',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
+              {isAluno && user.school_name
+                ? user.school_name
+                : <><span style={{ color: '#AEEA00' }}>Nexo</span><span style={{ color: '#F0F0F0' }}>College</span></>
+              }
+            </span>
+          </div>
           <div style={{ width: '30px', flexShrink: 0 }} />
         </div>
 

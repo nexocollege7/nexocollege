@@ -14,7 +14,7 @@ type Props = {
 }
 
 export default function HeaderVitrine({ slug, cor, nomeEscola, basePath, logoUrl }: Props) {
-  const [user, setUser] = useState<{ nome: string } | null>(null)
+  const [user, setUser] = useState<{ nome: string, avatar_url: string | null } | null>(null)
   const [menuAberto, setMenuAberto] = useState(false)
   const router = useRouter()
   const supabase = createClient()
@@ -26,11 +26,14 @@ export default function HeaderVitrine({ slug, cor, nomeEscola, basePath, logoUrl
 
       const { data: profile } = await supabase
         .from('users')
-        .select('full_name')
+        .select('full_name, avatar_url')
         .eq('id', user.id)
         .single()
 
-      setUser({ nome: profile?.full_name || user.email || 'Aluno' })
+      setUser({
+        nome: profile?.full_name || user.email || 'Aluno',
+        avatar_url: profile?.avatar_url || null,
+      })
     }
     load()
   }, [])
@@ -88,13 +91,22 @@ export default function HeaderVitrine({ slug, cor, nomeEscola, basePath, logoUrl
               cursor: 'pointer', color: '#F0F0F0', flexShrink: 0,
             }}
           >
-            <div style={{
-              width: '26px', height: '26px', borderRadius: '50%',
-              backgroundColor: cor, display: 'flex', alignItems: 'center',
-              justifyContent: 'center', fontSize: '12px', fontWeight: '700', color: '#0D0D0D',
-            }}>
-              {user.nome.charAt(0).toUpperCase()}
-            </div>
+            {user.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.avatar_url}
+                alt={user.nome}
+                style={{ width: '26px', height: '26px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+              />
+            ) : (
+              <div style={{
+                width: '26px', height: '26px', borderRadius: '50%',
+                backgroundColor: cor, display: 'flex', alignItems: 'center',
+                justifyContent: 'center', fontSize: '12px', fontWeight: '700', color: '#0D0D0D',
+              }}>
+                {user.nome.charAt(0).toUpperCase()}
+              </div>
+            )}
             <span style={{ fontSize: '13px', fontWeight: '500', maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               Olá, {user.nome.split(' ')[0]}
             </span>

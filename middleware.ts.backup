@@ -1,29 +1,36 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+// Rotas permitidas para alunos
+const ROTAS_ALUNO = [
+  '/dashboard/meus-cursos',
+  '/dashboard/aprender',
+  '/dashboard/certificados',
+  '/dashboard/mensagens',
+  '/dashboard/ajuda',
+]
+
+function alunoTemAcesso(pathname: string): boolean {
+  return ROTAS_ALUNO.some(rota => pathname === rota || pathname.startsWith(rota + '/'))
+}
+
 export async function middleware(request: NextRequest) {
   const host = request.headers.get('host') || ''
   const url = request.nextUrl
 
-  // Detecta subdominio em nexocollege.com.br
-  // Ex: academiabiblia.nexocollege.com.br -> subdominio = 'academiabiblia'
   const isNexoCollegeDomain = host.endsWith('.nexocollege.com.br')
   const isWww = host.startsWith('www.')
-  const isApex = host === 'nexocollege.com.br'
 
   if (isNexoCollegeDomain && !isWww) {
-    // Rotas de API nunca devem ser reescritas para vitrine
     if (url.pathname.startsWith('/api/')) {
       return NextResponse.next()
     }
     const subdomain = host.replace('.nexocollege.com.br', '')
-    // Reescreve internamente para /vitrine/[slug] sem redirecionar
     const rewriteUrl = url.clone()
     rewriteUrl.pathname = '/vitrine/' + subdomain + (url.pathname === '/' ? '' : url.pathname)
     return NextResponse.rewrite(rewriteUrl)
   }
 
-  // Rotas de API nunca devem ser interceptadas pelo middleware
   if (url.pathname.startsWith('/api/')) {
     return NextResponse.next()
   }
@@ -60,11 +67,12 @@ export async function middleware(request: NextRequest) {
     url.pathname.startsWith('/auth/') ||
     url.pathname.startsWith('/vitrine/') ||
     url.pathname.startsWith('/api/register-school') ||
-    url.pathname.startsWith('/api/webhook-upgrade') ||
     url.pathname.startsWith('/api/webhook')
 
   const isMasterRoute = url.pathname.startsWith('/master')
+  const isDashboardRoute = url.pathname.startsWith('/dashboard')
 
+  // Rota master: só o master email
   if (isMasterRoute) {
     if (!user) {
       const redirect = url.clone()
@@ -77,12 +85,42 @@ export async function middleware(request: NextRequest) {
       redirect.pathname = '/dashboard'
       return NextResponse.redirect(redirect)
     }
+    return supabaseResponse
   }
 
+  // Usuário não logado tentando acessar rota protegida
   if (!user && !isPublicRoute) {
     const redirect = url.clone()
     redirect.pathname = '/login'
     return NextResponse.redirect(redirect)
+  }
+
+  // Verificar role para rotas do dashboard
+  if (user && isDashboardRoute) {
+    const masterEmail = process.env.NEXT_PUBLIC_MASTER_EMAIL
+
+    // Master não deve acessar dashboard
+    if (user.email === masterEmail) {
+      const redirect = url.clone()
+      redirect.pathname = '/master'
+      return NextResponse.redirect(redirect)
+    }
+
+    // Buscar role do usuário
+    const { data: profile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const role = profile?.role || 'student'
+
+    // Aluno tentando acessar rota de admin
+    if (role === 'student' && !alunoTemAcesso(url.pathname)) {
+      const redirect = url.clone()
+      redirect.pathname = '/dashboard/meus-cursos'
+      return NextResponse.redirect(redirect)
+    }
   }
 
   return supabaseResponse

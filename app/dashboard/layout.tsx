@@ -25,11 +25,24 @@ export default async function DashboardLayout({
   const adminClient = createAdminClient()
   const { data: profile } = await adminClient
     .from('users')
-    .select('role, full_name, avatar_url')
+    .select('role, full_name, avatar_url, school_id')
     .eq('id', user.id)
     .single()
 
   const role = profile?.role || 'student'
+
+  // Busca dados da escola para exibir logo no dashboard
+  let schoolName: string | null = null
+  let schoolLogoUrl: string | null = null
+  if (profile?.school_id) {
+    const { data: school } = await adminClient
+      .from('schools')
+      .select('name, logo_url')
+      .eq('id', profile.school_id)
+      .single()
+    schoolName = school?.name ?? null
+    schoolLogoUrl = school?.logo_url ?? null
+  }
 
   return (
     <AdminLayout
@@ -38,6 +51,8 @@ export default async function DashboardLayout({
         role: role,
         full_name: profile?.full_name ?? '',
         avatar_url: profile?.avatar_url ?? null,
+        school_name: schoolName,
+        school_logo_url: schoolLogoUrl,
       }}
     >
       {children}
