@@ -176,30 +176,33 @@ export async function deleteEscola(id: string): Promise<{ success: true } | { er
 
   const adminClient = createAdminClient()
 
-  // 1. lesson_progress via enrollments da escola
-  const { data: enrollments } = await adminClient
-    .from('enrollments')
-    .select('id')
-    .in('course_id', adminClient.from('courses').select('id').eq('school_id', id) as unknown as string[])
-  const enrollmentIds = (enrollments ?? []).map((e) => e.id)
-  if (enrollmentIds.length > 0) {
-    await adminClient.from('lesson_progress').delete().in('enrollment_id', enrollmentIds)
-  }
-
-  // 2. enrollments via courses da escola
+  // 1. Buscar courses da escola primeiro (necessário para múltiplas etapas)
   const { data: courses } = await adminClient
     .from('courses')
     .select('id')
     .eq('school_id', id)
   const courseIds = (courses ?? []).map((c) => c.id)
+
+  // 2. lesson_progress via enrollments da escola (query correta, sem cast inválido)
+  if (courseIds.length > 0) {
+    const { data: enrollments } = await adminClient
+      .from('enrollments')
+      .select('id')
+      .in('course_id', courseIds)
+    const enrollmentIds = (enrollments ?? []).map((e) => e.id)
+    if (enrollmentIds.length > 0) {
+      await adminClient.from('lesson_progress').delete().in('enrollment_id', enrollmentIds)
+    }
+  }
+  // 3. enrollments via courses da escola
   if (courseIds.length > 0) {
     await adminClient.from('enrollments').delete().in('course_id', courseIds)
   }
 
-  // 3. payments
+  // 4. payments
   await adminClient.from('payments').delete().eq('school_id', id)
 
-  // 4. lesson_comments via courses
+  // 5. lesson_comments, lessons, modules via courses
   if (courseIds.length > 0) {
     const { data: modules } = await adminClient
       .from('modules')

@@ -12,8 +12,8 @@ function validateMPSignature(
 ): boolean {
   const secret = process.env.MP_WEBHOOK_SECRET
   if (!secret) {
-    console.warn('[webhook] MP_WEBHOOK_SECRET não configurado — validação HMAC desativada')
-    return true
+    console.error('[webhook-upgrade] MP_WEBHOOK_SECRET não configurado — requisição rejeitada')
+    return false
   }
 
   // x-signature: "ts=1704475800,v1=abc123..."

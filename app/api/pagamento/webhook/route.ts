@@ -1,6 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { MercadoPagoConfig, Payment } from 'mercadopago'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createHmac } from 'crypto'
+
+function validateMPSignature(
+  xSignature: string,
+  xRequestId: string,
+  paymentId: string,
+): boolean {
+  const secret = process.env.MP_WEBHOOK_SECRET
+  if (!secret) {
+    console.error('[webhook/pagamento] MP_WEBHOOK_SECRET não configurado — requisição rejeitada')
+    return false
+  }
+
+  const sigParts: Record<string, string> = {}
+  for (const part of xSignature.split(',')) {
+    const idx = part.indexOf('=')
+    if (idx !== -1) sigParts[part.slice(0, idx).trim()] = part.slice(idx + 1).trim()
+  }
+
+  const ts = sigParts['ts']
+  const v1 = sigParts['v1']
+
+  if (!ts || !v1) {
+    console.warn('[webhook/pagamento] x-signature malformado:', xSignature)
+    return false
+  }
+
+  const manifest = `id:${paymentId};request-id:${xRequestId};ts:${ts};`
+  const computed = createHmac('sha256', secret).update(manifest).digest('hex')
+  return computed === v1
+}
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MP_ACCESS_TOKEN!
@@ -12,6 +43,15 @@ export async function POST(request: NextRequest) {
 
     if (body.type !== 'payment') {
       return NextResponse.json({ ok: true })
+    }
+
+    const xSignature = request.headers.get('x-signature') || ''
+    const xRequestId = request.headers.get('x-request-id') || ''
+    const paymentId = String(body.data?.id || '')
+
+    if (!validateMPSignature(xSignature, xRequestId, paymentId)) {
+      console.error('[webhook/pagamento] Assinatura HMAC inválida — requisição rejeitada')
+      return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 })
     }
 
     const payment = new Payment(client)
@@ -65,8 +105,9 @@ export async function POST(request: NextRequest) {
       })
 
     return NextResponse.json({ ok: true })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Erro interno'
     console.error('Webhook error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

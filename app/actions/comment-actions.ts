@@ -20,13 +20,26 @@ export async function addLessonComment(lessonId: string, content: string) {
 
   if (lessonErr || !lesson?.course_id) return { error: 'Aula não encontrada' }
 
+  const courseId = lesson.course_id
+
   const { data: course, error: courseErr } = await adminClient
     .from('courses')
     .select('school_id')
-    .eq('id', lesson.course_id)
+    .eq('id', courseId)
     .single()
 
   if (courseErr || !course?.school_id) return { error: 'Escola não encontrada' }
+
+  // Verificar matrícula ativa no curso antes de permitir comentário
+  const { data: enrollment } = await adminClient
+    .from('enrollments')
+    .select('id')
+    .eq('course_id', courseId)
+    .eq('student_id', user.id)
+    .in('payment_status', ['paid', 'manual'])
+    .maybeSingle()
+
+  if (!enrollment) return { error: 'Você não está matriculado neste curso.' }
 
   const { error: insertErr } = await adminClient
     .from('lesson_comments')
