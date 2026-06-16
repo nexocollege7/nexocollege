@@ -8,7 +8,10 @@ export async function getLessonComments(lessonId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
 
-  const { data } = await supabase
+  // adminClient bypassa a RLS que usa users.school_id (null para alunos matriculados pelo admin)
+  const adminClient = createAdminClient()
+
+  const { data } = await adminClient
     .from('lesson_comments')
     .select('id, content, created_at, reply_content, reply_at, users(full_name)')
     .eq('lesson_id', lessonId)
@@ -29,20 +32,25 @@ export async function addLessonComment(lessonId: string, content: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autenticado' }
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('school_id')
-    .eq('id', user.id)
+  const adminClient = createAdminClient()
+
+  // Busca school_id via lessons.course_id → courses.school_id
+  // (não usa users.school_id que é null para alunos matriculados pelo admin)
+  const { data: lessonData } = await adminClient
+    .from('lessons')
+    .select('courses(school_id)')
+    .eq('id', lessonId)
     .single()
 
-  if (!profile?.school_id) return { error: 'Escola não encontrada' }
+  const schoolId = (lessonData as any)?.courses?.school_id
+  if (!schoolId) return { error: 'Escola não encontrada' }
 
-  const { error } = await supabase
+  const { error } = await adminClient
     .from('lesson_comments')
     .insert({
       lesson_id: lessonId,
       user_id: user.id,
-      school_id: profile.school_id,
+      school_id: schoolId,
       content: content.trim(),
     })
 
@@ -57,18 +65,32 @@ export async function getAllSchoolComments() {
 
   const adminClient = createAdminClient()
 
-  const { data: profile } = await adminClient
-    .from('users')
-    .select('school_id')
-    .eq('id', user.id)
+  // Tenta owner primeiro; fallback para collaborador (users.school_id)
+  let schoolId: string | null = null
+
+  const { data: ownedSchool } = await adminClient
+    .from('schools')
+    .select('id')
+    .eq('owner_id', user.id)
     .single()
 
-  if (!profile?.school_id) return []
+  if (ownedSchool) {
+    schoolId = ownedSchool.id
+  } else {
+    const { data: profile } = await adminClient
+      .from('users')
+      .select('school_id')
+      .eq('id', user.id)
+      .single()
+    schoolId = profile?.school_id ?? null
+  }
+
+  if (!schoolId) return []
 
   const { data } = await adminClient
     .from('lesson_comments')
     .select('id, content, created_at, reply_content, reply_at, users(full_name), lessons(title)')
-    .eq('school_id', profile.school_id)
+    .eq('school_id', schoolId)
     .order('created_at', { ascending: false })
 
   return (data || []).map((c: any) => ({

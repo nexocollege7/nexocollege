@@ -93,7 +93,7 @@ export default function AprenderPage() {
       `}</style>
 
       {/* Player principal */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
 
         {/* Vídeo */}
         <div style={{ padding: '16px 16px 0' }}>
