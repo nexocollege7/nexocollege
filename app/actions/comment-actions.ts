@@ -126,6 +126,40 @@ export async function getAllSchoolComments() {
   })
 }
 
+export async function deleteComment(commentId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const adminClient = createAdminClient()
+
+  // Verificar que o comentário pertence a uma escola do usuário
+  const { data: comment } = await adminClient
+    .from('lesson_comments')
+    .select('school_id')
+    .eq('id', commentId)
+    .single()
+
+  if (!comment) return { error: 'Comentário não encontrado' }
+
+  const { data: ownedSchool } = await adminClient
+    .from('schools')
+    .select('id')
+    .eq('owner_id', user.id)
+    .eq('id', comment.school_id)
+    .maybeSingle()
+
+  if (!ownedSchool) return { error: 'Sem permissão' }
+
+  const { error } = await adminClient
+    .from('lesson_comments')
+    .delete()
+    .eq('id', commentId)
+
+  if (error) return { error: error.message }
+  return { success: true }
+}
+
 export async function replyToComment(commentId: string, replyContent: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

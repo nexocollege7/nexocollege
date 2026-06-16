@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getAllSchoolComments, replyToComment } from '@/app/actions/comment-actions'
+import { getAllSchoolComments, replyToComment, deleteComment } from '@/app/actions/comment-actions'
 
 type Comment = {
   id: string
@@ -28,6 +28,7 @@ export default function ComentariosPage() {
   const [replyText, setReplyText] = useState('')
   const [sending, setSending] = useState(false)
   const [msg, setMsg] = useState('')
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   async function load() {
     const data = await getAllSchoolComments()
@@ -36,6 +37,14 @@ export default function ComentariosPage() {
   }
 
   useEffect(() => { load() }, [])
+
+  async function handleDelete(commentId: string) {
+    if (!confirm('Tem certeza? O comentário será removido permanentemente.')) return
+    setDeletingId(commentId)
+    await deleteComment(commentId)
+    setDeletingId(null)
+    await load()
+  }
 
   async function handleReply(commentId: string) {
     if (!replyText.trim()) return
@@ -148,12 +157,19 @@ export default function ComentariosPage() {
                   {msg && <p style={{ color: '#FF5555', fontSize: '12px', margin: 0 }}>{msg}</p>}
                 </div>
               ) : (
-                <div style={{ paddingLeft: '42px' }}>
+                <div style={{ paddingLeft: '42px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <button
                     onClick={() => { setReplyingId(c.id); setReplyText(c.reply_content || ''); setMsg('') }}
                     style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #2A2A2A', backgroundColor: 'transparent', color: '#888888', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}
                   >
                     {c.reply_content ? '✏️ Editar resposta' : '↩ Responder'}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(c.id)}
+                    disabled={deletingId === c.id}
+                    style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #3A1A1A', backgroundColor: 'transparent', color: '#FF5555', fontSize: '12px', cursor: deletingId === c.id ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: deletingId === c.id ? 0.5 : 1 }}
+                  >
+                    {deletingId === c.id ? 'Excluindo...' : '🗑 Excluir'}
                   </button>
                 </div>
               )}
