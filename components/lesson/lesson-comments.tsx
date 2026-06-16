@@ -30,7 +30,7 @@ export function LessonComments({ lessonId }: { lessonId: string }) {
     const supabase = createClient()
     const { data, error } = await supabase
       .from('lesson_comments')
-      .select('id, content, created_at, reply_content, reply_at, users!lesson_comments_user_id_fkey(full_name)')
+      .select('id, content, created_at, reply_content, reply_at, user_id')
       .eq('lesson_id', lessonId)
       .order('created_at', { ascending: true })
 
@@ -42,14 +42,24 @@ export function LessonComments({ lessonId }: { lessonId: string }) {
       return
     }
 
-    console.log('[LessonComments] carregados:', data?.length ?? 0, 'lessonId:', lessonId)
-
     if (!data) return
+
+    console.log('[LessonComments] carregados:', data.length, 'lessonId:', lessonId)
+
+    // Tenta buscar nomes dos usuários; se RLS bloquear, cai no fallback 'Aluno'
+    const userIds = [...new Set(data.map((c: any) => c.user_id as string))]
+    const { data: usersData } = await supabase
+      .from('users')
+      .select('id, full_name')
+      .in('id', userIds)
+
+    const userMap = new Map((usersData || []).map((u: any) => [u.id as string, u.full_name as string]))
+
     setComments(data.map((c: any) => ({
       id: c.id as string,
       content: c.content as string,
       created_at: c.created_at as string,
-      user_name: (c.users?.full_name as string) || 'Aluno',
+      user_name: userMap.get(c.user_id) || 'Aluno',
       reply_content: (c.reply_content as string) || null,
       reply_at: (c.reply_at as string) || null,
     })))
