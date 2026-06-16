@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { getAulasDoAluno, marcarAulaConcluida } from '@/app/actions/aula-actions'
+import { LessonComments } from '@/components/lesson/lesson-comments'
 
 function getEmbedUrl(url: string): string {
   if (!url) return ''
@@ -192,6 +193,9 @@ export default function AprenderPage() {
             </div>
           </div>
         )}
+
+        {/* Comentários da aula */}
+        {aulaAtual && <LessonComments lessonId={aulaAtual.id} />}
       </div>
 
         {/* Lista de módulos e aulas */}

@@ -13,6 +13,7 @@ const menuItems = [
   { href: '/dashboard/alunos', label: 'Alunos', icon: '👥' },
   { href: '/dashboard/mensagens', label: 'Mensagens', icon: '💬' },
   { href: '/dashboard/certificados', label: 'Certificados', icon: '🏆' },
+  { href: '/dashboard/comentarios', label: 'Comentários de Aulas', icon: '💬' },
   { href: '/dashboard/vitrine', label: 'Vitrine', icon: '🌐' },
   { href: '/dashboard/upgrade', label: 'Upgrade', icon: '⚡' },
   { href: '/dashboard/chamados', label: 'Chamados dos Alunos', icon: '🎫' },
