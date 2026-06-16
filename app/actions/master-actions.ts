@@ -170,6 +170,92 @@ export async function alterarPlanoEscola(escolaId: string, plano: 'starter' | 'c
   return { success: true }
 }
 
+export async function deleteEscola(id: string): Promise<{ success: true } | { error: string }> {
+  const authError = await verifyMaster()
+  if (authError) return { error: 'Não autorizado' }
+
+  const adminClient = createAdminClient()
+
+  // 1. lesson_progress via enrollments da escola
+  const { data: enrollments } = await adminClient
+    .from('enrollments')
+    .select('id')
+    .in('course_id', adminClient.from('courses').select('id').eq('school_id', id) as unknown as string[])
+  const enrollmentIds = (enrollments ?? []).map((e) => e.id)
+  if (enrollmentIds.length > 0) {
+    await adminClient.from('lesson_progress').delete().in('enrollment_id', enrollmentIds)
+  }
+
+  // 2. enrollments via courses da escola
+  const { data: courses } = await adminClient
+    .from('courses')
+    .select('id')
+    .eq('school_id', id)
+  const courseIds = (courses ?? []).map((c) => c.id)
+  if (courseIds.length > 0) {
+    await adminClient.from('enrollments').delete().in('course_id', courseIds)
+  }
+
+  // 3. payments
+  await adminClient.from('payments').delete().eq('school_id', id)
+
+  // 4. lesson_comments via courses
+  if (courseIds.length > 0) {
+    const { data: modules } = await adminClient
+      .from('modules')
+      .select('id')
+      .in('course_id', courseIds)
+    const moduleIds = (modules ?? []).map((m) => m.id)
+    if (moduleIds.length > 0) {
+      const { data: lessons } = await adminClient
+        .from('lessons')
+        .select('id')
+        .in('module_id', moduleIds)
+      const lessonIds = (lessons ?? []).map((l) => l.id)
+      if (lessonIds.length > 0) {
+        await adminClient.from('lesson_comments').delete().in('lesson_id', lessonIds)
+        await adminClient.from('lesson_progress').delete().in('lesson_id', lessonIds)
+      }
+      // 5–6. lessons e modules
+      await adminClient.from('lessons').delete().in('module_id', moduleIds)
+    }
+    await adminClient.from('modules').delete().in('course_id', courseIds)
+  }
+
+  // 7. courses
+  await adminClient.from('courses').delete().eq('school_id', id)
+
+  // 8. certificates
+  await adminClient.from('certificates').delete().eq('school_id', id)
+
+  // 9–10. support_messages via support_tickets
+  const { data: tickets } = await adminClient
+    .from('support_tickets')
+    .select('id')
+    .eq('school_id', id)
+  const ticketIds = (tickets ?? []).map((t) => t.id)
+  if (ticketIds.length > 0) {
+    await adminClient.from('support_messages').delete().in('ticket_id', ticketIds)
+  }
+  await adminClient.from('support_tickets').delete().eq('school_id', id)
+
+  // 11–14. mensagens, anúncios, colaboradores, aceites legais
+  await adminClient.from('messages').delete().eq('school_id', id)
+  await adminClient.from('school_announcements').delete().eq('school_id', id)
+  await adminClient.from('school_collaborators').delete().eq('school_id', id)
+  await adminClient.from('legal_acceptances').delete().eq('school_id', id)
+
+  // 15. users da escola (alunos e professores)
+  await adminClient.from('users').delete().eq('school_id', id)
+
+  // 16. escola
+  const { error } = await adminClient.from('schools').delete().eq('id', id)
+  if (error) return { error: error.message }
+
+  revalidatePath('/master/escolas')
+  return { success: true }
+}
+
 export async function getEscolaDetalhe(id: string): Promise<{
   id: string
   name: string

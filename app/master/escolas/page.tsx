@@ -1,13 +1,17 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getEscolas, toggleEscolaStatus, alterarPlanoEscola } from '@/app/actions/master-actions'
+import { getEscolas, toggleEscolaStatus, alterarPlanoEscola, deleteEscola } from '@/app/actions/master-actions'
 import Link from 'next/link'
+
+type ModalExcluir = { id: string; nome: string }
 
 export default function EscolasPage() {
   const [escolas, setEscolas] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [salvando, setSalvando] = useState<string | null>(null)
+  const [excluindo, setExcluindo] = useState(false)
+  const [modalExcluir, setModalExcluir] = useState<ModalExcluir | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -30,6 +34,19 @@ export default function EscolasPage() {
     setSalvando(null)
   }
 
+  async function handleExcluir() {
+    if (!modalExcluir) return
+    setExcluindo(true)
+    const result = await deleteEscola(modalExcluir.id)
+    setExcluindo(false)
+    setModalExcluir(null)
+    if ('error' in result) {
+      alert('Erro ao excluir: ' + result.error)
+      return
+    }
+    setEscolas(escolas.filter((e) => e.id !== modalExcluir.id))
+  }
+
   function getWhatsAppLink(phone: string) {
     const clean = phone.replace(/\D/g, '')
     const number = clean.startsWith('55') ? clean : '55' + clean
@@ -44,6 +61,68 @@ export default function EscolasPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+      {/* Modal de confirmação de exclusão */}
+      {modalExcluir && (
+        <div
+          onClick={() => !excluindo && setModalExcluir(null)}
+          style={{
+            position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.75)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1000, padding: '20px',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: '#1A1A1A', border: '1px solid rgba(255,68,68,0.3)',
+              borderRadius: '16px', padding: '32px', width: '100%', maxWidth: '480px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: 'rgba(255,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>
+                🗑️
+              </div>
+              <h2 style={{ color: '#F0F0F0', fontSize: '18px', fontWeight: '700', margin: 0 }}>
+                Excluir escola
+              </h2>
+            </div>
+
+            <p style={{ color: '#CCCCCC', fontSize: '14px', lineHeight: '1.6', margin: '0 0 24px' }}>
+              Tem certeza que deseja excluir a escola{' '}
+              <strong style={{ color: '#F0F0F0' }}>{modalExcluir.nome}</strong>?{' '}
+              Esta ação é irreversível e removerá todos os dados relacionados.
+            </p>
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setModalExcluir(null)}
+                disabled={excluindo}
+                style={{
+                  padding: '10px 20px', borderRadius: '8px', border: '1px solid #2A2A2A',
+                  backgroundColor: 'transparent', color: '#888888', fontSize: '14px',
+                  fontWeight: '600', cursor: excluindo ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit', opacity: excluindo ? 0.5 : 1,
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleExcluir}
+                disabled={excluindo}
+                style={{
+                  padding: '10px 20px', borderRadius: '8px', border: 'none',
+                  backgroundColor: '#FF4444', color: '#FFFFFF', fontSize: '14px',
+                  fontWeight: '700', cursor: excluindo ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit', opacity: excluindo ? 0.6 : 1,
+                }}
+              >
+                {excluindo ? 'Excluindo...' : 'Excluir permanentemente'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <style>{`
         @media (max-width: 768px) {
           .escola-card-inner { flex-direction: column !important; align-items: flex-start !important; }
@@ -105,6 +184,7 @@ export default function EscolasPage() {
 
                 <div className="escola-acoes" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Link href={`/master/escolas/${escola.id}`} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #2A2A2A', backgroundColor: 'transparent', color: '#AEEA00', fontSize: '13px', textDecoration: 'none', fontWeight: '600' }}>Detalhes</Link>
+                  <button onClick={() => setModalExcluir({ id: escola.id, nome: escola.name })} style={{ padding: '8px 14px', borderRadius: '8px', border: 'none', backgroundColor: 'rgba(255,68,68,0.12)', color: '#FF4444', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>Excluir</button>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
                     <label style={{ color: '#555555', fontSize: '11px' }}>Plano</label>
                     <select value={escola.plan ?? 'starter'} disabled={salvando === escola.id} onChange={(e) => handlePlano(escola.id, e.target.value)} style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid #2A2A2A', backgroundColor: '#0D0D0D', color: '#7C4DFF', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', opacity: salvando === escola.id ? 0.5 : 1 }}>
