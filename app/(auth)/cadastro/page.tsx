@@ -8,6 +8,14 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { getActiveDocuments, recordAcceptances } from '@/app/actions/legal-actions'
 import type { LegalDocument } from '@/app/actions/legal-actions'
 
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/
+const BLOCKED_DOMAINS = ['teste.com', 'test.com', 'example.com', 'foo.com', 'bar.com']
+function isEmailValido(email: string): boolean {
+  if (!EMAIL_REGEX.test(email)) return false
+  const domain = email.split('@')[1].toLowerCase()
+  return !BLOCKED_DOMAINS.includes(domain)
+}
+
 function Modal({ titulo, conteudo, onFechar }: { titulo: string; conteudo: string; onFechar: () => void }) {
   return (
     <div
@@ -64,6 +72,7 @@ const DOC_ICONS: Record<string, string> = {
 function CadastroContent() {
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState('')
   const [password, setPassword] = useState('')
   const [nomeEscola, setNomeEscola] = useState('')
   const [error, setError] = useState('')
@@ -90,9 +99,16 @@ function CadastroContent() {
   async function handleCadastro() {
     setLoading(true)
     setError('')
+    setEmailError('')
 
     if (!nome || !email || !password || !nomeEscola) {
       setError('Preencha todos os campos.')
+      setLoading(false)
+      return
+    }
+
+    if (!isEmailValido(email)) {
+      setEmailError('Por favor, informe um e-mail válido.')
       setLoading(false)
       return
     }
@@ -199,8 +215,11 @@ function CadastroContent() {
 
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#CCCCCC', marginBottom: '8px' }}>Email</label>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com"
-                  style={{ width: '100%', backgroundColor: '#111111', border: '1px solid #333333', borderRadius: '8px', padding: '12px 16px', color: '#FFFFFF', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }} />
+                <input type="email" value={email} onChange={(e) => { setEmail(e.target.value); setEmailError('') }} placeholder="seu@email.com"
+                  style={{ width: '100%', backgroundColor: '#111111', border: `1px solid ${emailError ? '#f87171' : '#333333'}`, borderRadius: '8px', padding: '12px 16px', color: '#FFFFFF', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }} />
+                {emailError && (
+                  <p style={{ color: '#f87171', fontSize: '12px', marginTop: '6px' }}>{emailError}</p>
+                )}
               </div>
 
               <div>

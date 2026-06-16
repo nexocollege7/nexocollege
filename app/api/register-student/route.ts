@@ -3,6 +3,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
+import { validateEmail } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request.headers)
@@ -28,6 +29,10 @@ export async function POST(request: NextRequest) {
 
     if (!userId || !schoolId) {
       return NextResponse.json({ error: 'Dados incompletos' }, { status: 400 })
+    }
+
+    if (email && !validateEmail(email)) {
+      return NextResponse.json({ error: 'Por favor, informe um e-mail válido.' }, { status: 400 })
     }
 
     // Usuário autenticado só pode atualizar seu próprio perfil

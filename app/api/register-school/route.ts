@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
+import { validateEmail, sendEmail } from '@/lib/email'
 
 function gerarSlug(nome: string): string {
   // Normalizar: remover acentos e caracteres especiais
@@ -38,6 +39,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Preencha todos os campos.' }, { status: 400 })
     }
 
+    if (!validateEmail(email)) {
+      return NextResponse.json({ error: 'Por favor, informe um e-mail válido.' }, { status: 400 })
+    }
+
     if (password.length < 6) {
       return NextResponse.json({ error: 'A senha precisa ter pelo menos 6 caracteres.' }, { status: 400 })
     }
@@ -47,6 +52,18 @@ export async function POST(request: NextRequest) {
     }
 
     const adminClient = createAdminClient()
+
+    // Verificar se o email já está cadastrado (AJUSTE 3)
+    const { data: existingUsers } = await adminClient.auth.admin.listUsers({ perPage: 1000 })
+    const emailJaCadastrado = existingUsers?.users.some(
+      (u) => u.email?.toLowerCase() === email.toLowerCase()
+    )
+    if (emailJaCadastrado) {
+      return NextResponse.json(
+        { error: 'Este e-mail já está cadastrado. Faça login ou use outro e-mail.' },
+        { status: 400 }
+      )
+    }
 
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email,
@@ -124,6 +141,26 @@ export async function POST(request: NextRequest) {
         await adminClient.from('schools').delete().eq('id', escola.id)
         return NextResponse.json({ error: 'Erro ao configurar perfil. Tente novamente.' }, { status: 500 })
       }
+    }
+
+    // Notificar master (AJUSTE 4A) — falha silenciosa para não bloquear o cadastro
+    const masterEmail = process.env.MASTER_EMAIL || process.env.NEXT_PUBLIC_MASTER_EMAIL
+    if (masterEmail) {
+      const dataHora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+      sendEmail(
+        masterEmail,
+        'Nova escola cadastrada — NexoCollege',
+        `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;background:#0D0D0D;color:#F0F0F0;padding:32px;border-radius:12px">
+          <h2 style="color:#AEEA00;margin:0 0 24px">Nova escola cadastrada</h2>
+          <table style="width:100%;border-collapse:collapse">
+            <tr><td style="color:#888;padding:8px 0;font-size:14px">Nome</td><td style="color:#F0F0F0;padding:8px 0;font-size:14px">${nomeEscola}</td></tr>
+            <tr><td style="color:#888;padding:8px 0;font-size:14px">Slug</td><td style="color:#AEEA00;padding:8px 0;font-size:14px">${slug}</td></tr>
+            <tr><td style="color:#888;padding:8px 0;font-size:14px">E-mail do dono</td><td style="color:#F0F0F0;padding:8px 0;font-size:14px">${email}</td></tr>
+            <tr><td style="color:#888;padding:8px 0;font-size:14px">Plano</td><td style="color:#7C4DFF;padding:8px 0;font-size:14px">Starter</td></tr>
+            <tr><td style="color:#888;padding:8px 0;font-size:14px">Data/hora</td><td style="color:#F0F0F0;padding:8px 0;font-size:14px">${dataHora}</td></tr>
+          </table>
+        </div>`
+      ).catch(() => undefined)
     }
 
     return NextResponse.json({ success: true, slug })

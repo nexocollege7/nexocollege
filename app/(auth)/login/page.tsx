@@ -118,8 +118,11 @@ export default function LoginPage() {
 
           </div>
 
-          <div style={{ marginTop: '24px', textAlign: 'center' }}>
-            <p style={{ color: '#666666', fontSize: '14px' }}>
+          <div style={{ marginTop: '24px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <Link href="/esqueci-senha" style={{ color: '#555555', fontSize: '13px', textDecoration: 'none' }}>
+              Esqueceu sua senha?
+            </Link>
+            <p style={{ color: '#666666', fontSize: '14px', margin: 0 }}>
               Nao tem conta?{' '}
               <Link href="/cadastro" style={{ color: '#AEEA00', fontWeight: '600', textDecoration: 'none' }}>
                 Criar escola gratis

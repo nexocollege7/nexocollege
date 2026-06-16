@@ -8,6 +8,14 @@ import { getSchoolBySlug } from '@/app/actions/vitrine-actions'
 import { getActiveDocuments, recordAcceptances } from '@/app/actions/legal-actions'
 import type { LegalDocument } from '@/app/actions/legal-actions'
 
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/
+const BLOCKED_DOMAINS = ['teste.com', 'test.com', 'example.com', 'foo.com', 'bar.com']
+function isEmailValido(email: string): boolean {
+  if (!EMAIL_REGEX.test(email)) return false
+  const domain = email.split('@')[1].toLowerCase()
+  return !BLOCKED_DOMAINS.includes(domain)
+}
+
 const DOC_ICONS: Record<string, string> = {
   terms_of_use: '📄',
   privacy_policy: '🔒',
@@ -53,6 +61,7 @@ export default function LoginEscolaPage() {
 
   const [school, setSchool] = useState<any>(null)
   const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -100,9 +109,16 @@ export default function LoginEscolaPage() {
   async function handleCadastro() {
     setLoading(true)
     setError('')
+    setEmailError('')
 
     if (!nome.trim()) {
       setError('Preencha seu nome.')
+      setLoading(false)
+      return
+    }
+
+    if (!isEmailValido(email)) {
+      setEmailError('Por favor, informe um e-mail válido.')
       setLoading(false)
       return
     }
@@ -193,7 +209,7 @@ export default function LoginEscolaPage() {
           {(['login', 'cadastro'] as const).map((m) => (
             <button
               key={m}
-              onClick={() => { setModo(m); setError('') }}
+              onClick={() => { setModo(m); setError(''); setEmailError('') }}
               style={{
                 flex: 1, padding: '10px', borderRadius: '8px', border: 'none',
                 backgroundColor: modo === m ? cor : 'transparent',
@@ -237,10 +253,13 @@ export default function LoginEscolaPage() {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setEmailError('') }}
                 placeholder="seu@email.com"
-                style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #2A2A2A', backgroundColor: '#0D0D0D', color: '#F0F0F0', fontSize: '14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: `1px solid ${emailError ? '#FF5555' : '#2A2A2A'}`, backgroundColor: '#0D0D0D', color: '#F0F0F0', fontSize: '14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
               />
+              {emailError && (
+                <p style={{ color: '#FF5555', fontSize: '12px', marginTop: '5px', margin: '5px 0 0' }}>{emailError}</p>
+              )}
             </div>
 
             <div>
@@ -302,7 +321,12 @@ export default function LoginEscolaPage() {
             </button>
           </div>
 
-          <div style={{ marginTop: '24px', textAlign: 'center' }}>
+          <div style={{ marginTop: '24px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {modo === 'login' && (
+              <Link href="/esqueci-senha" style={{ color: '#555555', fontSize: '12px', textDecoration: 'none' }}>
+                Esqueceu sua senha?
+              </Link>
+            )}
             <Link href={`/vitrine/${slug}`} style={{ color: '#555555', fontSize: '12px', textDecoration: 'none' }}>
               ← Voltar para a vitrine
             </Link>
