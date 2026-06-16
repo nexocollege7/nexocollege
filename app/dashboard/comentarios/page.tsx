@@ -9,6 +9,7 @@ type Comment = {
   created_at: string
   user_name: string
   lesson_title: string
+  course_title: string
   reply_content: string | null
   reply_at: string | null
 }
@@ -90,7 +91,8 @@ export default function ComentariosPage() {
                   <div style={{ minWidth: 0 }}>
                     <p style={{ color: '#F0F0F0', fontWeight: '600', fontSize: '14px', margin: 0 }}>{c.user_name}</p>
                     <p style={{ color: '#555555', fontSize: '12px', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      Aula: <span style={{ color: '#888888' }}>{c.lesson_title}</span>
+                      {c.course_title && <><span style={{ color: '#666666' }}>{c.course_title}</span><span style={{ color: '#333333' }}> · </span></>}
+                      <span style={{ color: '#888888' }}>{c.lesson_title}</span>
                     </p>
                   </div>
                 </div>

@@ -46,7 +46,10 @@ export async function addLessonComment(lessonId: string, content: string) {
 export async function getAllSchoolComments() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return []
+  if (!user) {
+    console.error('[getAllSchoolComments] sem sessão de usuário')
+    return []
+  }
 
   const adminClient = createAdminClient()
 
@@ -56,7 +59,7 @@ export async function getAllSchoolComments() {
     .from('schools')
     .select('id')
     .eq('owner_id', user.id)
-    .single()
+    .maybeSingle()
 
   if (ownedSchool) {
     schoolId = ownedSchool.id
@@ -69,7 +72,10 @@ export async function getAllSchoolComments() {
     schoolId = profile?.school_id ?? null
   }
 
-  if (!schoolId) return []
+  if (!schoolId) {
+    console.error('[getAllSchoolComments] schoolId não encontrado para user', user.id)
+    return []
+  }
 
   const { data: comments, error: commentsErr } = await adminClient
     .from('lesson_comments')
@@ -77,28 +83,47 @@ export async function getAllSchoolComments() {
     .eq('school_id', schoolId)
     .order('created_at', { ascending: false })
 
-  if (commentsErr || !comments || comments.length === 0) return []
+  if (commentsErr) {
+    console.error('[getAllSchoolComments] erro na query:', commentsErr)
+    return []
+  }
+
+  if (!comments || comments.length === 0) return []
 
   const userIds = [...new Set(comments.map((c: any) => c.user_id as string))]
   const lessonIds = [...new Set(comments.map((c: any) => c.lesson_id as string))]
 
   const [usersResult, lessonsResult] = await Promise.all([
     adminClient.from('users').select('id, full_name').in('id', userIds),
-    adminClient.from('lessons').select('id, title').in('id', lessonIds),
+    adminClient.from('lessons').select('id, title, course_id').in('id', lessonIds),
   ])
 
-  const userMap = new Map((usersResult.data || []).map((u: any) => [u.id as string, u.full_name as string]))
-  const lessonMap = new Map((lessonsResult.data || []).map((l: any) => [l.id as string, l.title as string]))
+  const courseIds = [...new Set((lessonsResult.data || []).map((l: any) => l.course_id as string).filter(Boolean))]
+  const { data: coursesData } = await adminClient
+    .from('courses')
+    .select('id, title')
+    .in('id', courseIds)
 
-  return comments.map((c: any) => ({
-    id: c.id as string,
-    content: c.content as string,
-    created_at: c.created_at as string,
-    user_name: userMap.get(c.user_id) || 'Aluno',
-    lesson_title: lessonMap.get(c.lesson_id) || 'Aula',
-    reply_content: (c.reply_content as string) || null,
-    reply_at: (c.reply_at as string) || null,
-  }))
+  const userMap = new Map((usersResult.data || []).map((u: any) => [u.id as string, u.full_name as string]))
+  const courseMap = new Map((coursesData || []).map((c: any) => [c.id as string, c.title as string]))
+  const lessonMap = new Map((lessonsResult.data || []).map((l: any) => [
+    l.id as string,
+    { title: l.title as string, course_id: l.course_id as string },
+  ]))
+
+  return comments.map((c: any) => {
+    const lesson = lessonMap.get(c.lesson_id)
+    return {
+      id: c.id as string,
+      content: c.content as string,
+      created_at: c.created_at as string,
+      user_name: userMap.get(c.user_id) || 'Aluno',
+      lesson_title: lesson?.title || 'Aula',
+      course_title: courseMap.get(lesson?.course_id || '') || '',
+      reply_content: (c.reply_content as string) || null,
+      reply_at: (c.reply_at as string) || null,
+    }
+  })
 }
 
 export async function replyToComment(commentId: string, replyContent: string) {

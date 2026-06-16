@@ -26,7 +26,7 @@ export function LessonComments({ lessonId }: { lessonId: string }) {
   const [sending, setSending] = useState(false)
   const [msg, setMsg] = useState('')
 
-  async function fetchComments() {
+  async function fetchComments(attempt = 0) {
     const supabase = createClient()
     const { data, error } = await supabase
       .from('lesson_comments')
@@ -34,7 +34,17 @@ export function LessonComments({ lessonId }: { lessonId: string }) {
       .eq('lesson_id', lessonId)
       .order('created_at', { ascending: true })
 
-    if (error || !data) return
+    if (error) {
+      console.error('[LessonComments] erro na query (tentativa', attempt + 1, '):', error)
+      if (attempt < 2) {
+        setTimeout(() => fetchComments(attempt + 1), 1000)
+      }
+      return
+    }
+
+    console.log('[LessonComments] carregados:', data?.length ?? 0, 'lessonId:', lessonId)
+
+    if (!data) return
     setComments(data.map((c: any) => ({
       id: c.id as string,
       content: c.content as string,
