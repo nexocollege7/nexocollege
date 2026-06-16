@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Sidebar } from './sidebar'
 import { SidebarAluno } from './sidebar-aluno'
 import { Header } from './header'
+import { SessionProvider } from '@/components/auth/session-provider'
 
 interface AdminLayoutProps {
   children: React.ReactNode
@@ -20,6 +21,7 @@ export function AdminLayout({ children, user, title }: AdminLayoutProps) {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0D0D0D' }}>
+      <SessionProvider />
 
       {/* OVERLAY — aparece atrás do drawer no mobile */}
       {mobileOpen && (
