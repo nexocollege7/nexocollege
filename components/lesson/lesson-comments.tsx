@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getLessonComments, addLessonComment } from '@/app/actions/comment-actions'
+import { createClient } from '@/lib/supabase/client'
+import { addLessonComment } from '@/app/actions/comment-actions'
 
 interface Comment {
   id: string
@@ -25,9 +26,28 @@ export function LessonComments({ lessonId }: { lessonId: string }) {
   const [sending, setSending] = useState(false)
   const [msg, setMsg] = useState('')
 
+  async function fetchComments() {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from('lesson_comments')
+      .select('id, content, created_at, reply_content, reply_at, users!lesson_comments_user_id_fkey(full_name)')
+      .eq('lesson_id', lessonId)
+      .order('created_at', { ascending: true })
+
+    if (error || !data) return
+    setComments(data.map((c: any) => ({
+      id: c.id as string,
+      content: c.content as string,
+      created_at: c.created_at as string,
+      user_name: (c.users?.full_name as string) || 'Aluno',
+      reply_content: (c.reply_content as string) || null,
+      reply_at: (c.reply_at as string) || null,
+    })))
+  }
+
   useEffect(() => {
     if (!lessonId) return
-    getLessonComments(lessonId).then(setComments)
+    fetchComments()
   }, [lessonId])
 
   async function handleSubmit() {
@@ -39,8 +59,7 @@ export function LessonComments({ lessonId }: { lessonId: string }) {
       setMsg('Erro: ' + result.error)
     } else {
       setText('')
-      const updated = await getLessonComments(lessonId)
-      setComments(updated)
+      await fetchComments()
     }
     setSending(false)
   }
@@ -95,7 +114,6 @@ export function LessonComments({ lessonId }: { lessonId: string }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {comments.map(c => (
             <div key={c.id}>
-              {/* Comentário do aluno */}
               <div style={{ background: '#1A1A1A', borderRadius: '10px', padding: '14px 16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                   <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#AEEA00', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700', color: '#0D0D0D', flexShrink: 0 }}>
@@ -109,16 +127,11 @@ export function LessonComments({ lessonId }: { lessonId: string }) {
                 </p>
               </div>
 
-              {/* Resposta do professor (se houver) */}
               {c.reply_content && (
                 <div style={{
-                  marginLeft: '20px',
-                  marginTop: '4px',
-                  backgroundColor: '#0D1500',
-                  border: '1px solid #1A3A00',
-                  borderRadius: '10px',
-                  padding: '12px 16px',
-                  position: 'relative',
+                  marginLeft: '20px', marginTop: '4px',
+                  backgroundColor: '#0D1500', border: '1px solid #1A3A00',
+                  borderRadius: '10px', padding: '12px 16px',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
                     <div style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: '#1A3A00', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

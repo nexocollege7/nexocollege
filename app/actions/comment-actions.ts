@@ -4,39 +4,6 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
-export async function getLessonComments(lessonId: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return []
-
-  const adminClient = createAdminClient()
-
-  const { data: comments, error: commentsErr } = await adminClient
-    .from('lesson_comments')
-    .select('id, content, created_at, reply_content, reply_at, user_id')
-    .eq('lesson_id', lessonId)
-    .order('created_at', { ascending: true })
-
-  if (commentsErr || !comments || comments.length === 0) return []
-
-  const userIds = [...new Set(comments.map((c: any) => c.user_id as string))]
-  const { data: users } = await adminClient
-    .from('users')
-    .select('id, full_name')
-    .in('id', userIds)
-
-  const userMap = new Map((users || []).map((u: any) => [u.id as string, u.full_name as string]))
-
-  return comments.map((c: any) => ({
-    id: c.id as string,
-    content: c.content as string,
-    created_at: c.created_at as string,
-    user_name: userMap.get(c.user_id) || 'Aluno',
-    reply_content: (c.reply_content as string) || null,
-    reply_at: (c.reply_at as string) || null,
-  }))
-}
-
 export async function addLessonComment(lessonId: string, content: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
