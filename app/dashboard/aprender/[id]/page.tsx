@@ -95,7 +95,8 @@ export default function AprenderPage() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* Vídeo */}
-        <div style={{ backgroundColor: '#000000', aspectRatio: '16/9', width: '100%', flexShrink: 0 }}>
+        <div style={{ padding: '16px 16px 0' }}>
+        <div style={{ backgroundColor: '#000000', aspectRatio: '16/9', width: '100%', flexShrink: 0, borderRadius: '16px', overflow: 'hidden' }}>
           {aulaAtual?.video_url ? (
             <iframe
               src={getEmbedUrl(aulaAtual.video_url)}
@@ -115,6 +116,7 @@ export default function AprenderPage() {
               </p>
             </div>
           )}
+        </div>
         </div>
 
         {/* Info da aula */}
