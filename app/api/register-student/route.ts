@@ -2,8 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request.headers)
+  if (!checkRateLimit(`register-student:${ip}`, 5, 60 * 60 * 1000)) {
+    return NextResponse.json(
+      { error: 'Muitas tentativas. Tente novamente em 1 hora.' },
+      { status: 429 }
+    )
+  }
+
   try {
     // Verificar sessão do usuário
     const cookieStore = await cookies()

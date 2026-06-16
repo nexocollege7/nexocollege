@@ -1,8 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { MercadoPagoConfig, Payment } from 'mercadopago'
 import { createClient } from '@supabase/supabase-js'
+import { createHmac } from 'crypto'
 
 const PLANOS_VALIDOS = ['starter', 'creator', 'pro', 'scale', 'enterprise']
+
+function validateMPSignature(
+  xSignature: string,
+  xRequestId: string,
+  paymentId: string,
+): boolean {
+  const secret = process.env.MP_WEBHOOK_SECRET
+  if (!secret) {
+    console.warn('[webhook] MP_WEBHOOK_SECRET não configurado — validação HMAC desativada')
+    return true
+  }
+
+  // x-signature: "ts=1704475800,v1=abc123..."
+  const sigParts: Record<string, string> = {}
+  for (const part of xSignature.split(',')) {
+    const idx = part.indexOf('=')
+    if (idx !== -1) sigParts[part.slice(0, idx).trim()] = part.slice(idx + 1).trim()
+  }
+
+  const ts = sigParts['ts']
+  const v1 = sigParts['v1']
+
+  if (!ts || !v1) {
+    console.warn('[webhook] x-signature malformado:', xSignature)
+    return false
+  }
+
+  const manifest = `id:${paymentId};request-id:${xRequestId};ts:${ts};`
+  const computed = createHmac('sha256', secret).update(manifest).digest('hex')
+  return computed === v1
+}
 
 export async function POST(request: NextRequest) {
   const adminClient = createClient(
@@ -15,6 +47,16 @@ export async function POST(request: NextRequest) {
 
     if (body.type !== 'payment') {
       return NextResponse.json({ ok: true })
+    }
+
+    // Validação HMAC — garante que a notificação veio do Mercado Pago
+    const xSignature = request.headers.get('x-signature') || ''
+    const xRequestId = request.headers.get('x-request-id') || ''
+    const paymentId = String(body.data?.id || '')
+
+    if (!validateMPSignature(xSignature, xRequestId, paymentId)) {
+      console.error('[webhook] Assinatura HMAC inválida — requisição rejeitada')
+      return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 })
     }
 
     const mpClient = new MercadoPagoConfig({
