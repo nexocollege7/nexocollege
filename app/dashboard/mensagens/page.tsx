@@ -2,9 +2,25 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { getMyTeachers, getMyStudents, getMessages, sendMessage, marcarMensagensLidas } from '@/app/actions/chat-actions'
+import { getMyAnnouncements } from '@/app/actions/announcement-actions'
 import { Send, MessageCircle } from 'lucide-react'
 
+interface Announcement {
+  id: string
+  title: string
+  content: string
+  created_at: string
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleString('pt-BR', {
+    day: '2-digit', month: 'long', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  })
+}
+
 export default function MensagensPage() {
+  const [aba, setAba] = useState<'chat' | 'comunicados'>('chat')
   const [conversations, setConversations] = useState<any[]>([])
   const [selected, setSelected] = useState<any>(null)
   const [messages, setMessages] = useState<any[]>([])
@@ -12,6 +28,7 @@ export default function MensagensPage() {
   const [sending, setSending] = useState(false)
   const [myId, setMyId] = useState('')
   const [isTeacher, setIsTeacher] = useState(false)
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const bottomRef = useRef<HTMLDivElement>(null)
 
   async function loadConversations(role: string) {
@@ -40,6 +57,7 @@ export default function MensagensPage() {
       setIsTeacher(role === 'admin')
       loadConversations(role)
     })
+    getMyAnnouncements().then(setAnnouncements)
   }, [])
 
   useEffect(() => {
@@ -113,7 +131,58 @@ export default function MensagensPage() {
   }
 
   return (
-    <div className="flex gap-4 h-[calc(100vh-120px)]">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: 'calc(100vh - 120px)' }}>
+      {/* Abas */}
+      <div style={{ display: 'flex', gap: '4px', background: '#111111', borderRadius: '10px', padding: '4px', width: 'fit-content' }}>
+        {([
+          { id: 'chat', label: '💬 Mensagens' },
+          { id: 'comunicados', label: '📣 Comunicados' + (announcements.length > 0 ? ` (${announcements.length})` : '') },
+        ] as const).map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setAba(tab.id)}
+            style={{
+              padding: '8px 20px', borderRadius: '8px', border: 'none',
+              cursor: 'pointer', fontFamily: 'inherit', fontSize: '13px', fontWeight: aba === tab.id ? '700' : '500',
+              background: aba === tab.id ? '#AEEA00' : 'transparent',
+              color: aba === tab.id ? '#0D0D0D' : '#666666',
+              transition: 'all 0.15s',
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+    {aba === 'comunicados' ? (
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {announcements.length === 0 ? (
+          <div style={{ backgroundColor: '#111111', border: '1px solid #2A2A2A', borderRadius: '16px', padding: '48px', textAlign: 'center' }}>
+            <p style={{ fontSize: '32px', margin: '0 0 12px' }}>📣</p>
+            <p style={{ color: '#555555', fontSize: '14px', margin: 0 }}>Nenhum comunicado da escola ainda</p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {announcements.map(a => (
+              <div key={a.id} style={{ backgroundColor: '#111111', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '20px 24px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '10px' }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#F0F0F0', margin: 0 }}>
+                    {a.title}
+                  </h3>
+                  <span style={{ fontSize: '11px', color: '#444444', flexShrink: 0 }}>
+                    {formatDate(a.created_at)}
+                  </span>
+                </div>
+                <p style={{ fontSize: '14px', color: '#AAAAAA', margin: 0, lineHeight: '1.7', whiteSpace: 'pre-wrap' }}>
+                  {a.content}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    ) : (
+    <div className="flex gap-4" style={{ flex: 1, minHeight: 0 }}>
       <div className={`${selected ? 'hidden md:flex' : 'flex'} w-full md:w-64 shrink-0 bg-gray-800 border border-gray-700 rounded-xl overflow-y-auto flex-col`}>
         <div className="p-4 border-b border-gray-700">
           <h2 className="text-white font-semibold text-sm">Mensagens</h2>
@@ -192,5 +261,7 @@ export default function MensagensPage() {
         )}
       </div>
     </div>
+    )}
+  </div>
   )
 }
