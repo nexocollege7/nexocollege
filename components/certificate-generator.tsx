@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { issueCertificate } from '@/app/actions/certificate-actions'
+import { gerarCertificadoPDF } from '@/lib/certificate-pdf'
 import { Award, Download } from 'lucide-react'
 
 type Props = {
@@ -10,77 +11,7 @@ type Props = {
   studentName: string
   schoolName: string
   existingCode?: string
-}
-
-async function generatePDF(
-  courseTitle: string,
-  studentName: string,
-  schoolName: string,
-  code: string
-) {
-  const { jsPDF } = await import('jspdf')
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
-
-  const w = doc.internal.pageSize.getWidth()
-  const h = doc.internal.pageSize.getHeight()
-
-  doc.setFillColor(15, 23, 42)
-  doc.rect(0, 0, w, h, 'F')
-
-  doc.setDrawColor(34, 197, 94)
-  doc.setLineWidth(2)
-  doc.rect(10, 10, w - 20, h - 20, 'S')
-  doc.setLineWidth(0.5)
-  doc.rect(13, 13, w - 26, h - 26, 'S')
-
-  doc.setTextColor(34, 197, 94)
-  doc.setFontSize(11)
-  doc.setFont('helvetica', 'bold')
-  doc.text(schoolName.toUpperCase(), w / 2, 35, { align: 'center' })
-
-  doc.setTextColor(255, 255, 255)
-  doc.setFontSize(28)
-  doc.text('CERTIFICADO DE CONCLUSÃO', w / 2, 55, { align: 'center' })
-
-  doc.setDrawColor(34, 197, 94)
-  doc.setLineWidth(0.5)
-  doc.line(40, 62, w - 40, 62)
-
-  doc.setTextColor(200, 200, 200)
-  doc.setFontSize(13)
-  doc.setFont('helvetica', 'normal')
-  doc.text('Certificamos que', w / 2, 80, { align: 'center' })
-
-  doc.setTextColor(255, 255, 255)
-  doc.setFontSize(26)
-  doc.setFont('helvetica', 'bold')
-  doc.text(studentName || 'Aluno', w / 2, 100, { align: 'center' })
-
-  doc.setDrawColor(100, 100, 100)
-  doc.setLineWidth(0.3)
-  doc.line(60, 105, w - 60, 105)
-
-  doc.setTextColor(200, 200, 200)
-  doc.setFontSize(13)
-  doc.setFont('helvetica', 'normal')
-  doc.text('concluiu com êxito o curso', w / 2, 118, { align: 'center' })
-
-  doc.setTextColor(34, 197, 94)
-  doc.setFontSize(18)
-  doc.setFont('helvetica', 'bold')
-  doc.text(courseTitle, w / 2, 133, { align: 'center' })
-
-  const date = new Date().toLocaleDateString('pt-BR', {
-    day: '2-digit', month: 'long', year: 'numeric',
-  })
-
-  doc.setTextColor(150, 150, 150)
-  doc.setFontSize(9)
-  doc.setFont('helvetica', 'normal')
-  doc.text(`Emitido em ${date}`, w / 2, 160, { align: 'center' })
-  doc.text(`Código de verificação: ${code}`, w / 2, 167, { align: 'center' })
-
-  doc.save(`certificado-${courseTitle.toLowerCase().replace(/\s+/g, '-')}.pdf`)
+  issuedAt?: string
 }
 
 export function CertificateGenerator({
@@ -89,6 +20,7 @@ export function CertificateGenerator({
   studentName,
   schoolName,
   existingCode,
+  issuedAt,
 }: Props) {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -98,7 +30,11 @@ export function CertificateGenerator({
     setMessage('')
 
     if (existingCode) {
-      await generatePDF(courseTitle, studentName, schoolName, existingCode)
+      await gerarCertificadoPDF({
+        studentName, courseTitle, schoolName,
+        code: existingCode,
+        issuedAt: issuedAt ?? new Date().toISOString(),
+      })
       setMessage('✅ Certificado baixado!')
       setLoading(false)
       return
@@ -112,7 +48,11 @@ export function CertificateGenerator({
       return
     }
 
-    await generatePDF(courseTitle, studentName, schoolName, result.code!)
+    await gerarCertificadoPDF({
+      studentName, courseTitle, schoolName,
+      code: result.code!,
+      issuedAt: new Date().toISOString(),
+    })
     setMessage(result.already ? '✅ Certificado baixado!' : '✅ Certificado gerado!')
     setLoading(false)
   }

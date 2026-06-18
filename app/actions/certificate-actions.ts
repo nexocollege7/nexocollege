@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
 export async function getMyCertificates() {
@@ -139,6 +140,67 @@ export async function issueCertificate(courseId: string) {
 
   revalidatePath('/dashboard/certificados')
   return { success: true, code: data.unique_code }
+}
+
+export async function getCertificadosGestao() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { total: 0, schoolName: '', ranking: [], linhas: [] }
+
+  let schoolId: string | null = null
+  const { data: ownedSchool } = await supabase.from('schools').select('id').eq('owner_id', user.id).single()
+  if (ownedSchool) {
+    schoolId = ownedSchool.id
+  } else {
+    const { data: profile } = await supabase.from('users').select('school_id').eq('id', user.id).single()
+    schoolId = profile?.school_id ?? null
+  }
+  if (!schoolId) return { total: 0, schoolName: '', ranking: [], linhas: [] }
+
+  const adminClient = createAdminClient()
+
+  const [{ data: school }, { data: certificados }, { data: cursos }] = await Promise.all([
+    adminClient.from('schools').select('name').eq('id', schoolId).single(),
+    adminClient.from('certificates').select('id, student_id, course_id, issued_at, unique_code').eq('school_id', schoolId).order('issued_at', { ascending: false }),
+    adminClient.from('courses').select('id, title').eq('school_id', schoolId),
+  ])
+
+  const cursosMap = new Map((cursos || []).map((c) => [c.id, c]))
+  const studentIds = [...new Set((certificados || []).map((c) => c.student_id))]
+
+  const { data: alunos } = studentIds.length
+    ? await adminClient.from('users').select('id, full_name, avatar_url').in('id', studentIds)
+    : { data: [] as any[] }
+  const alunosMap = new Map((alunos || []).map((a) => [a.id, a]))
+
+  const rankingMap = new Map<string, number>()
+  for (const c of certificados || []) {
+    rankingMap.set(c.course_id, (rankingMap.get(c.course_id) || 0) + 1)
+  }
+  const ranking = [...rankingMap.entries()]
+    .map(([courseId, qtd]) => ({ courseId, titulo: cursosMap.get(courseId)?.title ?? '—', qtd }))
+    .sort((a, b) => b.qtd - a.qtd)
+
+  const linhas = (certificados || []).map((c) => {
+    const aluno = alunosMap.get(c.student_id)
+    return {
+      certificateId: c.id,
+      studentId: c.student_id,
+      studentName: aluno?.full_name ?? 'Aluno',
+      avatarUrl: aluno?.avatar_url ?? null,
+      courseId: c.course_id,
+      courseTitle: cursosMap.get(c.course_id)?.title ?? '—',
+      issuedAt: c.issued_at,
+      code: c.unique_code,
+    }
+  })
+
+  return {
+    total: certificados?.length ?? 0,
+    schoolName: school?.name ?? '',
+    ranking,
+    linhas,
+  }
 }
 
 export async function getCertificateByCode(code: string) {
