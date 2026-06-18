@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { issueCertificate } from '@/app/actions/certificate-actions'
 import { gerarCertificadoPDF } from '@/lib/certificate-pdf'
+import { ReviewModal } from '@/components/lesson/review-modal'
 import { Award, Download } from 'lucide-react'
 
 type Props = {
@@ -24,6 +25,7 @@ export function CertificateGenerator({
 }: Props) {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [showReviewModal, setShowReviewModal] = useState(false)
 
   async function handleClick() {
     setLoading(true)
@@ -55,10 +57,14 @@ export function CertificateGenerator({
     })
     setMessage(result.already ? '✅ Certificado baixado!' : '✅ Certificado gerado!')
     setLoading(false)
+    if (!result.already) setShowReviewModal(true)
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
+      {showReviewModal && (
+        <ReviewModal courseId={courseId} onClose={() => setShowReviewModal(false)} />
+      )}
       <button
         onClick={handleClick}
         disabled={loading}

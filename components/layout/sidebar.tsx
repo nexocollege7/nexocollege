@@ -15,6 +15,7 @@ const menuItems = [
   { href: '/dashboard/mensagens', label: 'Mensagens', icon: '💬' },
   { href: '/dashboard/certificados', label: 'Certificados', icon: '🏆' },
   { href: '/dashboard/comentarios', label: 'Comentários de Aulas', icon: '💬' },
+  { href: '/dashboard/depoimentos', label: 'Depoimentos', icon: '🌟' },
   { href: '/dashboard/comunicados', label: 'Comunicados', icon: '📣' },
   { href: '/dashboard/vitrine', label: 'Vitrine', icon: '🌐' },
   { href: '/dashboard/upgrade', label: 'Upgrade', icon: '⚡' },

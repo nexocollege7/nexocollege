@@ -42,3 +42,28 @@ export async function getCourseBySlug(courseSlug: string, schoolId: string) {
     .single()
   return data
 }
+
+export async function getActiveReviews(schoolId: string) {
+  const adminClient = createAdminClient()
+  const { data: reviews } = await adminClient
+    .from('course_reviews')
+    .select('id, content, student_name, student_avatar_url, course_id, created_at')
+    .eq('school_id', schoolId)
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
+    .limit(20)
+
+  if (!reviews?.length) return []
+
+  const courseIds = [...new Set(reviews.map((r) => r.course_id))]
+  const { data: courses } = await adminClient.from('courses').select('id, title').in('id', courseIds)
+  const courseMap = new Map((courses || []).map((c) => [c.id, c.title]))
+
+  return reviews.map((r) => ({
+    id: r.id as string,
+    content: r.content as string,
+    studentName: r.student_name as string,
+    studentAvatarUrl: r.student_avatar_url as string | null,
+    courseTitle: courseMap.get(r.course_id) ?? '',
+  }))
+}

@@ -1,16 +1,20 @@
-import { getSchoolBySlug, getPublishedCourses } from '@/app/actions/vitrine-actions'
+import { getSchoolBySlug, getPublishedCourses, getActiveReviews } from '@/app/actions/vitrine-actions'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import BannerRotativo from './banner-rotativo'
 import HeaderVitrine from './header-vitrine'
+import { DepoimentosVitrine } from './depoimentos-vitrine'
 
 export default async function VitrinePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const school = await getSchoolBySlug(slug)
   if (!school) notFound()
 
-  const courses = await getPublishedCourses(school.id)
+  const [courses, reviews] = await Promise.all([
+    getPublishedCourses(school.id),
+    getActiveReviews(school.id),
+  ])
   const cor = school.primary_color || '#AEEA00'
 
   const host = (await headers()).get('host') || ''
@@ -128,6 +132,9 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
           </div>
         </div>
       )}
+
+      {/* Depoimentos */}
+      <DepoimentosVitrine reviews={reviews} cor={cor} />
 
       {/* Footer */}
       <footer className="vitrine-footer" style={{ borderTop: '1px solid #1A1A1A', padding: '24px 48px', textAlign: 'center' }}>
