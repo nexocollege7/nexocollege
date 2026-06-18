@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 
 export default function LandingPage() {
   const [precos, setPrecos] = useState<Record<string, number>>({
-    starter: 0, creator: 597, pro: 1197, scale: 2497,
+    starter: 0, creator: 697, pro: 1597, scale: 3597,
   })
 
   useEffect(() => {
@@ -499,7 +499,7 @@ export default function LandingPage() {
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab"><b>1</b> curso</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab"><b>50</b> alunos</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Vitrine personalizada</span></li>
-                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line className="no" x1="18" y1="6" x2="6" y2="18"/><line className="no" x1="6" y1="6" x2="18" y2="18"/></svg><span style={{color:'#555'}}>Certificados</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Certificados automáticos</span></li>
               </ul>
               <Link href="/cadastro?plano=starter" className="btn btn-ghost">Começar grátis</Link>
             </div>
@@ -507,9 +507,12 @@ export default function LandingPage() {
               <div className="pn">Creator</div><div className="pp">R$ {fmt(precos.creator)}<small>/ano</small></div><div className="pper">Cobrado anualmente</div>
               <ul>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab"><b>5</b> cursos</span></li>
-                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab"><b>200</b> alunos</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab"><b>300</b> alunos</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Vitrine personalizada</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Certificados automáticos</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Cupons de desconto</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Depoimentos automáticos</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab"><b>1</b> colaborador</span></li>
               </ul>
               <Link href="/cadastro?plano=creator" className="btn btn-ghost">Assinar Creator</Link>
             </div>
@@ -517,11 +520,14 @@ export default function LandingPage() {
               <div className="badge-top">⭐ MAIS VENDIDO</div>
               <div className="pn neon">Pro</div><div className="pp">R$ {fmt(precos.pro)}<small>/ano</small></div><div className="pper">Cobrado anualmente</div>
               <ul>
-                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab"><b>15</b> cursos</span></li>
-                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab"><b>500</b> alunos</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab"><b>20</b> cursos</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab"><b>1.000</b> alunos</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Vitrine personalizada</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Certificados automáticos</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Cupons e depoimentos</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Eventos ao vivo</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Gateway MP próprio</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab"><b>3</b> colaboradores</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Suporte prioritário</span></li>
               </ul>
               <Link href="/cadastro?plano=pro" className="btn btn-primary">Assinar Pro</Link>
@@ -530,12 +536,15 @@ export default function LandingPage() {
               <div className="pn">Scale</div><div className="pp">R$ {fmt(precos.scale)}<small>/ano</small></div><div className="pper">Cobrado anualmente</div>
               <ul>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab"><b>50</b> cursos</span></li>
-                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab"><b>2.000</b> alunos</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab"><b>3.000</b> alunos</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Vitrine personalizada</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Certificados automáticos</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Cupons e depoimentos</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Eventos ao vivo</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Gateway MP próprio</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Domínio próprio</span></li>
-                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Suporte VIP</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab"><b>10</b> colaboradores</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Suporte dedicado</span></li>
               </ul>
               <Link href="/cadastro?plano=scale" className="btn btn-ghost">Assinar Scale</Link>
             </div>
