@@ -114,11 +114,11 @@ export function AprenderClient() {
         }
       `}</style>
 
-      {/* Player principal — coluna inteira rola; vídeo fica fixo no topo via sticky */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+      {/* Player principal — coluna inteira rola */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', paddingBottom: '120px' }}>
 
-        {/* Vídeo — sticky no topo da coluna, nunca sai da tela ao rolar */}
-        <div style={{ flexShrink: 0, position: 'sticky', top: 0, zIndex: 1, backgroundColor: '#0D0D0D', padding: '16px 16px 0' }}>
+        {/* Vídeo — flexShrink:0 para nunca encolher */}
+        <div style={{ flexShrink: 0, padding: '16px 16px 0' }}>
         <div style={{ backgroundColor: '#000000', aspectRatio: '16/9', width: '100%', borderRadius: '16px', overflow: 'hidden' }}>
           {aulaAtual?.video_url ? (
             <iframe
