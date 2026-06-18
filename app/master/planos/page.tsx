@@ -11,8 +11,12 @@ type Plano = {
   max_courses: number
   max_students: number
   max_storage_gb: number
+  max_collaborators: number
   has_certificate: boolean
   has_custom_domain: boolean
+  can_use_coupons: boolean
+  can_use_reviews: boolean
+  can_use_live_events: boolean
   is_active: boolean
 }
 
@@ -156,9 +160,19 @@ export default function PlanosPage() {
                     style={{ width: '100%', background: '#0D0D0D', border: '1px solid #333', borderRadius: '8px', padding: '10px 12px', color: '#F0F0F0', fontSize: '14px' }}
                   />
                 </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#666', marginBottom: '6px' }}>Máx. colaboradores</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={editando.max_collaborators}
+                    onChange={e => setEditando({ ...editando, max_collaborators: Number(e.target.value) })}
+                    style={{ width: '100%', background: '#0D0D0D', border: '1px solid #333', borderRadius: '8px', padding: '10px 12px', color: '#F0F0F0', fontSize: '14px' }}
+                  />
+                </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', flexWrap: 'wrap' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#888', cursor: 'pointer' }}>
                   <input type="checkbox" checked={editando.has_certificate} onChange={e => setEditando({ ...editando, has_certificate: e.target.checked })} />
                   Certificados
@@ -166,6 +180,18 @@ export default function PlanosPage() {
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#888', cursor: 'pointer' }}>
                   <input type="checkbox" checked={editando.has_custom_domain} onChange={e => setEditando({ ...editando, has_custom_domain: e.target.checked })} />
                   Domínio próprio
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#888', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={editando.can_use_coupons} onChange={e => setEditando({ ...editando, can_use_coupons: e.target.checked })} />
+                  Cupons de desconto
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#888', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={editando.can_use_reviews} onChange={e => setEditando({ ...editando, can_use_reviews: e.target.checked })} />
+                  Depoimentos
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#888', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={editando.can_use_live_events} onChange={e => setEditando({ ...editando, can_use_live_events: e.target.checked })} />
+                  Eventos ao vivo
                 </label>
               </div>
 
@@ -212,10 +238,17 @@ export default function PlanosPage() {
                     <div style={{ fontSize: '18px', fontWeight: 700, color: '#F0F0F0' }}>{plano.max_storage_gb}GB</div>
                     <div style={{ fontSize: '11px', color: '#555' }}>storage</div>
                   </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#F0F0F0' }}>{plano.max_collaborators}</div>
+                    <div style={{ fontSize: '11px', color: '#555' }}>colaboradores</div>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   {plano.has_certificate && <span style={{ fontSize: '11px', background: '#1a2200', color: '#AEEA00', padding: '3px 8px', borderRadius: '6px' }}>Certificados</span>}
                   {plano.has_custom_domain && <span style={{ fontSize: '11px', background: '#1a2200', color: '#AEEA00', padding: '3px 8px', borderRadius: '6px' }}>Domínio próprio</span>}
+                  {plano.can_use_coupons && <span style={{ fontSize: '11px', background: '#1a2200', color: '#AEEA00', padding: '3px 8px', borderRadius: '6px' }}>Cupons</span>}
+                  {plano.can_use_reviews && <span style={{ fontSize: '11px', background: '#1a2200', color: '#AEEA00', padding: '3px 8px', borderRadius: '6px' }}>Depoimentos</span>}
+                  {plano.can_use_live_events && <span style={{ fontSize: '11px', background: '#1a2200', color: '#AEEA00', padding: '3px 8px', borderRadius: '6px' }}>Ao vivo</span>}
                   {!plano.is_active && <span style={{ fontSize: '11px', background: '#2a0000', color: '#f87171', padding: '3px 8px', borderRadius: '6px' }}>Inativo</span>}
                 </div>
               </div>

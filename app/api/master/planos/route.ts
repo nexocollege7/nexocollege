@@ -19,6 +19,10 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'ID do plano inválido.' }, { status: 400 })
     }
 
+    if (typeof plano.max_collaborators !== 'number' || plano.max_collaborators < 0) {
+      return NextResponse.json({ error: 'Máx. colaboradores inválido.' }, { status: 400 })
+    }
+
     const adminClient = createAdminClient()
 
     const { error } = await adminClient
@@ -29,8 +33,12 @@ export async function PUT(request: NextRequest) {
         max_courses: plano.max_courses,
         max_students: plano.max_students,
         max_storage_gb: plano.max_storage_gb,
+        max_collaborators: plano.max_collaborators,
         has_certificate: plano.has_certificate,
         has_custom_domain: plano.has_custom_domain,
+        can_use_coupons: plano.can_use_coupons,
+        can_use_reviews: plano.can_use_reviews,
+        can_use_live_events: plano.can_use_live_events,
         is_active: plano.is_active,
       })
       .eq('id', plano.id)
