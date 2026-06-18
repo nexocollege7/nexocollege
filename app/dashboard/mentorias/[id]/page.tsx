@@ -10,7 +10,14 @@ import {
   deletarAulaMentoria,
   getSchoolTeamMembers,
   ensureMentorshipCoversBucket,
+  getCohorts,
+  createCohort,
+  closeCohort,
+  updateCohortLive,
 } from '@/app/actions/mentor-actions'
+import { verificarPermissaoFeature } from '@/app/actions/school-actions'
+import { PlanLock } from '@/components/PlanLock'
+import type { PermissaoPlano } from '@/lib/plan-permissions'
 
 export default function EditarMentoriaPage() {
   const params = useParams()
@@ -26,15 +33,26 @@ export default function EditarMentoriaPage() {
   const [msg, setMsg] = useState('')
   const [novaAula, setNovaAula] = useState({ title: '', summary: '', scheduledAt: '', materialsUrl: '' })
 
+  const [cohorts, setCohorts] = useState<any[]>([])
+  const [permissaoLive, setPermissaoLive] = useState<PermissaoPlano | null>(null)
+  const [novaTurma, setNovaTurma] = useState({ maxStudents: '20', enrollmentStart: '', enrollmentEnd: '' })
+  const [abrindoTurma, setAbrindoTurma] = useState(false)
+  const [liveEdits, setLiveEdits] = useState<Record<string, string>>({})
+  const [savingLiveId, setSavingLiveId] = useState<string | null>(null)
+
   useEffect(() => {
     async function load() {
-      const [mentoriaData, membros] = await Promise.all([
+      const [mentoriaData, membros, cohortsData, permissao] = await Promise.all([
         getMentorship(id),
         getSchoolTeamMembers(),
+        getCohorts(id),
+        verificarPermissaoFeature('live_events'),
         ensureMentorshipCoversBucket(),
       ])
       setMentoria(mentoriaData)
       setTeamMembers(membros)
+      setCohorts(cohortsData)
+      setPermissaoLive(permissao)
       setLoading(false)
     }
     load()
@@ -100,6 +118,39 @@ export default function EditarMentoriaPage() {
     if (!confirm('Remover este item do cronograma?')) return
     await deletarAulaMentoria(classId, id)
     setMentoria({ ...mentoria, classes: mentoria.classes.filter((c: any) => c.id !== classId) })
+  }
+
+  async function handleAbrirTurma() {
+    setAbrindoTurma(true)
+    const result = await createCohort(id, {
+      maxStudents: parseInt(novaTurma.maxStudents) || 0,
+      enrollmentStart: novaTurma.enrollmentStart ? new Date(novaTurma.enrollmentStart).toISOString() : null,
+      enrollmentEnd: novaTurma.enrollmentEnd ? new Date(novaTurma.enrollmentEnd).toISOString() : null,
+    })
+    setAbrindoTurma(false)
+    if (result.data) {
+      setCohorts([result.data, ...cohorts])
+      setNovaTurma({ maxStudents: '20', enrollmentStart: '', enrollmentEnd: '' })
+    } else if (result.error) {
+      showMsg('Erro: ' + result.error)
+    }
+  }
+
+  async function handleEncerrarTurma(cohortId: string) {
+    if (!confirm('Encerrar esta turma? Não será possível reabri-la.')) return
+    const result = await closeCohort(cohortId, id)
+    if (result?.error) { showMsg('Erro: ' + result.error); return }
+    setCohorts(cohorts.map((c) => c.id === cohortId ? { ...c, status: 'archived', live_active: false } : c))
+  }
+
+  async function handleAlternarLiveTurma(cohort: any) {
+    const novoStatus = !cohort.live_active
+    const liveUrl = liveEdits[cohort.id] ?? cohort.live_url ?? ''
+    setSavingLiveId(cohort.id)
+    const result = await updateCohortLive(cohort.id, id, { liveUrl, liveActive: novoStatus })
+    setSavingLiveId(null)
+    if (result?.error) { showMsg('Erro: ' + result.error); return }
+    setCohorts(cohorts.map((c) => c.id === cohort.id ? { ...c, live_url: liveUrl, live_active: novoStatus } : c))
   }
 
   if (loading) return (
@@ -326,6 +377,105 @@ export default function EditarMentoriaPage() {
               + Adicionar
             </button>
           </div>
+        </div>
+      </div>
+
+      <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '24px' }}>
+        <h2 style={{ color: '#F0F0F0', fontSize: '16px', fontWeight: '600', margin: '0 0 20px' }}>
+          Turmas
+        </h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+          {cohorts.length === 0 && (
+            <p style={{ color: '#555555', fontSize: '14px', textAlign: 'center', padding: '24px 0' }}>
+              Nenhuma turma aberta ainda.
+            </p>
+          )}
+          {cohorts.map((c) => {
+            const aberta = c.status === 'open'
+            return (
+              <div key={c.id} style={{
+                padding: '14px 16px', backgroundColor: '#0D0D0D', borderRadius: '8px', border: '1px solid #2A2A2A',
+                display: 'flex', flexDirection: 'column', gap: '10px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                    <span style={{
+                      fontSize: '11px', fontWeight: '700', padding: '3px 8px', borderRadius: '6px',
+                      color: aberta ? '#AEEA00' : '#888888', backgroundColor: aberta ? '#1A2E00' : '#222222',
+                    }}>
+                      {aberta ? 'Aberta' : c.status === 'closed' ? 'Fechada' : 'Arquivada'}
+                    </span>
+                    <span style={{ color: '#F0F0F0', fontSize: '13px', fontWeight: '600' }}>
+                      {c.enrolled_count}/{c.max_students} vagas
+                    </span>
+                    {(c.enrollment_start || c.enrollment_end) && (
+                      <span style={{ color: '#555555', fontSize: '12px' }}>
+                        {c.enrollment_start ? new Date(c.enrollment_start).toLocaleDateString('pt-BR') : '—'}
+                        {' a '}
+                        {c.enrollment_end ? new Date(c.enrollment_end).toLocaleDateString('pt-BR') : '—'}
+                      </span>
+                    )}
+                  </div>
+                  {aberta && (
+                    <button onClick={() => handleEncerrarTurma(c.id)} style={btnPerigo}>Encerrar turma</button>
+                  )}
+                </div>
+
+                {aberta && (
+                  permissaoLive && !permissaoLive.allowed ? (
+                    <PlanLock upgradeRequired={permissaoLive.upgradeRequired} mensagem="Eventos ao vivo disponíveis a partir do plano Pro" />
+                  ) : (
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <input
+                        placeholder="Link da transmissão ao vivo desta turma"
+                        style={{ ...input, flex: 1, minWidth: '200px' }}
+                        value={liveEdits[c.id] ?? c.live_url ?? ''}
+                        onChange={(e) => setLiveEdits({ ...liveEdits, [c.id]: e.target.value })}
+                        disabled={c.live_active}
+                      />
+                      <button
+                        onClick={() => handleAlternarLiveTurma(c)}
+                        disabled={savingLiveId === c.id || (!c.live_active && !(liveEdits[c.id] ?? c.live_url ?? '').trim())}
+                        style={{
+                          ...btnPrimary,
+                          backgroundColor: c.live_active ? '#FF4444' : '#7C4DFF',
+                          whiteSpace: 'nowrap',
+                          opacity: savingLiveId === c.id ? 0.6 : 1,
+                        }}
+                      >
+                        {savingLiveId === c.id ? 'Aguarde...' : c.live_active ? 'Encerrar transmissão' : 'Iniciar transmissão'}
+                      </button>
+                    </div>
+                  )
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        <div style={{
+          display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap',
+          padding: '16px', backgroundColor: '#111111',
+          borderRadius: '10px', border: '1px dashed #7C4DFF',
+        }}>
+          <div style={{ flex: 1, minWidth: '100px' }}>
+            <label style={{ color: '#888888', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Vagas</label>
+            <input type="number" min={0} style={input} value={novaTurma.maxStudents}
+              onChange={(e) => setNovaTurma({ ...novaTurma, maxStudents: e.target.value })} />
+          </div>
+          <div style={{ flex: 1, minWidth: '160px' }}>
+            <label style={{ color: '#888888', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Início das inscrições</label>
+            <input type="date" style={input} value={novaTurma.enrollmentStart}
+              onChange={(e) => setNovaTurma({ ...novaTurma, enrollmentStart: e.target.value })} />
+          </div>
+          <div style={{ flex: 1, minWidth: '160px' }}>
+            <label style={{ color: '#888888', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Fim das inscrições</label>
+            <input type="date" style={input} value={novaTurma.enrollmentEnd}
+              onChange={(e) => setNovaTurma({ ...novaTurma, enrollmentEnd: e.target.value })} />
+          </div>
+          <button onClick={handleAbrirTurma} disabled={abrindoTurma} style={{ ...btnPrimary, whiteSpace: 'nowrap', alignSelf: 'flex-end' }}>
+            {abrindoTurma ? 'Abrindo...' : '+ Abrir turma'}
+          </button>
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { verificarPermissao } from '@/lib/plan-permissions'
 
 async function getSchoolId(userId: string) {
   const adminClient = createAdminClient()
@@ -276,4 +277,148 @@ export async function ensureMentorshipCoversBucket() {
       allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
     })
   }
+}
+
+export async function getCohorts(mentorshipId: string) {
+  const supabase = await createClient()
+
+  const { data: cohorts } = await supabase
+    .from('mentorship_cohorts')
+    .select('*')
+    .eq('mentorship_id', mentorshipId)
+    .order('created_at', { ascending: false })
+
+  if (!cohorts || cohorts.length === 0) return []
+
+  const { data: enrollments } = await supabase
+    .from('mentorship_enrollments')
+    .select('cohort_id')
+    .in('cohort_id', cohorts.map((c) => c.id))
+
+  const countMap = new Map<string, number>()
+  for (const e of enrollments || []) {
+    countMap.set(e.cohort_id, (countMap.get(e.cohort_id) || 0) + 1)
+  }
+
+  return cohorts.map((c) => ({ ...c, enrolled_count: countMap.get(c.id) || 0 }))
+}
+
+export async function createCohort(mentorshipId: string, formData: {
+  maxStudents: number
+  enrollmentStart: string | null
+  enrollmentEnd: string | null
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const schoolId = await getSchoolId(user.id)
+  if (!schoolId) return { error: 'Escola não encontrada' }
+
+  const { data: mentorship } = await supabase
+    .from('mentorships')
+    .select('school_id')
+    .eq('id', mentorshipId)
+    .single()
+
+  if (!mentorship || mentorship.school_id !== schoolId) {
+    return { error: 'Acesso negado' }
+  }
+
+  const { data, error } = await supabase
+    .from('mentorship_cohorts')
+    .insert({
+      mentorship_id: mentorshipId,
+      max_students: formData.maxStudents || 0,
+      enrollment_start: formData.enrollmentStart,
+      enrollment_end: formData.enrollmentEnd,
+      status: 'open',
+    })
+    .select()
+    .single()
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/dashboard/mentorias/${mentorshipId}`)
+  return { data: { ...data, enrolled_count: 0 } }
+}
+
+export async function closeCohort(cohortId: string, mentorshipId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const schoolId = await getSchoolId(user.id)
+  if (!schoolId) return { error: 'Escola não encontrada' }
+
+  const { data: mentorship } = await supabase
+    .from('mentorships')
+    .select('school_id')
+    .eq('id', mentorshipId)
+    .single()
+
+  if (!mentorship || mentorship.school_id !== schoolId) {
+    return { error: 'Acesso negado' }
+  }
+
+  const { error } = await supabase
+    .from('mentorship_cohorts')
+    .update({ status: 'archived', live_active: false })
+    .eq('id', cohortId)
+    .eq('mentorship_id', mentorshipId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/dashboard/mentorias/${mentorshipId}`)
+  return { success: true }
+}
+
+export async function updateCohortLive(cohortId: string, mentorshipId: string, formData: {
+  liveUrl: string
+  liveActive: boolean
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const schoolId = await getSchoolId(user.id)
+  if (!schoolId) return { error: 'Escola não encontrada' }
+
+  const { data: mentorship } = await supabase
+    .from('mentorships')
+    .select('school_id')
+    .eq('id', mentorshipId)
+    .single()
+
+  if (!mentorship || mentorship.school_id !== schoolId) {
+    return { error: 'Acesso negado' }
+  }
+
+  if (formData.liveActive && !formData.liveUrl.trim()) {
+    return { error: 'Cole o link da transmissão antes de iniciar' }
+  }
+
+  if (formData.liveActive) {
+    const { data: school } = await supabase
+      .from('schools')
+      .select('plan')
+      .eq('id', schoolId)
+      .single()
+
+    const permissao = await verificarPermissao({ plan: school?.plan ?? null }, 'live_events')
+    if (!permissao.allowed) {
+      return { error: 'Eventos ao vivo não disponíveis no seu plano. Faça upgrade para continuar.' }
+    }
+  }
+
+  const { error } = await supabase
+    .from('mentorship_cohorts')
+    .update({ live_url: formData.liveUrl.trim(), live_active: formData.liveActive })
+    .eq('id', cohortId)
+    .eq('mentorship_id', mentorshipId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/dashboard/mentorias/${mentorshipId}`)
+  return { success: true }
 }
