@@ -114,11 +114,11 @@ export function AprenderClient() {
         }
       `}</style>
 
-      {/* Player principal — overflow:hidden na coluna; comentários têm scroll próprio */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {/* Player principal — coluna inteira rola; vídeo fica fixo no topo via sticky */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
 
-        {/* Vídeo — flexShrink:0 para nunca encolher */}
-        <div style={{ flexShrink: 0, padding: '16px 16px 0' }}>
+        {/* Vídeo — sticky no topo da coluna, nunca sai da tela ao rolar */}
+        <div style={{ flexShrink: 0, position: 'sticky', top: 0, zIndex: 1, backgroundColor: '#0D0D0D', padding: '16px 16px 0' }}>
         <div style={{ backgroundColor: '#000000', aspectRatio: '16/9', width: '100%', borderRadius: '16px', overflow: 'hidden' }}>
           {aulaAtual?.video_url ? (
             <iframe
@@ -243,10 +243,9 @@ export function AprenderClient() {
           </div>
         )}
 
-        {/* Comentários — flex:1 + overflowY:auto: ocupa espaço restante e rola internamente */}
-        {/* O textarea/botão fica sempre visível no topo; a lista de comentários fica abaixo */}
+        {/* Comentários — flexShrink:0 garante tamanho real do conteúdo, sem disputa de espaço no flex */}
         {aulaAtual && (
-          <div style={{ flex: 1, overflowY: 'auto', minHeight: '320px' }}>
+          <div style={{ flexShrink: 0 }}>
             <LessonComments lessonId={aulaAtual.id} />
           </div>
         )}
