@@ -492,7 +492,7 @@ export async function getMyMentorshipEnrollments() {
       id,
       enrolled_at,
       mentorship_cohorts (
-        id, live_url, live_active,
+        id, status, live_url, live_active,
         mentorships ( id, title, description, cover_url, slug,
           mentorship_classes ( id, title, summary, scheduled_at, materials_url, position )
         )
@@ -502,4 +502,77 @@ export async function getMyMentorshipEnrollments() {
     .order('enrolled_at', { ascending: false })
 
   return data || []
+}
+
+export async function getProfessorOnlineStatus() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data } = await supabase
+    .from('mentorship_enrollments')
+    .select(`
+      mentorship_cohorts (
+        live_active,
+        mentorships ( title )
+      )
+    `)
+    .eq('student_id', user.id)
+
+  return (data || [])
+    .map((e: any) => e.mentorship_cohorts)
+    .filter((c: any) => c?.live_active)
+    .map((c: any) => ({ mentorshipTitle: c.mentorships?.title as string }))
+}
+
+export async function criarComentarioAula(classId: string, content: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const trimmed = content.trim()
+  if (!trimmed) return { error: 'Comentário vazio' }
+  if (trimmed.length > 1000) return { error: 'Comentário deve ter no máximo 1000 caracteres' }
+
+  const { data, error } = await supabase
+    .from('mentorship_comments')
+    .insert({
+      class_id: classId,
+      student_id: user.id,
+      content: trimmed,
+    })
+    .select('id, content, created_at, student_id')
+    .single()
+
+  if (error) return { error: error.message }
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('full_name')
+    .eq('id', user.id)
+    .single()
+
+  return { data: { ...data, student_name: profile?.full_name || 'Aluno' } }
+}
+
+export async function getComentariosAula(classId: string) {
+  const supabase = await createClient()
+
+  const { data: comments } = await supabase
+    .from('mentorship_comments')
+    .select('id, content, created_at, student_id')
+    .eq('class_id', classId)
+    .order('created_at', { ascending: true })
+
+  if (!comments?.length) return []
+
+  const studentIds = [...new Set(comments.map((c) => c.student_id))]
+  const { data: profiles } = await supabase
+    .from('users')
+    .select('id, full_name')
+    .in('id', studentIds)
+
+  const nameMap = new Map((profiles || []).map((p) => [p.id, p.full_name]))
+
+  return comments.map((c) => ({ ...c, student_name: nameMap.get(c.student_id) || 'Aluno' }))
 }

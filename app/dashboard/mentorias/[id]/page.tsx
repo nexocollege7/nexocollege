@@ -17,6 +17,7 @@ import {
 } from '@/app/actions/mentor-actions'
 import { verificarPermissaoFeature } from '@/app/actions/school-actions'
 import { PlanLock } from '@/components/PlanLock'
+import { AulaComentarios } from '@/components/AulaComentarios'
 import type { PermissaoPlano } from '@/lib/plan-permissions'
 
 export default function EditarMentoriaPage() {
@@ -339,6 +340,7 @@ export default function EditarMentoriaPage() {
                 {c.materials_url && (
                   <a href={c.materials_url} target="_blank" rel="noreferrer" style={{ color: '#7C4DFF', fontSize: '12px' }}>Materiais →</a>
                 )}
+                <AulaComentarios classId={c.id} podeComentar={false} expandidoPorPadrao={false} />
               </div>
               <button onClick={() => handleDeletarAula(c.id)} style={btnPerigo}>Remover</button>
             </div>

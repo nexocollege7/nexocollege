@@ -5,6 +5,7 @@ import { Sidebar } from './sidebar'
 import { SidebarAluno } from './sidebar-aluno'
 import { Header } from './header'
 import { SessionProvider } from '@/components/auth/session-provider'
+import { ProfessorOnlineBanner } from '@/components/ProfessorOnlineBanner'
 
 interface AdminLayoutProps {
   children: React.ReactNode
@@ -120,6 +121,7 @@ export function AdminLayout({ children, user, title }: AdminLayoutProps) {
 
         <Header user={user} title={title} />
         <main style={{ flex: 1, padding: '24px' }}>
+          {isAluno && <ProfessorOnlineBanner />}
           {children}
         </main>
       </div>
