@@ -5,6 +5,7 @@ import { getDashboardStats } from '@/app/actions/analytics-actions'
 import OnboardingBanner from '@/components/OnboardingBanner'
 import AnalyticsSection from '@/app/dashboard/analytics-section'
 import Link from 'next/link'
+import { elegivelParaMentorModule } from '@/lib/mentor-module'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -25,7 +26,7 @@ export default async function DashboardPage() {
 
   const { data: escola } = await adminClient
     .from('schools')
-    .select('id, name, slug, primary_color, plan')
+    .select('id, name, slug, primary_color, plan, mentor_module')
     .eq('id', profile?.school_id)
     .single()
 
@@ -116,6 +117,39 @@ export default async function DashboardPage() {
             flexShrink: 0,
           }}>
             Ver planos →
+          </Link>
+        </div>
+      ) : null}
+
+      {/* Banner do Módulo Mentor — escolas elegíveis que ainda não ativaram */}
+      {elegivelParaMentorModule(escola?.plan) && !escola?.mentor_module ? (
+        <div style={{
+          background: 'linear-gradient(135deg, #1a1130, #1e0e3f)',
+          border: '1px solid rgba(124,77,255,0.3)',
+          borderRadius: '14px',
+          padding: '18px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '16px',
+          flexWrap: 'wrap',
+        }}>
+          <div>
+            <p style={{ color: '#7C4DFF', fontWeight: '800', fontSize: '15px', margin: '0 0 4px' }}>
+              🎓 Novo: Módulo Mentor
+            </p>
+            <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>
+              Venda mentorias com turmas, vagas e cronograma — +R$ 1.597/ano
+            </p>
+          </div>
+          <Link href="/dashboard/mentor-module" style={{
+            background: '#7C4DFF', color: '#fff',
+            fontWeight: '800', fontSize: '14px',
+            padding: '10px 22px', borderRadius: '10px',
+            textDecoration: 'none', whiteSpace: 'nowrap',
+            flexShrink: 0,
+          }}>
+            Conheça o Módulo Mentor →
           </Link>
         </div>
       ) : null}

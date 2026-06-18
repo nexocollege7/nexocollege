@@ -29,6 +29,42 @@ export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, o
   const [collapsed, setCollapsed] = useState(false)
   const [unread, setUnread] = useState(0)
   const [pendingComments, setPendingComments] = useState(0)
+  const [mentorModule, setMentorModule] = useState(false)
+
+  useEffect(() => {
+    async function loadMentorModule() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: ownedSchool } = await supabase
+        .from('schools')
+        .select('mentor_module')
+        .eq('owner_id', user.id)
+        .maybeSingle()
+
+      if (ownedSchool) {
+        setMentorModule(!!ownedSchool.mentor_module)
+        return
+      }
+
+      const { data: profile } = await supabase
+        .from('users')
+        .select('school_id')
+        .eq('id', user.id)
+        .single()
+
+      if (!profile?.school_id) return
+
+      const { data: school } = await supabase
+        .from('schools')
+        .select('mentor_module')
+        .eq('id', profile.school_id)
+        .single()
+
+      setMentorModule(!!school?.mentor_module)
+    }
+    loadMentorModule()
+  }, [supabase])
 
   useEffect(() => {
     async function loadUnread() {
@@ -94,7 +130,10 @@ export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, o
       </div>
 
       <nav style={{ padding: '12px 8px', flex: 1 }}>
-        {menuItems.map((item) => {
+        {(mentorModule
+          ? [...menuItems.slice(0, 3), { href: '/dashboard/mentorias', label: 'Mentorias', icon: '🎓' }, ...menuItems.slice(3)]
+          : menuItems
+        ).map((item) => {
           const isActive = pathname === item.href
           const isMensagens = item.href === '/dashboard/mensagens'
           const isComentarios = item.href === '/dashboard/comentarios'

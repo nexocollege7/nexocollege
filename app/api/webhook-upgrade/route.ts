@@ -105,6 +105,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true })
     }
 
+    // FLUXO 3: Ativação do Módulo Mentor (external_reference: "mentor-addon|school_id|user_id")
+    if (parts[0] === 'mentor-addon' && parts.length >= 2) {
+      const schoolId = parts[1]
+
+      if (!schoolId) {
+        return NextResponse.json({ error: 'Referência inválida' }, { status: 400 })
+      }
+
+      const { error } = await adminClient
+        .from('schools')
+        .update({ mentor_module: true })
+        .eq('id', schoolId)
+
+      if (error) {
+        console.error('Erro ao ativar Módulo Mentor:', error)
+        return NextResponse.json({ error: error.message }, { status: 500 })
+      }
+
+      await adminClient.from('payments').insert({
+        school_id: schoolId,
+        amount: paymentData.transaction_amount,
+        status: 'approved',
+        mp_payment_id: String(paymentData.id),
+        description: 'Módulo Mentor — Add-on anual',
+      })
+
+      console.log(`Módulo Mentor ativado para escola ${schoolId}`)
+      return NextResponse.json({ ok: true })
+    }
+
     // FLUXO 2: Compra de curso (external_reference: "courseId|userId" ou "courseId|userId|cupom|desconto")
     const isCourseRef = (parts.length === 2 || parts.length === 4) && parts[0] && parts[1] && parts[0] !== 'upgrade'
     if (isCourseRef) {

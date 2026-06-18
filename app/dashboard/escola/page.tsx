@@ -6,6 +6,7 @@ import { getMySchool, updateSchool, updateLiveStatus, saveMpToken, getMpTokenSta
 import { School, CreditCard, User, Users, Settings, Radio } from 'lucide-react'
 import { PlanLock } from '@/components/PlanLock'
 import type { PermissaoPlano } from '@/lib/plan-permissions'
+import { elegivelParaMentorModule } from '@/lib/mentor-module'
 
 const ABAS = [
   { id: 'escola', label: 'Minha Escola', icon: School },
@@ -268,6 +269,22 @@ export default function EscolaPage() {
         <div style={{ background: msg.startsWith('Erro') ? 'rgba(255,85,85,0.1)' : 'rgba(174,234,0,0.1)', border: `1px solid ${msg.startsWith('Erro') ? '#FF5555' : '#AEEA00'}`, borderRadius: '8px', padding: '12px 16px', marginBottom: '24px', color: msg.startsWith('Erro') ? '#FF5555' : '#AEEA00', fontSize: '14px' }}>
           {msg}
         </div>
+      )}
+
+      {/* Banner do Módulo Mentor — escolas elegíveis que ainda não ativaram */}
+      {school && elegivelParaMentorModule(school.plan) && !school.mentor_module && (
+        <a href="/dashboard/mentor-module" style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap',
+          background: 'linear-gradient(135deg, #1a1130, #1e0e3f)',
+          border: '1px solid rgba(124,77,255,0.3)', borderRadius: '14px',
+          padding: '16px 22px', marginBottom: '24px', textDecoration: 'none',
+        }}>
+          <div>
+            <p style={{ color: '#7C4DFF', fontWeight: '800', fontSize: '14px', margin: '0 0 4px' }}>🎓 Novo: Módulo Mentor</p>
+            <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>Venda mentorias com turmas e cronograma próprios</p>
+          </div>
+          <span style={{ color: '#7C4DFF', fontWeight: '700', fontSize: '13px', whiteSpace: 'nowrap' }}>Conheça →</span>
+        </a>
       )}
 
       {/* Abas */}
