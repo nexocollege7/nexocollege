@@ -6,7 +6,7 @@ export async function getSchoolBySlug(slug: string) {
   const adminClient = createAdminClient()
   const { data, error } = await adminClient
     .from('schools')
-    .select('id, name, slug, logo_url, description, primary_color, is_active, featured_course_id, featured_course_ids')
+    .select('id, name, slug, logo_url, description, primary_color, is_active, featured_course_id, featured_course_ids, live_url, live_active')
     .eq('slug', slug)
     .eq('is_active', true)
     .single()
@@ -41,6 +41,20 @@ export async function getCourseBySlug(courseSlug: string, schoolId: string) {
     .eq('status', 'published')
     .single()
   return data
+}
+
+export async function getLiveStatus(schoolId: string) {
+  const adminClient = createAdminClient()
+  const { data } = await adminClient
+    .from('schools')
+    .select('live_url, live_active')
+    .eq('id', schoolId)
+    .single()
+
+  return {
+    liveActive: data?.live_active ?? false,
+    liveUrl: data?.live_url ?? null,
+  }
 }
 
 export async function getActiveReviews(schoolId: string) {

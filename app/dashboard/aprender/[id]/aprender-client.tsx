@@ -5,16 +5,7 @@ import { useParams, useSearchParams } from 'next/navigation'
 import { getAulasDoAluno, marcarAulaConcluida } from '@/app/actions/aula-actions'
 import { getLessonInteractions, toggleLessonLike, toggleLessonFavorite } from '@/app/actions/lesson-interactions-actions'
 import { LessonComments } from '@/components/lesson/lesson-comments'
-
-function getEmbedUrl(url: string): string {
-  if (!url) return ''
-  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)
-  if (yt) return `https://www.youtube.com/embed/${yt[1]}?autoplay=1&modestbranding=1&rel=0&fs=1&iv_load_policy=3&disablekb=0`
-  const vm = url.match(/vimeo\.com\/(\d+)/)
-  if (vm) return `https://player.vimeo.com/video/${vm[1]}?autoplay=1`
-  if (url.includes('pandavideo')) return url
-  return url
-}
+import { getEmbedUrl } from '@/lib/video-embed'
 
 export function AprenderClient() {
   const params = useParams()

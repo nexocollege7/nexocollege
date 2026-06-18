@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { getMySchool, updateSchool, saveMpToken, getMpTokenStatus, saveOwnerContact, updateSchoolLogoUrl, ensureSchoolLogosBucket, updateMyName } from '@/app/actions/school-actions'
-import { School, CreditCard, User, Users, Settings } from 'lucide-react'
+import { getMySchool, updateSchool, updateLiveStatus, saveMpToken, getMpTokenStatus, saveOwnerContact, updateSchoolLogoUrl, ensureSchoolLogosBucket, updateMyName } from '@/app/actions/school-actions'
+import { School, CreditCard, User, Users, Settings, Radio } from 'lucide-react'
 
 const ABAS = [
   { id: 'escola', label: 'Minha Escola', icon: School },
+  { id: 'aovivo', label: 'Ao Vivo', icon: Radio },
   { id: 'pagamentos', label: 'Pagamentos', icon: CreditCard },
   { id: 'perfil', label: 'Meu Perfil', icon: User },
   { id: 'equipe', label: 'Equipe', icon: Users },
@@ -28,6 +29,11 @@ export default function EscolaPage() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const logoInputRef = useRef<HTMLInputElement>(null)
+
+  // Ao Vivo
+  const [liveUrl, setLiveUrl] = useState('')
+  const [liveActive, setLiveActive] = useState(false)
+  const [savingLive, setSavingLive] = useState(false)
 
   // Pagamentos
   const [mpToken, setMpToken] = useState('')
@@ -77,6 +83,8 @@ export default function EscolaPage() {
       setLogoUrl(schoolData.logo_url || null)
       setNomeResponsavel(schoolData.owner_name || '')
       setTelefone(schoolData.owner_phone || '')
+      setLiveUrl(schoolData.live_url || '')
+      setLiveActive(schoolData.live_active || false)
     }
 
     // Status MP
@@ -133,6 +141,16 @@ export default function EscolaPage() {
     setSaving(false)
     if ((result as any)?.error) showMsg('Erro: ' + (result as any).error)
     else showMsg('✅ Escola atualizada!')
+  }
+
+  async function alternarTransmissao() {
+    setSavingLive(true)
+    const novoStatus = !liveActive
+    const result = await updateLiveStatus(liveUrl, novoStatus)
+    setSavingLive(false)
+    if ((result as any)?.error) { showMsg('Erro: ' + (result as any).error); return }
+    setLiveActive(novoStatus)
+    showMsg(novoStatus ? '🔴 Transmissão iniciada!' : '✅ Transmissão encerrada!')
   }
 
   async function salvarPagamento() {
@@ -306,6 +324,60 @@ export default function EscolaPage() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <button onClick={salvarEscola} disabled={saving} style={btnStyle}>Salvar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ABA: AO VIVO */}
+      {abaAtiva === 'aovivo' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '24px' }}>
+            <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 8px' }}>Transmissão ao vivo</h2>
+            <p style={{ color: '#666', fontSize: '13px', margin: '0 0 20px' }}>
+              Cole o link de uma live do YouTube ou Vimeo. Quando ativa, ela substitui o banner principal da vitrine, com o badge "🔴 AO VIVO".
+            </p>
+
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 14px',
+              borderRadius: '20px', marginBottom: '20px',
+              background: liveActive ? 'rgba(255,68,68,0.1)' : '#1a1a1a',
+              border: `1px solid ${liveActive ? '#FF4444' : '#2a2a2a'}`,
+            }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: liveActive ? '#FF4444' : '#555' }} />
+              <span style={{ fontSize: '13px', fontWeight: '700', color: liveActive ? '#FF4444' : '#666' }}>
+                {liveActive ? 'Ao vivo agora' : 'Offline'}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={labelStyle}>Link da transmissão (YouTube ou Vimeo)</label>
+                <input
+                  value={liveUrl}
+                  onChange={e => setLiveUrl(e.target.value)}
+                  style={inputStyle}
+                  placeholder="https://youtube.com/watch?v=... ou https://vimeo.com/..."
+                  disabled={liveActive}
+                />
+                {liveActive && (
+                  <p style={{ color: '#555', fontSize: '12px', margin: '6px 0 0' }}>Encerre a transmissão para alterar o link.</p>
+                )}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={alternarTransmissao}
+                  disabled={savingLive || (!liveActive && !liveUrl.trim())}
+                  style={{
+                    ...btnStyle,
+                    background: liveActive ? '#FF4444' : '#AEEA00',
+                    color: liveActive ? '#fff' : '#000',
+                    opacity: savingLive || (!liveActive && !liveUrl.trim()) ? 0.6 : 1,
+                  }}
+                >
+                  {savingLive ? 'Aguarde...' : liveActive ? 'Encerrar transmissão' : 'Iniciar transmissão'}
+                </button>
               </div>
             </div>
           </div>

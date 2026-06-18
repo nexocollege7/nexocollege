@@ -2,9 +2,9 @@ import { getSchoolBySlug, getPublishedCourses, getActiveReviews } from '@/app/ac
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
-import BannerRotativo from './banner-rotativo'
 import HeaderVitrine from './header-vitrine'
 import { DepoimentosVitrine } from './depoimentos-vitrine'
+import { LiveBanner } from './live-banner'
 
 export default async function VitrinePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -51,18 +51,16 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
 
       <HeaderVitrine slug={slug} cor={cor} nomeEscola={school.name} basePath={basePath} logoUrl={school.logo_url ?? null} />
 
-      {/* Hero Banner Rotativo */}
-      {courses.length > 0 ? (
-        <BannerRotativo courses={courses} slug={slug} cor={cor} basePath={basePath} />
-      ) : (
-        <div style={{
-          height: '85vh', display: 'flex', alignItems: 'center',
-          justifyContent: 'center', flexDirection: 'column', gap: '16px',
-        }}>
-          <p style={{ fontSize: '48px' }}>📚</p>
-          <p style={{ color: '#888888', fontSize: '18px' }}>Nenhum curso disponível ainda</p>
-        </div>
-      )}
+      {/* Hero — Banner Rotativo, ou transmissão ao vivo quando ativa */}
+      <LiveBanner
+        schoolId={school.id}
+        liveUrlInitial={school.live_url ?? null}
+        liveActiveInitial={school.live_active ?? false}
+        courses={courses}
+        slug={slug}
+        cor={cor}
+        basePath={basePath}
+      />
 
       {/* Grid de Cursos */}
       {courses.length > 0 && (

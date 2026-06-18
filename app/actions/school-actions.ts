@@ -64,6 +64,40 @@ export async function updateSchool(formData: {
   return { success: true }
 }
 
+export async function updateLiveStatus(liveUrl: string, liveActive: boolean) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Nao autenticado' }
+
+  if (liveActive && !liveUrl.trim()) {
+    return { error: 'Cole o link da transmissão antes de iniciar' }
+  }
+
+  const adminClient = createAdminClient()
+
+  const { data: profile } = await adminClient
+    .from('users')
+    .select('school_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.school_id) return { error: 'Escola nao encontrada' }
+
+  const { error } = await adminClient
+    .from('schools')
+    .update({
+      live_url: liveUrl.trim(),
+      live_active: liveActive,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', profile.school_id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/dashboard/escola')
+  return { success: true }
+}
+
 export async function createSchool(formData: {
   name: string
   description: string
