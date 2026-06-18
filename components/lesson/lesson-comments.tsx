@@ -1,23 +1,40 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { addLessonComment } from '@/app/actions/comment-actions'
+import { getLessonComments, addLessonComment, toggleCommentLike } from '@/app/actions/comment-actions'
 
 interface Comment {
   id: string
   content: string
   created_at: string
   user_name: string
+  avatar_url: string | null
   reply_content: string | null
   reply_at: string | null
+  likeCount: number
+  likedByMe: boolean
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString('pt-BR', {
-    day: '2-digit', month: 'long', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  })
+function formatRelative(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime()
+  const min = Math.floor(diffMs / 60000)
+  if (min < 1) return 'agora'
+  if (min < 60) return `há ${min} min`
+  const h = Math.floor(min / 60)
+  if (h < 24) return `há ${h}h`
+  const d = Math.floor(h / 24)
+  if (d < 7) return `há ${d}d`
+  const sem = Math.floor(d / 7)
+  if (sem < 4) return `há ${sem}sem`
+  const mes = Math.floor(d / 30)
+  if (mes < 12) return mes === 1 ? 'há 1 mês' : `há ${mes} meses`
+  const ano = Math.floor(d / 365)
+  return ano === 1 ? 'há 1 ano' : `há ${ano} anos`
+}
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(' ')
+  return parts.length >= 2 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : (parts[0]?.[0] || '?').toUpperCase()
 }
 
 export function LessonComments({ lessonId }: { lessonId: string }) {
@@ -25,42 +42,11 @@ export function LessonComments({ lessonId }: { lessonId: string }) {
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [msg, setMsg] = useState('')
+  const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set())
 
-  async function fetchComments(attempt = 0) {
-    const supabase = createClient()
-    const { data, error } = await supabase
-      .from('lesson_comments')
-      .select('id, content, created_at, reply_content, reply_at, user_id')
-      .eq('lesson_id', lessonId)
-      .order('created_at', { ascending: true })
-
-    if (error) {
-      console.error('[LessonComments] erro na query (tentativa', attempt + 1, '):', error)
-      if (attempt < 2) {
-        setTimeout(() => fetchComments(attempt + 1), 1000)
-      }
-      return
-    }
-
-    if (!data) return
-
-    // Tenta buscar nomes dos usuários; se RLS bloquear, cai no fallback 'Aluno'
-    const userIds = [...new Set(data.map((c: any) => c.user_id as string))]
-    const { data: usersData } = await supabase
-      .from('users')
-      .select('id, full_name')
-      .in('id', userIds)
-
-    const userMap = new Map((usersData || []).map((u: any) => [u.id as string, u.full_name as string]))
-
-    setComments(data.map((c: any) => ({
-      id: c.id as string,
-      content: c.content as string,
-      created_at: c.created_at as string,
-      user_name: userMap.get(c.user_id) || 'Aluno',
-      reply_content: (c.reply_content as string) || null,
-      reply_at: (c.reply_at as string) || null,
-    })))
+  async function fetchComments() {
+    const data = await getLessonComments(lessonId)
+    setComments(data as Comment[])
   }
 
   useEffect(() => {
@@ -82,17 +68,32 @@ export function LessonComments({ lessonId }: { lessonId: string }) {
     setSending(false)
   }
 
+  async function handleToggleLike(commentId: string) {
+    const result = await toggleCommentLike(commentId)
+    if ('liked' in result) {
+      setComments((prev) => prev.map((c) => c.id === commentId ? { ...c, likedByMe: result.liked, likeCount: result.count } : c))
+    }
+  }
+
+  function toggleReplyExpanded(commentId: string) {
+    setExpandedReplies((prev) => {
+      const next = new Set(prev)
+      if (next.has(commentId)) next.delete(commentId)
+      else next.add(commentId)
+      return next
+    })
+  }
+
   return (
     <div style={{ padding: '24px', borderTop: '1px solid #2A2A2A' }}>
-      <p style={{ color: '#888888', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 16px' }}>
-        Comentários ({comments.length})
-      </p>
-
-      {/* Input */}
+      {/* Campo de novo comentário — fixo no topo */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
+        <p style={{ color: '#888888', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>
+          Comentários ({comments.length})
+        </p>
         <textarea
           value={text}
-          onChange={e => setText(e.target.value)}
+          onChange={(e) => setText(e.target.value)}
           rows={3}
           placeholder="Deixe seu comentário sobre esta aula..."
           style={{
@@ -101,7 +102,7 @@ export function LessonComments({ lessonId }: { lessonId: string }) {
             fontSize: '14px', outline: 'none', resize: 'vertical',
             fontFamily: 'inherit', boxSizing: 'border-box',
           }}
-          onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSubmit() }}
+          onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSubmit() }}
         />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: '11px', color: '#444444' }}>Ctrl+Enter para enviar</span>
@@ -130,43 +131,80 @@ export function LessonComments({ lessonId }: { lessonId: string }) {
         </p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {comments.map(c => (
-            <div key={c.id}>
-              <div style={{ background: '#1A1A1A', borderRadius: '10px', padding: '14px 16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#AEEA00', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700', color: '#0D0D0D', flexShrink: 0 }}>
-                    {c.user_name.charAt(0).toUpperCase()}
+          {comments.map((c) => {
+            const replyExpanded = expandedReplies.has(c.id)
+            return (
+              <div key={c.id}>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <div style={{
+                    width: '32px', height: '32px', borderRadius: '50%', flexShrink: 0, overflow: 'hidden',
+                    backgroundColor: '#AEEA00', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '12px', fontWeight: '700', color: '#0D0D0D',
+                  }}>
+                    {c.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={c.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : getInitials(c.user_name)}
                   </div>
-                  <span style={{ fontSize: '13px', fontWeight: '600', color: '#F0F0F0' }}>{c.user_name}</span>
-                  <span style={{ fontSize: '11px', color: '#555555', marginLeft: 'auto' }}>{formatDate(c.created_at)}</span>
-                </div>
-                <p style={{ fontSize: '13px', color: '#CCCCCC', margin: 0, lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
-                  {c.content}
-                </p>
-              </div>
-
-              {c.reply_content && (
-                <div style={{
-                  marginLeft: '20px', marginTop: '4px',
-                  backgroundColor: '#0D1500', border: '1px solid #1A3A00',
-                  borderRadius: '10px', padding: '12px 16px',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                    <div style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: '#1A3A00', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <span style={{ fontSize: '10px' }}>👨‍🏫</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ background: '#1A1A1A', borderRadius: '10px', padding: '10px 14px' }}>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#F0F0F0' }}>{c.user_name}</span>
+                        <span style={{ fontSize: '11px', color: '#555555' }} title={new Date(c.created_at).toLocaleString('pt-BR')}>
+                          {formatRelative(c.created_at)}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: '13px', color: '#CCCCCC', margin: 0, lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                        {c.content}
+                      </p>
                     </div>
-                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#AEEA00' }}>Professor</span>
-                    {c.reply_at && (
-                      <span style={{ fontSize: '11px', color: '#444444', marginLeft: 'auto' }}>{formatDate(c.reply_at)}</span>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginTop: '4px', paddingLeft: '4px' }}>
+                      <button
+                        onClick={() => handleToggleLike(c.id)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none',
+                          color: c.likedByMe ? '#FF4444' : '#666666', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit', padding: 0,
+                        }}
+                      >
+                        {c.likedByMe ? '❤️' : '🤍'} {c.likeCount > 0 ? c.likeCount : ''}
+                      </button>
+
+                      {c.reply_content && (
+                        <button
+                          onClick={() => toggleReplyExpanded(c.id)}
+                          style={{ background: 'none', border: 'none', color: '#AEEA00', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
+                        >
+                          {replyExpanded ? 'Ocultar resposta ▴' : 'Ver resposta do professor ▾'}
+                        </button>
+                      )}
+                    </div>
+
+                    {c.reply_content && replyExpanded && (
+                      <div style={{
+                        marginTop: '8px',
+                        backgroundColor: '#0D1500', border: '1px solid #1A3A00',
+                        borderRadius: '10px', padding: '12px 16px',
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                          <div style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: '#1A3A00', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <span style={{ fontSize: '10px' }}>👨‍🏫</span>
+                          </div>
+                          <span style={{ fontSize: '12px', fontWeight: '700', color: '#AEEA00' }}>Professor</span>
+                          {c.reply_at && (
+                            <span style={{ fontSize: '11px', color: '#444444', marginLeft: 'auto' }}>{formatRelative(c.reply_at)}</span>
+                          )}
+                        </div>
+                        <p style={{ fontSize: '13px', color: '#CCCCCC', margin: 0, lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                          {c.reply_content}
+                        </p>
+                      </div>
                     )}
                   </div>
-                  <p style={{ fontSize: '13px', color: '#CCCCCC', margin: 0, lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
-                    {c.reply_content}
-                  </p>
                 </div>
-              )}
-            </div>
-          ))}
+              </div>
+            )
+          })}
         </div>
       )}
     </div>

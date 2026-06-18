@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import { getAulasDoAluno, marcarAulaConcluida } from '@/app/actions/aula-actions'
+import { getLessonInteractions, toggleLessonLike, toggleLessonFavorite } from '@/app/actions/lesson-interactions-actions'
 import { LessonComments } from '@/components/lesson/lesson-comments'
 
 function getEmbedUrl(url: string): string {
@@ -18,21 +19,42 @@ function getEmbedUrl(url: string): string {
 export function AprenderClient() {
   const params = useParams()
   const id = params.id as string
+  const searchParams = useSearchParams()
 
   const [modulos, setModulos] = useState<any[]>([])
   const [aulaAtual, setAulaAtual] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [interacoes, setInteracoes] = useState({ likeCount: 0, liked: false, favorited: false })
 
   useEffect(() => {
     async function load() {
       const data = await getAulasDoAluno(id)
       setModulos(data)
-      const primeiraAula = data?.[0]?.lessons?.[0]
-      if (primeiraAula) setAulaAtual(primeiraAula)
+      const aulaParam = searchParams.get('aula')
+      const todas = data.flatMap((m: any) => m.lessons || [])
+      const aulaEscolhida = (aulaParam && todas.find((l: any) => l.id === aulaParam)) || data?.[0]?.lessons?.[0]
+      if (aulaEscolhida) setAulaAtual(aulaEscolhida)
       setLoading(false)
     }
     load()
   }, [id])
+
+  useEffect(() => {
+    if (!aulaAtual) return
+    getLessonInteractions(aulaAtual.id).then(setInteracoes)
+  }, [aulaAtual?.id])
+
+  async function handleToggleLike() {
+    if (!aulaAtual) return
+    const result = await toggleLessonLike(aulaAtual.id)
+    if ('liked' in result) setInteracoes((prev) => ({ ...prev, liked: result.liked, likeCount: result.count }))
+  }
+
+  async function handleToggleFavorite() {
+    if (!aulaAtual) return
+    const result = await toggleLessonFavorite(aulaAtual.id)
+    if ('favorited' in result) setInteracoes((prev) => ({ ...prev, favorited: result.favorited }))
+  }
 
   // Monta lista plana de todas as aulas em ordem
   function getTodasAulas() {
@@ -142,6 +164,32 @@ export function AprenderClient() {
                 {aulaAtual.completed ? '✓ Concluída' : 'Marcar como concluída'}
               </button>
             </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px' }}>
+              <button
+                onClick={handleToggleLike}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '6px 14px', borderRadius: '20px', border: '1px solid #2A2A2A',
+                  backgroundColor: interacoes.liked ? 'rgba(255,68,68,0.1)' : 'transparent',
+                  color: interacoes.liked ? '#FF4444' : '#888888',
+                  fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                {interacoes.liked ? '❤️' : '🤍'} {interacoes.likeCount}
+              </button>
+              <button
+                onClick={handleToggleFavorite}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '6px 14px', borderRadius: '20px', border: '1px solid #2A2A2A',
+                  backgroundColor: interacoes.favorited ? 'rgba(174,234,0,0.1)' : 'transparent',
+                  color: interacoes.favorited ? '#AEEA00' : '#888888',
+                  fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                {interacoes.favorited ? '⭐ Favoritado' : '☆ Favoritar'}
+              </button>
+            </div>
           </div>
         )}
 
@@ -198,7 +246,7 @@ export function AprenderClient() {
         {/* Comentários — flex:1 + overflowY:auto: ocupa espaço restante e rola internamente */}
         {/* O textarea/botão fica sempre visível no topo; a lista de comentários fica abaixo */}
         {aulaAtual && (
-          <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', minHeight: '320px' }}>
             <LessonComments lessonId={aulaAtual.id} />
           </div>
         )}

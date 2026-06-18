@@ -8,6 +8,7 @@ import { getUnreadCount } from '@/app/actions/chat-actions'
 
 const menuAluno = [
   { href: '/dashboard/meus-cursos', label: 'Meus Cursos', icon: '📚' },
+  { href: '/dashboard/favoritos', label: 'Favoritos', icon: '⭐' },
   { href: '/dashboard/certificados', label: 'Certificados', icon: '🏆' },
   { href: '/dashboard/mensagens', label: 'Mensagens', icon: '💬' },
   { href: '/dashboard/ajuda', label: 'Ajuda', icon: '🆘' },

@@ -5,6 +5,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 const ROTAS_ALUNO = [
   '/dashboard/meus-cursos',
   '/dashboard/aprender',
+  '/dashboard/favoritos',
   '/dashboard/certificados',
   '/dashboard/mensagens',
   '/dashboard/ajuda',

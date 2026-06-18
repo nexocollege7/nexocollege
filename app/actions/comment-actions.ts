@@ -209,6 +209,82 @@ export async function deleteComment(commentId: string) {
   return { success: true }
 }
 
+export async function getLessonComments(lessonId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const adminClient = createAdminClient()
+
+  const { data: comments, error } = await adminClient
+    .from('lesson_comments')
+    .select('id, content, created_at, reply_content, reply_at, user_id')
+    .eq('lesson_id', lessonId)
+    .order('created_at', { ascending: true })
+
+  if (error || !comments) return []
+
+  const userIds = [...new Set(comments.map((c) => c.user_id))]
+  const commentIds = comments.map((c) => c.id)
+
+  const [{ data: usersData }, { data: likes }] = await Promise.all([
+    adminClient.from('users').select('id, full_name, avatar_url').in('id', userIds),
+    commentIds.length
+      ? adminClient.from('lesson_comment_likes').select('comment_id, user_id').in('comment_id', commentIds)
+      : Promise.resolve({ data: [] as any[] }),
+  ])
+
+  const userMap = new Map((usersData || []).map((u) => [u.id, u]))
+  const likeCountMap = new Map<string, number>()
+  const likedByMeSet = new Set<string>()
+  for (const l of likes || []) {
+    likeCountMap.set(l.comment_id, (likeCountMap.get(l.comment_id) || 0) + 1)
+    if (user && l.user_id === user.id) likedByMeSet.add(l.comment_id)
+  }
+
+  return comments.map((c) => {
+    const autor = userMap.get(c.user_id)
+    return {
+      id: c.id,
+      content: c.content,
+      created_at: c.created_at,
+      user_name: autor?.full_name || 'Aluno',
+      avatar_url: autor?.avatar_url || null,
+      reply_content: c.reply_content || null,
+      reply_at: c.reply_at || null,
+      likeCount: likeCountMap.get(c.id) || 0,
+      likedByMe: likedByMeSet.has(c.id),
+    }
+  })
+}
+
+export async function toggleCommentLike(commentId: string): Promise<{ error: string } | { liked: boolean; count: number }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const adminClient = createAdminClient()
+
+  const { data: existing } = await adminClient
+    .from('lesson_comment_likes')
+    .select('id')
+    .eq('comment_id', commentId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (existing) {
+    await adminClient.from('lesson_comment_likes').delete().eq('id', existing.id)
+  } else {
+    await adminClient.from('lesson_comment_likes').insert({ comment_id: commentId, user_id: user.id })
+  }
+
+  const { count } = await adminClient
+    .from('lesson_comment_likes')
+    .select('*', { count: 'exact', head: true })
+    .eq('comment_id', commentId)
+
+  return { liked: !existing, count: count ?? 0 }
+}
+
 export async function replyToComment(commentId: string, replyContent: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
