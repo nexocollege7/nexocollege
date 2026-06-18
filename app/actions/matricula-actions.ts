@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { diasRestantes } from '@/lib/enrollment'
 
 export async function getCursosEscola() {
   const supabase = await createClient()
@@ -75,6 +76,93 @@ export async function getEnrollments() {
   })
 
   return alunosApenas
+}
+
+export async function getAlunosGestao() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { totalAlunos: 0, totalAtivos: 0, cursos: [], linhas: [] }
+
+  // owner primeiro, depois collaborator (mesmo padrão de getCursosEscola)
+  let schoolId: string | null = null
+  const { data: ownedSchool } = await supabase
+    .from('schools')
+    .select('id')
+    .eq('owner_id', user.id)
+    .single()
+
+  if (ownedSchool) {
+    schoolId = ownedSchool.id
+  } else {
+    const { data: profile } = await supabase
+      .from('users')
+      .select('school_id')
+      .eq('id', user.id)
+      .single()
+    schoolId = profile?.school_id ?? null
+  }
+
+  if (!schoolId) return { totalAlunos: 0, totalAtivos: 0, cursos: [], linhas: [] }
+
+  const adminClient = createAdminClient()
+
+  const [{ data: alunos }, { data: cursos }, { data: enrollments }] = await Promise.all([
+    adminClient.from('users').select('id, full_name, avatar_url').eq('school_id', schoolId).eq('role', 'student'),
+    adminClient.from('courses').select('id, title, total_lessons').eq('school_id', schoolId),
+    adminClient.from('enrollments').select('id, student_id, course_id, enrolled_at, expires_at, payment_status').eq('school_id', schoolId).eq('status', 'active'),
+  ])
+
+  const cursosMap = new Map((cursos || []).map((c) => [c.id, c]))
+  const alunosMap = new Map((alunos || []).map((a) => [a.id, a]))
+  const studentIds = [...new Set((enrollments || []).map((e) => e.student_id))]
+
+  const { data: progresso } = studentIds.length
+    ? await adminClient.from('lesson_progress').select('student_id, course_id').in('student_id', studentIds).eq('is_completed', true)
+    : { data: [] as any[] }
+
+  const progressoCount = new Map<string, number>()
+  for (const p of progresso || []) {
+    const key = `${p.student_id}_${p.course_id}`
+    progressoCount.set(key, (progressoCount.get(key) || 0) + 1)
+  }
+
+  const { data: authData } = await adminClient.auth.admin.listUsers({ perPage: 1000 })
+  const emailMap = new Map((authData?.users || []).map((u) => [u.id, u.email]))
+
+  const linhas = (enrollments || [])
+    .filter((e) => alunosMap.has(e.student_id))
+    .map((e) => {
+      const aluno = alunosMap.get(e.student_id)!
+      const curso = cursosMap.get(e.course_id)
+      const total = curso?.total_lessons ?? 0
+      const completas = progressoCount.get(`${e.student_id}_${e.course_id}`) ?? 0
+      const progressoPercent = total > 0 ? Math.round((completas / total) * 100) : 0
+      const dias = diasRestantes(e.expires_at)
+      const expirado = dias !== null && dias <= 0
+
+      return {
+        enrollmentId: e.id,
+        studentId: e.student_id,
+        fullName: aluno.full_name,
+        avatarUrl: aluno.avatar_url,
+        email: emailMap.get(e.student_id) ?? '',
+        courseId: e.course_id,
+        courseTitle: curso?.title ?? '—',
+        enrolledAt: e.enrolled_at,
+        progresso: progressoPercent,
+        dias,
+        expirado,
+      }
+    })
+
+  const studentsAtivos = new Set(linhas.filter((l) => !l.expirado).map((l) => l.studentId))
+
+  return {
+    totalAlunos: alunos?.length ?? 0,
+    totalAtivos: studentsAtivos.size,
+    cursos: cursos || [],
+    linhas,
+  }
 }
 
 export async function enrollStudentByEmail(email: string, courseId: string) {

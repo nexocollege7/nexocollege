@@ -1,14 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getEnrollments, getSchoolStudents, liberarCurso, deletarMatriculaManual, getCursosEscola } from '@/app/actions/matricula-actions'
+import {
+  getAlunosGestao,
+  liberarCurso,
+  deletarMatriculaManual,
+  getCursosEscola,
+  estenderAcesso,
+} from '@/app/actions/matricula-actions'
 import { getStudentLgpdData } from '@/app/actions/legal-actions'
-
-type Student = {
-  id: string
-  full_name: string | null
-  created_at: string
-}
+import { corDiasRestantes } from '@/lib/enrollment'
 
 type StudentDetails = {
   id: string
@@ -348,17 +349,30 @@ function StudentModal({
   )
 }
 
+function getInitials(name: string | null | undefined, email: string | null | undefined): string {
+  if (name && name.trim()) {
+    const parts = name.trim().split(' ')
+    return parts.length >= 2
+      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+      : parts[0][0].toUpperCase()
+  }
+  return email ? email[0].toUpperCase() : '?'
+}
+
 export default function AlunosPage() {
-  const [students, setStudents] = useState<Student[]>([])
-  const [enrollments, setEnrollments] = useState<any[]>([])
+  const [dados, setDados] = useState<{ totalAlunos: number; totalAtivos: number; cursos: any[]; linhas: any[] }>({
+    totalAlunos: 0, totalAtivos: 0, cursos: [], linhas: [],
+  })
   const [loading, setLoading] = useState(true)
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
   const [schoolName, setSchoolName] = useState('')
+  const [busca, setBusca] = useState('')
+  const [filtroCurso, setFiltroCurso] = useState('')
+  const [estendendoId, setEstendendoId] = useState<string | null>(null)
 
   async function load() {
-    const [s, e] = await Promise.all([getSchoolStudents(), getEnrollments()])
-    setStudents(s as Student[])
-    setEnrollments(e)
+    const d = await getAlunosGestao()
+    setDados(d)
     setLoading(false)
   }
 
@@ -375,9 +389,27 @@ export default function AlunosPage() {
     })
   }, [])
 
-  function getEnrollmentsForStudent(studentId: string) {
-    return enrollments.filter(e => e.student_id === studentId && e.status === 'active')
+  async function handleEstender(enrollmentId: string) {
+    const input = prompt('Estender o acesso em quantos dias?', '30')
+    if (!input) return
+    const dias = parseInt(input, 10)
+    if (!dias || dias <= 0) return
+    setEstendendoId(enrollmentId)
+    await estenderAcesso(enrollmentId, dias)
+    await load()
+    setEstendendoId(null)
   }
+
+  const linhasFiltradas = dados.linhas.filter((l) => {
+    if (filtroCurso && l.courseId !== filtroCurso) return false
+    if (busca) {
+      const termo = busca.toLowerCase()
+      const nome = (l.fullName || '').toLowerCase()
+      const email = (l.email || '').toLowerCase()
+      if (!nome.includes(termo) && !email.includes(termo)) return false
+    }
+    return true
+  })
 
   if (loading) {
     return (
@@ -388,7 +420,7 @@ export default function AlunosPage() {
   }
 
   return (
-    <div style={{ maxWidth: '800px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
       {selectedStudentId && (
         <StudentModal
@@ -402,55 +434,133 @@ export default function AlunosPage() {
       <div>
         <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#F0F0F0', margin: 0 }}>Alunos</h1>
         <p style={{ color: '#555555', fontSize: '13px', margin: '4px 0 0' }}>
-          {students.length} aluno{students.length !== 1 ? 's' : ''} cadastrado{students.length !== 1 ? 's' : ''} · Clique para ver detalhes e liberar cursos
+          Gerencie matrículas, acesso e progresso dos alunos da sua escola
         </p>
       </div>
 
-      {students.length === 0 ? (
+      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+        <div style={{ flex: '1 1 200px', backgroundColor: '#111111', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '16px 20px' }}>
+          <p style={{ color: '#555555', fontSize: '12px', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Total de alunos</p>
+          <p style={{ color: '#F0F0F0', fontSize: '28px', fontWeight: '700', margin: 0 }}>{dados.totalAlunos}</p>
+        </div>
+        <div style={{ flex: '1 1 200px', backgroundColor: '#111111', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '16px 20px' }}>
+          <p style={{ color: '#555555', fontSize: '12px', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Alunos ativos</p>
+          <p style={{ color: '#AEEA00', fontSize: '28px', fontWeight: '700', margin: 0 }}>{dados.totalAtivos}</p>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        <input
+          type="text"
+          placeholder="Buscar por nome ou email..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          style={{
+            flex: '1 1 240px', padding: '10px 14px', borderRadius: '8px',
+            border: '1px solid #2A2A2A', backgroundColor: '#111111', color: '#F0F0F0',
+            fontSize: '13px', fontFamily: 'inherit', outline: 'none',
+          }}
+        />
+        <select
+          value={filtroCurso}
+          onChange={(e) => setFiltroCurso(e.target.value)}
+          style={{
+            padding: '10px 14px', borderRadius: '8px',
+            border: '1px solid #2A2A2A', backgroundColor: '#111111', color: '#F0F0F0',
+            fontSize: '13px', fontFamily: 'inherit', outline: 'none', minWidth: '200px',
+          }}
+        >
+          <option value="">Todos os cursos</option>
+          {dados.cursos.map((c: any) => (
+            <option key={c.id} value={c.id}>{c.title}</option>
+          ))}
+        </select>
+      </div>
+
+      {linhasFiltradas.length === 0 ? (
         <div style={{ backgroundColor: '#111111', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '48px', textAlign: 'center' }}>
           <p style={{ color: '#444444', fontSize: '14px', margin: 0 }}>
-            Nenhum aluno cadastrado ainda. Compartilhe o link da vitrine para receber alunos.
+            {dados.linhas.length === 0 ? 'Nenhum aluno matriculado ainda.' : 'Nenhum resultado para o filtro/busca aplicado.'}
           </p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {students.map((student) => {
-            const inscricoes = getEnrollmentsForStudent(student.id)
-            return (
-              <div
-                key={student.id}
-                onClick={() => setSelectedStudentId(student.id)}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  backgroundColor: '#111111', border: '1px solid #2A2A2A', borderRadius: '10px',
-                  padding: '14px 16px', cursor: 'pointer',
-                  transition: 'border-color 0.15s',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#444444')}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#2A2A2A')}
-              >
-                <div>
-                  <p style={{ color: '#F0F0F0', fontSize: '14px', fontWeight: '600', margin: '0 0 2px' }}>
-                    {student.full_name || 'Sem nome'}
-                  </p>
-                  <p style={{ color: '#555555', fontSize: '12px', margin: 0 }}>
-                    Cadastrado em {new Date(student.created_at).toLocaleDateString('pt-BR')}
-                    {inscricoes.length > 0 && ` · ${inscricoes.map((e: any) => (e.courses as any)?.title).join(', ')}`}
-                  </p>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{
-                    fontSize: '12px', color: '#AEEA00',
-                    backgroundColor: 'rgba(174,234,0,0.1)',
-                    padding: '4px 10px', borderRadius: '20px', fontWeight: '600',
-                  }}>
-                    {inscricoes.length} curso{inscricoes.length !== 1 ? 's' : ''}
-                  </span>
-                  <span style={{ color: '#333333', fontSize: '16px' }}>›</span>
-                </div>
-              </div>
-            )
-          })}
+        <div style={{ overflowX: 'auto', border: '1px solid #2A2A2A', borderRadius: '12px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#111111', borderBottom: '1px solid #2A2A2A' }}>
+                {['Aluno', 'Email', 'Curso', 'Matrícula', 'Progresso', 'Dias restantes', 'Status', 'Ações'].map((h) => (
+                  <th key={h} style={{ textAlign: 'left', padding: '12px 16px', color: '#555555', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {linhasFiltradas.map((l: any) => (
+                <tr key={l.enrollmentId} style={{ borderBottom: '1px solid #1A1A1A' }}>
+                  <td style={{ padding: '12px 16px' }}>
+                    <button
+                      onClick={() => setSelectedStudentId(l.studentId)}
+                      style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
+                    >
+                      <div style={{
+                        width: '32px', height: '32px', borderRadius: '50%', flexShrink: 0,
+                        backgroundColor: '#1A2E00', color: '#AEEA00', fontSize: '12px', fontWeight: '700',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+                      }}>
+                        {l.avatarUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={l.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : getInitials(l.fullName, l.email)}
+                      </div>
+                      <span style={{ color: '#F0F0F0', fontWeight: '600', whiteSpace: 'nowrap' }}>{l.fullName || 'Sem nome'}</span>
+                    </button>
+                  </td>
+                  <td style={{ padding: '12px 16px', color: '#888888', whiteSpace: 'nowrap' }}>{l.email}</td>
+                  <td style={{ padding: '12px 16px', color: '#CCCCCC', whiteSpace: 'nowrap' }}>{l.courseTitle}</td>
+                  <td style={{ padding: '12px 16px', color: '#888888', whiteSpace: 'nowrap' }}>
+                    {new Date(l.enrolledAt).toLocaleDateString('pt-BR')}
+                  </td>
+                  <td style={{ padding: '12px 16px', minWidth: '120px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ flex: 1, height: '4px', backgroundColor: '#2A2A2A', borderRadius: '2px' }}>
+                        <div style={{ height: '4px', backgroundColor: '#AEEA00', borderRadius: '2px', width: `${l.progresso}%` }} />
+                      </div>
+                      <span style={{ color: '#888888', fontSize: '11px', whiteSpace: 'nowrap' }}>{l.progresso}%</span>
+                    </div>
+                  </td>
+                  <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
+                    <span style={{ color: corDiasRestantes(l.dias), fontWeight: '600' }}>
+                      {l.dias === null ? 'Vitalício' : l.expirado ? 'Expirado' : `${l.dias} dia${l.dias !== 1 ? 's' : ''}`}
+                    </span>
+                  </td>
+                  <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
+                    <span style={{
+                      fontSize: '11px', fontWeight: '700', padding: '3px 10px', borderRadius: '20px',
+                      color: l.expirado ? '#FF4444' : '#AEEA00',
+                      backgroundColor: l.expirado ? 'rgba(255,68,68,0.1)' : 'rgba(174,234,0,0.1)',
+                    }}>
+                      {l.expirado ? 'Expirado' : 'Ativo'}
+                    </span>
+                  </td>
+                  <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
+                    <button
+                      onClick={() => handleEstender(l.enrollmentId)}
+                      disabled={estendendoId === l.enrollmentId}
+                      style={{
+                        padding: '5px 12px', borderRadius: '6px', border: '1px solid rgba(124,77,255,0.4)',
+                        backgroundColor: 'rgba(124,77,255,0.08)', color: '#7C4DFF', fontSize: '11px', fontWeight: '700',
+                        cursor: estendendoId === l.enrollmentId ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+                        opacity: estendendoId === l.enrollmentId ? 0.6 : 1,
+                      }}
+                    >
+                      {estendendoId === l.enrollmentId ? '...' : 'Estender'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
