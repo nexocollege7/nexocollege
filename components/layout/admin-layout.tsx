@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Sidebar } from './sidebar'
 import { SidebarAluno } from './sidebar-aluno'
+import { SidebarMentorGuest } from './sidebar-mentor-guest'
 import { Header } from './header'
 import { SessionProvider } from '@/components/auth/session-provider'
 import { ProfessorOnlineBanner } from '@/components/ProfessorOnlineBanner'
@@ -23,6 +24,7 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children, user, title }: AdminLayoutProps) {
   const isAluno = user.role === 'student'
+  const isMentorGuest = user.role === 'mentor_guest'
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
@@ -51,7 +53,9 @@ export function AdminLayout({ children, user, title }: AdminLayoutProps) {
       }}
         className="mobile-sidebar"
       >
-        {isAluno
+        {isMentorGuest
+          ? <SidebarMentorGuest />
+          : isAluno
           ? <SidebarAluno onClose={() => setMobileOpen(false)} />
           : <Sidebar schoolSlug={user.school_slug ?? null} onClose={() => setMobileOpen(false)} />
         }
@@ -59,7 +63,7 @@ export function AdminLayout({ children, user, title }: AdminLayoutProps) {
 
       {/* SIDEBAR DESKTOP — sempre visível acima de 768px */}
       <div className="desktop-sidebar">
-        {isAluno ? <SidebarAluno /> : <Sidebar schoolSlug={user.school_slug ?? null} />}
+        {isMentorGuest ? <SidebarMentorGuest /> : isAluno ? <SidebarAluno /> : <Sidebar schoolSlug={user.school_slug ?? null} />}
       </div>
 
       {/* CONTEÚDO PRINCIPAL */}

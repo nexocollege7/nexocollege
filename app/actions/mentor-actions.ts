@@ -576,3 +576,94 @@ export async function getComentariosAula(classId: string) {
 
   return comments.map((c) => ({ ...c, student_name: nameMap.get(c.student_id) || 'Aluno' }))
 }
+
+export async function getMentorAtual(mentorshipId: string) {
+  const supabase = await createClient()
+
+  const { data: mentorship } = await supabase
+    .from('mentorships')
+    .select('mentor_id')
+    .eq('id', mentorshipId)
+    .single()
+
+  if (!mentorship?.mentor_id) return null
+
+  const { data: mentor } = await supabase
+    .from('users')
+    .select('full_name, role')
+    .eq('id', mentorship.mentor_id)
+    .single()
+
+  if (!mentor) return null
+
+  return { full_name: mentor.full_name, isGuest: mentor.role === 'mentor_guest' }
+}
+
+export async function createGuestMentor(mentorshipId: string, formData: {
+  name: string
+  email: string
+  password: string
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const schoolId = await getSchoolId(user.id)
+  if (!schoolId) return { error: 'Escola não encontrada' }
+
+  const { data: mentorship } = await supabase
+    .from('mentorships')
+    .select('school_id')
+    .eq('id', mentorshipId)
+    .single()
+
+  if (!mentorship || mentorship.school_id !== schoolId) {
+    return { error: 'Acesso negado' }
+  }
+
+  const name = formData.name.trim()
+  const email = formData.email.trim().toLowerCase()
+
+  if (!name || !email || !formData.password) {
+    return { error: 'Nome, email e senha são obrigatórios.' }
+  }
+  if (formData.password.length < 6) {
+    return { error: 'A senha precisa ter pelo menos 6 caracteres.' }
+  }
+
+  const adminClient = createAdminClient()
+
+  const { data: existingUsers } = await adminClient.auth.admin.listUsers()
+  const existingUser = existingUsers?.users?.find((u) => u.email === email)
+
+  if (existingUser) {
+    return { error: 'Este email já está cadastrado na plataforma. Use outro email.' }
+  }
+
+  const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+    email,
+    password: formData.password,
+    email_confirm: true,
+  })
+
+  if (createError) return { error: createError.message }
+
+  const { error: profileError } = await adminClient.from('users').upsert({
+    id: newUser.user.id,
+    full_name: name,
+    role: 'mentor_guest',
+    school_id: null,
+  }, { onConflict: 'id' })
+
+  if (profileError) return { error: profileError.message }
+
+  const { error } = await supabase
+    .from('mentorships')
+    .update({ mentor_id: newUser.user.id })
+    .eq('id', mentorshipId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/dashboard/mentorias/${mentorshipId}`)
+  return { success: true }
+}

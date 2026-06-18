@@ -14,6 +14,8 @@ import {
   createCohort,
   closeCohort,
   updateCohortLive,
+  getMentorAtual,
+  createGuestMentor,
 } from '@/app/actions/mentor-actions'
 import { verificarPermissaoFeature } from '@/app/actions/school-actions'
 import { PlanLock } from '@/components/PlanLock'
@@ -41,19 +43,25 @@ export default function EditarMentoriaPage() {
   const [liveEdits, setLiveEdits] = useState<Record<string, string>>({})
   const [savingLiveId, setSavingLiveId] = useState<string | null>(null)
 
+  const [mentorAtual, setMentorAtual] = useState<{ full_name: string; isGuest: boolean } | null>(null)
+  const [guestForm, setGuestForm] = useState({ name: '', email: '', password: '' })
+  const [criandoGuest, setCriandoGuest] = useState(false)
+
   useEffect(() => {
     async function load() {
-      const [mentoriaData, membros, cohortsData, permissao] = await Promise.all([
+      const [mentoriaData, membros, cohortsData, permissao, mentorAtualData] = await Promise.all([
         getMentorship(id),
         getSchoolTeamMembers(),
         getCohorts(id),
         verificarPermissaoFeature('live_events'),
+        getMentorAtual(id),
         ensureMentorshipCoversBucket(),
       ])
       setMentoria(mentoriaData)
       setTeamMembers(membros)
       setCohorts(cohortsData)
       setPermissaoLive(permissao)
+      setMentorAtual(mentorAtualData)
       setLoading(false)
     }
     load()
@@ -74,8 +82,24 @@ export default function EditarMentoriaPage() {
       mentor_id: mentoria.mentor_id || null,
     })
     setSalvando(false)
-    if (result?.error) showMsg('Erro: ' + result.error)
-    else showMsg('✅ Mentoria salva!')
+    if (result?.error) { showMsg('Erro: ' + result.error); return }
+    showMsg('✅ Mentoria salva!')
+    setMentorAtual(await getMentorAtual(id))
+  }
+
+  async function handleCriarGuestMentor() {
+    if (!guestForm.name.trim() || !guestForm.email.trim() || !guestForm.password) {
+      showMsg('Erro: preencha nome, email e senha do professor convidado.')
+      return
+    }
+    setCriandoGuest(true)
+    const result = await createGuestMentor(id, guestForm)
+    setCriandoGuest(false)
+    if (result?.error) { showMsg('Erro: ' + result.error); return }
+    showMsg('✅ Professor convidado cadastrado e vinculado à mentoria!')
+    setGuestForm({ name: '', email: '', password: '' })
+    setMentoria({ ...mentoria, mentor_id: null })
+    setMentorAtual(await getMentorAtual(id))
   }
 
   async function handleUploadCover(e: React.ChangeEvent<HTMLInputElement>) {
@@ -300,6 +324,12 @@ export default function EditarMentoriaPage() {
                   <option key={m.id} value={m.id}>{m.full_name || 'Sem nome'} {m.role === 'admin' ? '(dono)' : '(colaborador)'}</option>
                 ))}
               </select>
+              {mentorAtual && (
+                <p style={{ color: '#555555', fontSize: '11px', margin: '6px 0 0' }}>
+                  Atual: <strong style={{ color: '#888888' }}>{mentorAtual.full_name}</strong>
+                  {mentorAtual.isGuest ? ' (professor convidado)' : ''}
+                </p>
+              )}
             </div>
           </div>
 
@@ -308,6 +338,37 @@ export default function EditarMentoriaPage() {
               {salvando ? 'Salvando...' : 'Salvar Alterações'}
             </button>
           </div>
+        </div>
+      </div>
+
+      <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '24px' }}>
+        <h2 style={{ color: '#F0F0F0', fontSize: '16px', fontWeight: '600', margin: '0 0 8px' }}>
+          Professor convidado
+        </h2>
+        <p style={{ color: '#888888', fontSize: '12px', margin: '0 0 16px' }}>
+          Cadastre um professor externo (não faz parte da equipe da escola) para ser o mentor desta mentoria.
+          Ele acessará apenas o ambiente restrito da própria mentoria pelo login da escola.
+          {mentorAtual?.isGuest && ' Cadastrar um novo professor aqui substitui o professor convidado atual.'}
+        </p>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <input placeholder="Nome do professor"
+            style={{ ...input, flex: 1, minWidth: '160px' }}
+            value={guestForm.name}
+            onChange={(e) => setGuestForm({ ...guestForm, name: e.target.value })}
+          />
+          <input placeholder="Email" type="email"
+            style={{ ...input, flex: 1, minWidth: '160px' }}
+            value={guestForm.email}
+            onChange={(e) => setGuestForm({ ...guestForm, email: e.target.value })}
+          />
+          <input placeholder="Senha (mín. 6 caracteres)" type="password"
+            style={{ ...input, flex: 1, minWidth: '160px' }}
+            value={guestForm.password}
+            onChange={(e) => setGuestForm({ ...guestForm, password: e.target.value })}
+          />
+          <button onClick={handleCriarGuestMentor} disabled={criandoGuest} style={{ ...btnPrimary, whiteSpace: 'nowrap' }}>
+            {criandoGuest ? 'Cadastrando...' : '+ Cadastrar professor convidado'}
+          </button>
         </div>
       </div>
 

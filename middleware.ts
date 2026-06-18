@@ -17,6 +17,13 @@ function alunoTemAcesso(pathname: string): boolean {
   return ROTAS_ALUNO.some(rota => pathname === rota || pathname.startsWith(rota + '/'))
 }
 
+// Professor convidado só acessa a própria mentoria — nada do painel da escola
+const ROTAS_MENTOR_GUEST = ['/dashboard/minha-mentoria']
+
+function mentorGuestTemAcesso(pathname: string): boolean {
+  return ROTAS_MENTOR_GUEST.some(rota => pathname === rota || pathname.startsWith(rota + '/'))
+}
+
 export async function middleware(request: NextRequest) {
   const host = request.headers.get('host') || ''
   const url = request.nextUrl
@@ -132,6 +139,13 @@ export async function middleware(request: NextRequest) {
     if (role === 'student' && !alunoTemAcesso(url.pathname)) {
       const redirect = url.clone()
       redirect.pathname = '/dashboard/meus-cursos'
+      return NextResponse.redirect(redirect)
+    }
+
+    // Professor convidado só acessa o ambiente restrito da própria mentoria
+    if (role === 'mentor_guest' && !mentorGuestTemAcesso(url.pathname)) {
+      const redirect = url.clone()
+      redirect.pathname = '/dashboard/minha-mentoria'
       return NextResponse.redirect(redirect)
     }
   }
