@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { verificarPermissao } from '@/lib/plan-permissions'
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
 
     const { data: course, error } = await adminClient
       .from('courses')
-      .select('price, is_free, coupon_code, coupon_discount_percent')
+      .select('price, is_free, coupon_code, coupon_discount_percent, school_id')
       .eq('id', courseId)
       .single()
 
@@ -26,6 +27,17 @@ export async function POST(request: NextRequest) {
 
     if (course.is_free) {
       return NextResponse.json({ error: 'Este curso é gratuito.' }, { status: 400 })
+    }
+
+    const { data: school } = await adminClient
+      .from('schools')
+      .select('plan')
+      .eq('id', course.school_id)
+      .single()
+
+    const permissao = await verificarPermissao({ plan: school?.plan ?? null }, 'coupons')
+    if (!permissao.allowed) {
+      return NextResponse.json({ error: 'Cupons não disponíveis no plano desta escola.' }, { status: 403 })
     }
 
     if (!course.coupon_code || !course.coupon_discount_percent) {

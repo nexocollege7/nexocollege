@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { getMySchool, updateSchool, updateLiveStatus, saveMpToken, getMpTokenStatus, saveOwnerContact, updateSchoolLogoUrl, ensureSchoolLogosBucket, updateMyName } from '@/app/actions/school-actions'
+import { getMySchool, updateSchool, updateLiveStatus, saveMpToken, getMpTokenStatus, saveOwnerContact, updateSchoolLogoUrl, ensureSchoolLogosBucket, updateMyName, verificarPermissaoFeature } from '@/app/actions/school-actions'
 import { School, CreditCard, User, Users, Settings, Radio } from 'lucide-react'
+import { PlanLock } from '@/components/PlanLock'
+import type { PermissaoPlano } from '@/lib/plan-permissions'
 
 const ABAS = [
   { id: 'escola', label: 'Minha Escola', icon: School },
@@ -54,6 +56,10 @@ export default function EscolaPage() {
   const [senhaColaborador, setSenhaColaborador] = useState('')
   const [adicionandoColab, setAdicionandoColab] = useState(false)
 
+  // Permissões por plano
+  const [permissaoLive, setPermissaoLive] = useState<PermissaoPlano | null>(null)
+  const [permissaoColaboradores, setPermissaoColaboradores] = useState<PermissaoPlano | null>(null)
+
   useEffect(() => { loadData(); ensureSchoolLogosBucket() }, [])
 
   async function loadData() {
@@ -91,6 +97,14 @@ export default function EscolaPage() {
     const status = await getMpTokenStatus()
     setHasToken(status.hasToken)
     setHasPublicKey((status as any).hasPublicKey || false)
+
+    // Permissões por plano
+    const [liveAllowed, colabAllowed] = await Promise.all([
+      verificarPermissaoFeature('live_events'),
+      verificarPermissaoFeature('collaborators'),
+    ])
+    setPermissaoLive(liveAllowed)
+    setPermissaoColaboradores(colabAllowed)
 
     // Colaboradores
     const { data: colabs } = await supabase
@@ -331,7 +345,10 @@ export default function EscolaPage() {
       )}
 
       {/* ABA: AO VIVO */}
-      {abaAtiva === 'aovivo' && (
+      {abaAtiva === 'aovivo' && permissaoLive && !permissaoLive.allowed && (
+        <PlanLock upgradeRequired={permissaoLive.upgradeRequired} mensagem="Eventos ao vivo disponíveis a partir do plano Pro" />
+      )}
+      {abaAtiva === 'aovivo' && permissaoLive?.allowed && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '24px' }}>
             <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 8px' }}>Transmissão ao vivo</h2>
@@ -511,31 +528,35 @@ export default function EscolaPage() {
               </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>Nome</label>
-                  <input value={nomeColaborador} onChange={e => setNomeColaborador(e.target.value)} style={inputStyle} placeholder="Nome completo" />
+            {permissaoColaboradores && !permissaoColaboradores.allowed ? (
+              <PlanLock upgradeRequired={permissaoColaboradores.upgradeRequired} />
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={labelStyle}>Nome</label>
+                    <input value={nomeColaborador} onChange={e => setNomeColaborador(e.target.value)} style={inputStyle} placeholder="Nome completo" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={labelStyle}>Email</label>
+                    <input value={emailColaborador} onChange={e => setEmailColaborador(e.target.value)} style={inputStyle} placeholder="email@colaborador.com" />
+                  </div>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>Email</label>
-                  <input value={emailColaborador} onChange={e => setEmailColaborador(e.target.value)} style={inputStyle} placeholder="email@colaborador.com" />
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={labelStyle}>Senha inicial (mín. 6 caracteres)</label>
+                    <input type="password" value={senhaColaborador} onChange={e => setSenhaColaborador(e.target.value)} style={inputStyle} placeholder="••••••••" />
+                  </div>
+                  <button
+                    onClick={adicionarColaborador}
+                    disabled={adicionandoColab || !nomeColaborador.trim() || !emailColaborador.trim() || !senhaColaborador.trim()}
+                    style={{ ...btnStyle, padding: '10px 20px', whiteSpace: 'nowrap', flexShrink: 0 }}
+                  >
+                    {adicionandoColab ? 'Adicionando...' : 'Adicionar'}
+                  </button>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
-                <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>Senha inicial (mín. 6 caracteres)</label>
-                  <input type="password" value={senhaColaborador} onChange={e => setSenhaColaborador(e.target.value)} style={inputStyle} placeholder="••••••••" />
-                </div>
-                <button
-                  onClick={adicionarColaborador}
-                  disabled={adicionandoColab || !nomeColaborador.trim() || !emailColaborador.trim() || !senhaColaborador.trim()}
-                  style={{ ...btnStyle, padding: '10px 20px', whiteSpace: 'nowrap', flexShrink: 0 }}
-                >
-                  {adicionandoColab ? 'Adicionando...' : 'Adicionar'}
-                </button>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       )}

@@ -1,11 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
+import { type PlanFeature, type PermissaoPlano } from '@/lib/plan-features'
 
-export type PlanFeature = 'coupons' | 'reviews' | 'live_events' | 'custom_domain' | 'collaborators'
-
-export type PermissaoPlano = {
-  allowed: boolean
-  upgradeRequired?: string
-}
+export type { PlanFeature, PermissaoPlano }
+export { PLAN_LABELS } from '@/lib/plan-features'
 
 type PlanRow = {
   slug: string

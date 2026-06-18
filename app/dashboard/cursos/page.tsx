@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { getMyCourses, deleteCourse } from '@/app/actions/course-actions'
-import { getMySchool } from '@/app/actions/school-actions'
+import { getMySchool, verificarLimiteCurso } from '@/app/actions/school-actions'
 import { BookOpen, Plus, Pencil, Trash2, Lock } from 'lucide-react'
 
 type Course = {
@@ -17,21 +17,7 @@ type Course = {
   created_at: string
 }
 
-type PlanoInfo = {
-  plano: string
-  usados: number
-  limite: number
-  permitido: boolean
-}
-
-function getLimitePorPlano(plan: string): number {
-  if (plan === 'starter') return 1
-  if (plan === 'creator') return 5
-  if (plan === 'pro') return 15
-  if (plan === 'scale') return 50
-  if (plan === 'enterprise') return Infinity
-  return 1
-}
+type PlanoInfo = Awaited<ReturnType<typeof verificarLimiteCurso>>
 
 export default function CursosPage() {
   const [courses, setCourses] = useState<Course[]>([])
@@ -46,14 +32,8 @@ export default function CursosPage() {
     setCourses(data)
 
     if (school) {
-      const limite = getLimitePorPlano(school.plan ?? 'starter')
-      const usados = data.length
-      setPlanoInfo({
-        plano: school.plan ?? 'starter',
-        usados,
-        limite,
-        permitido: usados < limite,
-      })
+      const info = await verificarLimiteCurso(school.id)
+      setPlanoInfo(info)
     }
 
     setLoading(false)
@@ -77,7 +57,7 @@ export default function CursosPage() {
 
   const podeCriar = planoInfo?.permitido ?? true
   const labelPlano = planoInfo
-    ? `Plano ${planoInfo.plano.charAt(0).toUpperCase() + planoInfo.plano.slice(1)} — ${planoInfo.usados}/${planoInfo.limite === Infinity ? '∞' : planoInfo.limite} curso${planoInfo.limite !== 1 ? 's' : ''}`
+    ? `Plano ${planoInfo.plano.charAt(0).toUpperCase() + planoInfo.plano.slice(1)} — ${planoInfo.usados}/${planoInfo.limite >= 999 ? '∞' : planoInfo.limite} curso${planoInfo.limite !== 1 ? 's' : ''}`
     : ''
 
   return (

@@ -6,6 +6,9 @@ import { useParams, useRouter } from 'next/navigation'
 import { getCourse, updateCourse } from '@/app/actions/course-actions'
 import { getModulos, criarModulo, deletarModulo } from '@/app/actions/modulo-actions'
 import { criarAula, deletarAula } from '@/app/actions/aula-actions'
+import { verificarPermissaoFeature } from '@/app/actions/school-actions'
+import { PlanLock } from '@/components/PlanLock'
+import type { PermissaoPlano } from '@/lib/plan-permissions'
 
 export default function EditarCursoPage() {
   const params = useParams()
@@ -20,15 +23,18 @@ export default function EditarCursoPage() {
   const [uploadando, setUploadando] = useState(false)
   const [novoModulo, setNovoModulo] = useState('')
   const [novaAula, setNovaAula] = useState<{ [key: string]: { titulo: string; url: string; materiais?: string } }>({})
+  const [permissaoCupons, setPermissaoCupons] = useState<PermissaoPlano | null>(null)
 
   useEffect(() => {
     async function load() {
-      const [cursoData, modulosData] = await Promise.all([
+      const [cursoData, modulosData, permissao] = await Promise.all([
         getCourse(id),
         getModulos(id),
+        verificarPermissaoFeature('coupons'),
       ])
       setCurso(cursoData)
       setModulos(modulosData)
+      setPermissaoCupons(permissao)
       setLoading(false)
     }
     load()
@@ -268,7 +274,11 @@ export default function EditarCursoPage() {
             )}
 
             {/* Cupom de desconto — só para cursos pagos */}
-            {!curso.is_free && (
+            {!curso.is_free && permissaoCupons && !permissaoCupons.allowed && (
+              <PlanLock upgradeRequired={permissaoCupons.upgradeRequired} />
+            )}
+
+            {!curso.is_free && permissaoCupons?.allowed && (
               <div style={{ backgroundColor: '#0D0D0D', border: '1px solid #2A2A2A', borderRadius: '10px', padding: '16px' }}>
                 <p style={{ fontSize: '12px', fontWeight: '700', color: '#555555', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 14px' }}>
                   Cupom de Desconto (opcional)

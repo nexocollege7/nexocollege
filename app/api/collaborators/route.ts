@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
+import { verificarPermissao, PLAN_LABELS } from '@/lib/plan-permissions'
 
 const adminClient = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -61,20 +62,33 @@ export async function POST(req: NextRequest) {
   // Buscar escola do dono
   const { data: school } = await adminClient
     .from('schools')
-    .select('id')
+    .select('id, plan')
     .eq('owner_id', user.id)
     .single()
 
   if (!school) return NextResponse.json({ error: 'Escola não encontrada' }, { status: 404 })
 
-  // Verificar limite de 3 colaboradores
+  const permissao = await verificarPermissao({ plan: school.plan ?? null }, 'collaborators')
+  if (!permissao.allowed) {
+    const planoLabel = permissao.upgradeRequired ? PLAN_LABELS[permissao.upgradeRequired] ?? permissao.upgradeRequired : 'superior'
+    return NextResponse.json({ error: `Colaboradores não disponíveis no seu plano. Faça upgrade para o plano ${planoLabel}.` }, { status: 403 })
+  }
+
+  const { data: planRow } = await adminClient
+    .from('plans')
+    .select('max_collaborators')
+    .eq('slug', school.plan ?? 'starter')
+    .maybeSingle()
+
+  const limiteColaboradores = planRow?.max_collaborators ?? 0
+
   const { count } = await adminClient
     .from('school_collaborators')
     .select('*', { count: 'exact', head: true })
     .eq('school_id', school.id)
 
-  if ((count ?? 0) >= 3) {
-    return NextResponse.json({ error: 'Limite de 3 colaboradores atingido.' }, { status: 400 })
+  if ((count ?? 0) >= limiteColaboradores) {
+    return NextResponse.json({ error: `Limite de ${limiteColaboradores} colaborador(es) do seu plano atingido.` }, { status: 400 })
   }
 
   // Verificar se email já existe no auth

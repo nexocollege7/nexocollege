@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { matriculaValida } from '@/lib/enrollment'
+import { verificarPermissao } from '@/lib/plan-permissions'
 
 export async function submitCourseReview(courseId: string, content: string) {
   const supabase = await createClient()
@@ -33,6 +34,15 @@ export async function submitCourseReview(courseId: string, content: string) {
     .single()
 
   if (!course?.school_id) return { error: 'Curso não encontrado' }
+
+  const { data: school } = await adminClient
+    .from('schools')
+    .select('plan')
+    .eq('id', course.school_id)
+    .single()
+
+  const permissao = await verificarPermissao({ plan: school?.plan ?? null }, 'reviews')
+  if (!permissao.allowed) return { error: 'Depoimentos não disponíveis no plano desta escola.' }
 
   const { data: profile } = await adminClient
     .from('users')

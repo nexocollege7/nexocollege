@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { verificarPermissao, type PlanFeature, type PermissaoPlano } from '@/lib/plan-permissions'
 
 // Busca escola pelo school_id do perfil do usuário
 export async function getMySchool() {
@@ -27,6 +28,12 @@ export async function getMySchool() {
     .single()
 
   return data
+}
+
+export async function verificarPermissaoFeature(feature: PlanFeature): Promise<PermissaoPlano> {
+  const school = await getMySchool()
+  if (!school) return { allowed: false }
+  return verificarPermissao(school, feature)
 }
 
 export async function updateSchool(formData: {
@@ -82,6 +89,19 @@ export async function updateLiveStatus(liveUrl: string, liveActive: boolean) {
     .single()
 
   if (!profile?.school_id) return { error: 'Escola nao encontrada' }
+
+  if (liveActive) {
+    const { data: school } = await adminClient
+      .from('schools')
+      .select('plan')
+      .eq('id', profile.school_id)
+      .single()
+
+    const permissao = await verificarPermissao({ plan: school?.plan ?? null }, 'live_events')
+    if (!permissao.allowed) {
+      return { error: 'Eventos ao vivo não disponíveis no seu plano. Faça upgrade para continuar.' }
+    }
+  }
 
   const { error } = await adminClient
     .from('schools')
@@ -197,14 +217,6 @@ export async function getMpTokenStatus() {
   }
 }
 
-function getLimitePorPlano(plan: string): number {
-  if (plan === 'creator') return 5
-  if (plan === 'pro') return 10
-  if (plan === 'scale') return 25
-  if (plan === 'enterprise') return Infinity
-  return 1 // starter
-}
-
 export async function verificarLimiteCurso(schoolId: string): Promise<{
   permitido: boolean
   plano: string
@@ -233,8 +245,14 @@ export async function verificarLimiteCurso(schoolId: string): Promise<{
     return { permitido: false, plano: school.plan, usados: 0, limite: 1, mensagem: 'Erro ao contar cursos.' }
   }
 
+  const { data: planRow } = await supabase
+    .from('plans')
+    .select('max_courses')
+    .eq('slug', school.plan ?? 'starter')
+    .maybeSingle()
+
   const usados = count ?? 0
-  const limite = getLimitePorPlano(school.plan)
+  const limite = planRow?.max_courses ?? 1
   const permitido = usados < limite
 
   return {
