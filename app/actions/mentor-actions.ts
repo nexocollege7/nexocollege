@@ -1,0 +1,279 @@
+'use server'
+
+import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { revalidatePath } from 'next/cache'
+
+async function getSchoolId(userId: string) {
+  const adminClient = createAdminClient()
+  const { data, error } = await adminClient
+    .from('users')
+    .select('school_id')
+    .eq('id', userId)
+    .single()
+
+  if (error) console.error('getSchoolId error:', error.message)
+  return data?.school_id || null
+}
+
+export async function getMyMentorships() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const schoolId = await getSchoolId(user.id)
+  if (!schoolId) return []
+
+  const { data } = await supabase
+    .from('mentorships')
+    .select('*')
+    .eq('school_id', schoolId)
+    .order('created_at', { ascending: false })
+
+  return data || []
+}
+
+export async function getMentorship(id: string) {
+  const supabase = await createClient()
+
+  const { data: mentorship } = await supabase
+    .from('mentorships')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (!mentorship) return null
+
+  const { data: classes } = await supabase
+    .from('mentorship_classes')
+    .select('*')
+    .eq('mentorship_id', id)
+    .order('position', { ascending: true })
+
+  return { ...mentorship, classes: classes || [] }
+}
+
+export async function getSchoolTeamMembers() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const schoolId = await getSchoolId(user.id)
+  if (!schoolId) return []
+
+  const { data } = await supabase
+    .from('users')
+    .select('id, full_name, role')
+    .eq('school_id', schoolId)
+    .in('role', ['admin', 'collaborator'])
+    .order('role', { ascending: true })
+
+  return data || []
+}
+
+export async function createMentorship(formData: {
+  title: string
+  description: string
+  price: number
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const schoolId = await getSchoolId(user.id)
+  if (!schoolId) return { error: 'Escola não encontrada. Crie sua escola primeiro.' }
+
+  const { data: school } = await supabase
+    .from('schools')
+    .select('mentor_module')
+    .eq('id', schoolId)
+    .single()
+
+  if (!school?.mentor_module) {
+    return { error: 'Módulo Mentor não está ativo nesta escola.' }
+  }
+
+  const slug = formData.title
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+
+  const { data, error } = await supabase
+    .from('mentorships')
+    .insert({
+      school_id: schoolId,
+      title: formData.title,
+      description: formData.description,
+      price: formData.price || 0,
+      slug: `${slug}-${Date.now()}`,
+      status: 'draft',
+    })
+    .select()
+    .single()
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/dashboard/mentorias')
+  return { success: true, id: data.id }
+}
+
+export async function updateMentorship(id: string, formData: {
+  title: string
+  description: string
+  price: number
+  status: string
+  mentor_id: string | null
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const schoolId = await getSchoolId(user.id)
+  if (!schoolId) return { error: 'Escola não encontrada' }
+
+  const { data: existing } = await supabase
+    .from('mentorships')
+    .select('school_id')
+    .eq('id', id)
+    .single()
+
+  if (!existing || existing.school_id !== schoolId) {
+    return { error: 'Acesso negado' }
+  }
+
+  const { error } = await supabase
+    .from('mentorships')
+    .update({
+      title: formData.title,
+      description: formData.description,
+      price: formData.price || 0,
+      status: formData.status,
+      mentor_id: formData.mentor_id,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/dashboard/mentorias')
+  revalidatePath(`/dashboard/mentorias/${id}`)
+  return { success: true }
+}
+
+export async function deleteMentorship(id: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const schoolId = await getSchoolId(user.id)
+  if (!schoolId) return { error: 'Escola não encontrada' }
+
+  const { data: existing } = await supabase
+    .from('mentorships')
+    .select('school_id')
+    .eq('id', id)
+    .single()
+
+  if (!existing || existing.school_id !== schoolId) {
+    return { error: 'Acesso negado' }
+  }
+
+  const { error } = await supabase.from('mentorships').delete().eq('id', id)
+  if (error) return { error: error.message }
+
+  revalidatePath('/dashboard/mentorias')
+  return { success: true }
+}
+
+export async function criarAulaMentoria(
+  mentorshipId: string,
+  formData: { title: string; summary: string; scheduledAt: string | null; materialsUrl: string }
+) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const schoolId = await getSchoolId(user.id)
+  if (!schoolId) return { error: 'Escola não encontrada' }
+
+  const { data: mentorship } = await supabase
+    .from('mentorships')
+    .select('school_id')
+    .eq('id', mentorshipId)
+    .single()
+
+  if (!mentorship || mentorship.school_id !== schoolId) {
+    return { error: 'Acesso negado' }
+  }
+
+  const { data: existing } = await supabase
+    .from('mentorship_classes')
+    .select('position')
+    .eq('mentorship_id', mentorshipId)
+    .order('position', { ascending: false })
+    .limit(1)
+
+  const nextPosition = existing && existing.length > 0 ? existing[0].position + 1 : 1
+
+  const { data, error } = await supabase
+    .from('mentorship_classes')
+    .insert({
+      mentorship_id: mentorshipId,
+      title: formData.title,
+      summary: formData.summary || null,
+      scheduled_at: formData.scheduledAt || null,
+      materials_url: formData.materialsUrl || null,
+      position: nextPosition,
+    })
+    .select()
+    .single()
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/dashboard/mentorias/${mentorshipId}`)
+  return { data }
+}
+
+export async function deletarAulaMentoria(classId: string, mentorshipId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const schoolId = await getSchoolId(user.id)
+  if (!schoolId) return { error: 'Escola não encontrada' }
+
+  const { data: mentorship } = await supabase
+    .from('mentorships')
+    .select('school_id')
+    .eq('id', mentorshipId)
+    .single()
+
+  if (!mentorship || mentorship.school_id !== schoolId) {
+    return { error: 'Acesso negado' }
+  }
+
+  const { error } = await supabase
+    .from('mentorship_classes')
+    .delete()
+    .eq('id', classId)
+    .eq('mentorship_id', mentorshipId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/dashboard/mentorias/${mentorshipId}`)
+  return { success: true }
+}
+
+export async function ensureMentorshipCoversBucket() {
+  const admin = createAdminClient()
+  const { data: bucket } = await admin.storage.getBucket('mentorship-covers')
+  if (!bucket) {
+    await admin.storage.createBucket('mentorship-covers', {
+      public: true,
+      fileSizeLimit: 5 * 1024 * 1024,
+      allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+    })
+  }
+}
