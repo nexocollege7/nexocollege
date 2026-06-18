@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { getDashboardStats } from '@/app/actions/analytics-actions'
 import OnboardingBanner from '@/components/OnboardingBanner'
+import AnalyticsSection from '@/app/dashboard/analytics-section'
 import Link from 'next/link'
 
 export default async function DashboardPage() {
@@ -156,6 +157,8 @@ export default async function DashboardPage() {
           </div>
         ))}
       </div>
+
+      <AnalyticsSection corEscola={cor} />
 
       {/* Acesso rapido */}
       <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '20px' }}>
