@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { matriculaValida } from '@/lib/enrollment'
 import { AprenderClient } from './aprender-client'
 
 export default async function AprenderPage({
@@ -23,13 +24,12 @@ export default async function AprenderPage({
 
   const { data: enrollment } = await supabase
     .from('enrollments')
-    .select('id')
+    .select('id, status, expires_at')
     .eq('student_id', user.id)
     .eq('course_id', courseId)
-    .eq('status', 'active')
     .maybeSingle()
 
-  if (!enrollment) {
+  if (!enrollment || !matriculaValida(enrollment)) {
     const { data: course } = await supabase
       .from('courses')
       .select('slug, schools!courses_school_id_fkey(slug)')

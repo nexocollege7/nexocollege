@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { getMeuscursos, getLessonProgress } from '@/app/actions/aluno-actions'
 import Link from 'next/link'
+import { diasRestantes, corDiasRestantes } from '@/lib/enrollment'
 
 export default function MeusCursosPage() {
   const [cursos, setCursos] = useState<any[]>([])
@@ -80,6 +81,9 @@ export default function MeusCursosPage() {
             const concluidas = progressos[curso?.id] ?? 0
             const progresso = total > 0 ? Math.round((concluidas / total) * 100) : 0
             const corEscola = escola?.primary_color || '#22c55e'
+            const dias = diasRestantes(matricula.expires_at)
+            const expirado = dias !== null && dias <= 0
+            const corDias = corDiasRestantes(dias)
 
             return (
               <div key={matricula.id} style={{
@@ -132,20 +136,37 @@ export default function MeusCursosPage() {
                     }} />
                   </div>
 
+                  {dias !== null && (
+                    <p style={{ fontSize: '11px', color: corDias, fontWeight: '600', margin: '0 0 8px' }}>
+                      {expirado ? '⚠ Acesso expirado' : `${dias} dia${dias !== 1 ? 's' : ''} restante${dias !== 1 ? 's' : ''}`}
+                    </p>
+                  )}
+
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: '12px', color: '#555555' }}>
                       {total === 0
                         ? 'Sem aulas ainda'
                         : `${concluidas}/${total} aulas — ${progresso}%`}
                     </span>
-                    <Link href={`/dashboard/aprender/${curso?.id}`} style={{
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      color: '#AEEA00',
-                      textDecoration: 'none',
-                    }}>
-                      {progresso === 100 ? 'Revisar →' : progresso > 0 ? 'Continuar →' : 'Começar →'}
-                    </Link>
+                    {expirado ? (
+                      <Link href={escola?.slug && curso?.slug ? `/vitrine/${escola.slug}/${curso.slug}` : '/dashboard/meus-cursos'} style={{
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        color: '#FF4444',
+                        textDecoration: 'none',
+                      }}>
+                        Renovar acesso →
+                      </Link>
+                    ) : (
+                      <Link href={`/dashboard/aprender/${curso?.id}`} style={{
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        color: '#AEEA00',
+                        textDecoration: 'none',
+                      }}>
+                        {progresso === 100 ? 'Revisar →' : progresso > 0 ? 'Continuar →' : 'Começar →'}
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>

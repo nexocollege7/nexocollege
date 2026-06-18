@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
         student_id: studentId,
         status: 'active',
         payment_status: 'paid',
+        expires_at: new Date(Date.now() + 365 * 86_400_000).toISOString(),
       }, { onConflict: 'course_id,student_id' })
 
     // Registrar pagamento

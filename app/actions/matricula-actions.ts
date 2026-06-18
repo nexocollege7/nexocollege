@@ -111,6 +111,7 @@ export async function enrollStudentByEmail(email: string, courseId: string) {
       course_id: courseId,
       student_id: studentId,
       status: 'active',
+      expires_at: new Date(Date.now() + 365 * 86_400_000).toISOString(),
     })
 
   if (error) {
@@ -157,6 +158,7 @@ export async function liberarCurso(studentId: string, courseId: string) {
       student_id: studentId,
       status: 'active',
       payment_status: 'manual',
+      expires_at: new Date(Date.now() + 365 * 86_400_000).toISOString(),
     })
 
   if (error) {
@@ -197,6 +199,44 @@ export async function deletarMatriculaManual(enrollmentId: string) {
   const { error } = await adminClient
     .from('enrollments')
     .delete()
+    .eq('id', enrollmentId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/dashboard/alunos')
+  return { success: true }
+}
+
+export async function estenderAcesso(enrollmentId: string, dias: number) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const { data: school } = await supabase
+    .from('schools')
+    .select('id')
+    .eq('owner_id', user.id)
+    .single()
+
+  if (!school) return { error: 'Escola não encontrada' }
+
+  const { data: enrollment } = await supabase
+    .from('enrollments')
+    .select('id, school_id, expires_at')
+    .eq('id', enrollmentId)
+    .single()
+
+  if (!enrollment) return { error: 'Matrícula não encontrada' }
+  if (enrollment.school_id !== school.id) return { error: 'Acesso negado' }
+
+  const base = enrollment.expires_at && new Date(enrollment.expires_at) > new Date()
+    ? new Date(enrollment.expires_at)
+    : new Date()
+  const novaData = new Date(base.getTime() + dias * 86_400_000)
+
+  const { error } = await supabase
+    .from('enrollments')
+    .update({ expires_at: novaData.toISOString(), status: 'active' })
     .eq('id', enrollmentId)
 
   if (error) return { error: error.message }

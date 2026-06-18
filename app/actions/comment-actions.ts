@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { matriculaValida } from '@/lib/enrollment'
 
 export async function addLessonComment(lessonId: string, content: string) {
   const supabase = await createClient()
@@ -33,13 +34,13 @@ export async function addLessonComment(lessonId: string, content: string) {
   // Verificar matrícula ativa no curso antes de permitir comentário
   const { data: enrollment } = await adminClient
     .from('enrollments')
-    .select('id')
+    .select('id, status, expires_at')
     .eq('course_id', courseId)
     .eq('student_id', user.id)
     .in('payment_status', ['paid', 'manual'])
     .maybeSingle()
 
-  if (!enrollment) return { error: 'Você não está matriculado neste curso.' }
+  if (!enrollment || !matriculaValida(enrollment)) return { error: 'Você não está matriculado neste curso.' }
 
   const { error: insertErr } = await adminClient
     .from('lesson_comments')

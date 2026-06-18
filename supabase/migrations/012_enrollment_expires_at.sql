@@ -1,0 +1,2 @@
+ALTER TABLE public.enrollments
+  ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ DEFAULT (NOW() + INTERVAL '365 days');

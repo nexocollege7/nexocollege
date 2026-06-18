@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { matriculaValida } from '@/lib/enrollment'
 
 async function atualizarTotalAulas(supabase: any, courseId: string) {
   const { count } = await supabase
@@ -78,12 +79,11 @@ export async function deletarAula(aulaId: string) {
 async function temMatriculaAtiva(supabase: any, studentId: string, courseId: string): Promise<boolean> {
   const { data } = await supabase
     .from('enrollments')
-    .select('id')
+    .select('status, expires_at')
     .eq('student_id', studentId)
     .eq('course_id', courseId)
-    .eq('status', 'active')
     .maybeSingle()
-  return !!data
+  return !!data && matriculaValida(data)
 }
 
 export async function getAulasDoAluno(courseId: string) {

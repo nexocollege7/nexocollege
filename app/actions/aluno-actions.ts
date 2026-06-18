@@ -13,6 +13,7 @@ export async function getMeuscursos() {
       id,
       status,
       enrolled_at,
+      expires_at,
       course_id,
       courses (
         id,
@@ -22,7 +23,7 @@ export async function getMeuscursos() {
         total_lessons,
         slug,
         school_id,
-        schools!courses_school_id_fkey ( name, primary_color )
+        schools!courses_school_id_fkey ( slug, name, primary_color )
       )
     `)
     .eq('student_id', user.id)

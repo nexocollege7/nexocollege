@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { matriculaValida } from '@/lib/enrollment'
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,16 +28,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Este curso não é gratuito' }, { status: 400 })
     }
 
+    const expiresAt = new Date(Date.now() + 365 * 86_400_000).toISOString()
+
     // Verifica se já está matriculado
     const { data: existing } = await supabase
       .from('enrollments')
-      .select('id')
+      .select('id, status, expires_at')
       .eq('student_id', user.id)
       .eq('course_id', courseId)
       .single()
 
     if (existing) {
-      return NextResponse.json({ success: true, already: true })
+      if (matriculaValida(existing)) {
+        return NextResponse.json({ success: true, already: true })
+      }
+      const { error: renewError } = await supabase
+        .from('enrollments')
+        .update({ status: 'active', expires_at: expiresAt })
+        .eq('id', existing.id)
+      if (renewError) {
+        return NextResponse.json({ error: renewError.message }, { status: 500 })
+      }
+      return NextResponse.json({ success: true, renewed: true })
     }
 
     // Cria a matrícula
@@ -47,6 +60,7 @@ export async function POST(request: NextRequest) {
         course_id: courseId,
         school_id: course.school_id,
         status: 'active',
+        expires_at: expiresAt,
       })
 
     if (enrollError) {
