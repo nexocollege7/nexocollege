@@ -57,6 +57,70 @@ export async function getLiveStatus(schoolId: string) {
   }
 }
 
+export async function getPublishedMentorships(schoolId: string) {
+  const adminClient = createAdminClient()
+  const { data: mentorships } = await adminClient
+    .from('mentorships')
+    .select('id, title, description, price, slug, cover_url, created_at')
+    .eq('school_id', schoolId)
+    .eq('status', 'published')
+    .order('created_at', { ascending: false })
+
+  if (!mentorships?.length) return []
+
+  const { data: cohorts } = await adminClient
+    .from('mentorship_cohorts')
+    .select('mentorship_id, status')
+    .in('mentorship_id', mentorships.map((m) => m.id))
+    .eq('status', 'open')
+
+  const openMentorshipIds = new Set((cohorts || []).map((c) => c.mentorship_id))
+
+  return mentorships.map((m) => ({ ...m, has_open_cohort: openMentorshipIds.has(m.id) }))
+}
+
+export async function getMentorshipBySlug(mentorshipSlug: string, schoolId: string) {
+  const adminClient = createAdminClient()
+  const { data: mentorship } = await adminClient
+    .from('mentorships')
+    .select('*')
+    .eq('slug', mentorshipSlug)
+    .eq('school_id', schoolId)
+    .eq('status', 'published')
+    .single()
+
+  if (!mentorship) return null
+
+  const [{ data: classes }, { data: cohorts }] = await Promise.all([
+    adminClient
+      .from('mentorship_classes')
+      .select('*')
+      .eq('mentorship_id', mentorship.id)
+      .order('position', { ascending: true }),
+    adminClient
+      .from('mentorship_cohorts')
+      .select('*')
+      .eq('mentorship_id', mentorship.id)
+      .order('created_at', { ascending: false }),
+  ])
+
+  const cohortIds = (cohorts || []).map((c) => c.id)
+  const { data: enrollments } = cohortIds.length
+    ? await adminClient.from('mentorship_enrollments').select('cohort_id').in('cohort_id', cohortIds)
+    : { data: [] as { cohort_id: string }[] }
+
+  const countMap = new Map<string, number>()
+  for (const e of enrollments || []) {
+    countMap.set(e.cohort_id, (countMap.get(e.cohort_id) || 0) + 1)
+  }
+
+  return {
+    ...mentorship,
+    classes: classes || [],
+    cohorts: (cohorts || []).map((c) => ({ ...c, enrolled_count: countMap.get(c.id) || 0 })),
+  }
+}
+
 export async function getActiveReviews(schoolId: string) {
   const adminClient = createAdminClient()
   const { data: reviews } = await adminClient

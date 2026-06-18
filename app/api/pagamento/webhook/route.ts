@@ -62,13 +62,66 @@ export async function POST(request: NextRequest) {
     }
 
     const parts = (data.external_reference || '').split('|')
+
+    // Admin client bypasses RLS — webhook não tem sessão de usuário
+    const adminClient = createAdminClient()
+
+    // FLUXO: Inscrição em mentoria (external_reference: "mentoria|cohort_id|student_id")
+    if (parts[0] === 'mentoria' && parts.length >= 3) {
+      const cohortId = parts[1]
+      const mentorshipStudentId = parts[2]
+      if (!cohortId || !mentorshipStudentId) {
+        return NextResponse.json({ ok: true })
+      }
+
+      const { data: cohort } = await adminClient
+        .from('mentorship_cohorts')
+        .select('mentorship_id')
+        .eq('id', cohortId)
+        .single()
+
+      if (!cohort) return NextResponse.json({ ok: true })
+
+      const { error: enrollError } = await adminClient
+        .from('mentorship_enrollments')
+        .upsert({
+          cohort_id: cohortId,
+          student_id: mentorshipStudentId,
+          payment_id: String(data.id),
+          payment_status: 'paid',
+        }, { onConflict: 'cohort_id,student_id' })
+
+      if (enrollError) {
+        console.error('Erro ao criar inscrição de mentoria:', enrollError)
+        return NextResponse.json({ ok: true })
+      }
+
+      const { data: mentorship } = await adminClient
+        .from('mentorships')
+        .select('school_id, title')
+        .eq('id', cohort.mentorship_id)
+        .single()
+
+      if (mentorship) {
+        await adminClient.from('payments').insert({
+          school_id: mentorship.school_id,
+          student_id: mentorshipStudentId,
+          amount: data.transaction_amount || 0,
+          status: 'approved',
+          method: 'pix',
+          mp_payment_id: String(data.id),
+          paid_at: new Date().toISOString(),
+          description: `Mentoria: ${mentorship.title}`,
+        })
+      }
+
+      return NextResponse.json({ ok: true })
+    }
+
     const [courseId, studentId, couponUsed, discountUsed] = parts
     if (!courseId || !studentId || studentId === 'guest') {
       return NextResponse.json({ ok: true })
     }
-
-    // Admin client bypasses RLS — webhook não tem sessão de usuário
-    const adminClient = createAdminClient()
 
     const { data: course } = await adminClient
       .from('courses')

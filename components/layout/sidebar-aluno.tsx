@@ -21,6 +21,7 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
   const [unread, setUnread] = useState(0)
   const [ajudaPendente, setAjudaPendente] = useState(0)
   const [escola, setEscola] = useState<{ name: string, slug: string, primary_color: string, logo_url: string | null } | null>(null)
+  const [temMentorias, setTemMentorias] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -29,6 +30,12 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
 
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
+
+      const { count: mentoriasCount } = await supabase
+        .from('mentorship_enrollments')
+        .select('*', { count: 'exact', head: true })
+        .eq('student_id', user.id)
+      setTemMentorias((mentoriasCount ?? 0) > 0)
 
       // Buscar tickets de ajuda pendentes
       const { data: pendentes } = await supabase
@@ -145,7 +152,10 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
       </div>
 
       <nav style={{ padding: '12px 8px', flex: 1 }}>
-        {menuAluno.map((item) => {
+        {(temMentorias
+          ? [...menuAluno.slice(0, 1), { href: '/dashboard/minhas-mentorias', label: 'Minhas Mentorias', icon: '🎓' }, ...menuAluno.slice(1)]
+          : menuAluno
+        ).map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
           const isMensagens = item.href === '/dashboard/mensagens'
           const isAjuda = item.href === '/dashboard/ajuda'

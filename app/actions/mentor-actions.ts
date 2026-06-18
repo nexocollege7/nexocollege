@@ -422,3 +422,84 @@ export async function updateCohortLive(cohortId: string, mentorshipId: string, f
   revalidatePath(`/dashboard/mentorias/${mentorshipId}`)
   return { success: true }
 }
+
+export async function enrollFreeMentorship(cohortId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const { data: cohort } = await supabase
+    .from('mentorship_cohorts')
+    .select('id, mentorship_id, max_students, status, enrollment_start, enrollment_end')
+    .eq('id', cohortId)
+    .single()
+
+  if (!cohort) return { error: 'Turma não encontrada' }
+  if (cohort.status !== 'open') return { error: 'Esta turma não está com inscrições abertas.' }
+
+  const now = new Date()
+  if (cohort.enrollment_start && now < new Date(cohort.enrollment_start)) {
+    return { error: 'As inscrições ainda não começaram.' }
+  }
+  if (cohort.enrollment_end && now > new Date(cohort.enrollment_end)) {
+    return { error: 'As inscrições já encerraram.' }
+  }
+
+  const { data: mentorship } = await supabase
+    .from('mentorships')
+    .select('price')
+    .eq('id', cohort.mentorship_id)
+    .single()
+
+  if (!mentorship || Number(mentorship.price) > 0) {
+    return { error: 'Esta mentoria não é gratuita.' }
+  }
+
+  const { count } = await supabase
+    .from('mentorship_enrollments')
+    .select('*', { count: 'exact', head: true })
+    .eq('cohort_id', cohortId)
+
+  if ((count ?? 0) >= cohort.max_students) {
+    return { error: 'Vagas esgotadas para esta turma.' }
+  }
+
+  const { error } = await supabase
+    .from('mentorship_enrollments')
+    .insert({
+      cohort_id: cohortId,
+      student_id: user.id,
+      payment_status: 'manual',
+    })
+
+  if (error) {
+    if (error.code === '23505') return { error: 'Você já está inscrito nesta turma.' }
+    return { error: error.message }
+  }
+
+  revalidatePath('/dashboard/minhas-mentorias')
+  return { success: true }
+}
+
+export async function getMyMentorshipEnrollments() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data } = await supabase
+    .from('mentorship_enrollments')
+    .select(`
+      id,
+      enrolled_at,
+      mentorship_cohorts (
+        id, live_url, live_active,
+        mentorships ( id, title, description, cover_url, slug,
+          mentorship_classes ( id, title, summary, scheduled_at, materials_url, position )
+        )
+      )
+    `)
+    .eq('student_id', user.id)
+    .order('enrolled_at', { ascending: false })
+
+  return data || []
+}

@@ -1,7 +1,8 @@
-import { getSchoolBySlug, getPublishedCourses, getActiveReviews } from '@/app/actions/vitrine-actions'
+import { getSchoolBySlug, getPublishedCourses, getPublishedMentorships, getActiveReviews } from '@/app/actions/vitrine-actions'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
+import { GraduationCap } from 'lucide-react'
 import HeaderVitrine from './header-vitrine'
 import { DepoimentosVitrine } from './depoimentos-vitrine'
 import { LiveBanner } from './live-banner'
@@ -11,8 +12,9 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
   const school = await getSchoolBySlug(slug)
   if (!school) notFound()
 
-  const [courses, reviews] = await Promise.all([
+  const [courses, mentorias, reviews] = await Promise.all([
     getPublishedCourses(school.id),
+    getPublishedMentorships(school.id),
     getActiveReviews(school.id),
   ])
   const cor = school.primary_color || '#AEEA00'
@@ -122,6 +124,75 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
                       color: course.is_free ? cor : '#F0F0F0',
                     }}>
                       {course.is_free ? 'Gratuito' : `R$ ${Number(course.price).toFixed(2)}`}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Grid de Mentorias */}
+      {mentorias.length > 0 && (
+        <div className="vitrine-grid-section" style={{ padding: '0 48px 80px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#F0F0F0', margin: '0 0 24px' }}>
+            Mentorias
+            <span style={{ color: '#555555', fontSize: '15px', fontWeight: '400', marginLeft: '12px' }}>
+              {mentorias.length} disponível{mentorias.length !== 1 ? 'is' : ''}
+            </span>
+          </h2>
+
+          <div className="vitrine-cursos-grid" style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+            gap: '20px',
+          }}>
+            {mentorias.map((m) => (
+              <Link key={m.id} href={`${basePath}/mentorias/${m.slug}`} className="curso-card">
+                <div style={{
+                  height: '160px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  backgroundImage: m.cover_url ? `url(${m.cover_url})` : undefined,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  background: m.cover_url
+                    ? undefined
+                    : `linear-gradient(135deg, #7C4DFF33, #7C4DFF11)`,
+                  borderBottom: '3px solid #7C4DFF',
+                }}>
+                  {!m.cover_url && <GraduationCap size={40} color="#7C4DFF" />}
+                </div>
+
+                <div style={{ padding: '16px' }}>
+                  <h3 style={{
+                    color: '#F0F0F0', fontWeight: '600', fontSize: '15px',
+                    margin: '0 0 8px', lineHeight: '1.3',
+                  }}>
+                    {m.title}
+                  </h3>
+                  {m.description && (
+                    <p style={{
+                      color: '#888888', fontSize: '13px', margin: '0 0 16px',
+                      lineHeight: '1.5', overflow: 'hidden',
+                      display: '-webkit-box', WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                    }}>
+                      {m.description}
+                    </p>
+                  )}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    paddingTop: '12px', borderTop: '1px solid #2A2A2A',
+                  }}>
+                    <span style={{ color: m.has_open_cohort ? '#AEEA00' : '#555555', fontSize: '12px' }}>
+                      {m.has_open_cohort ? 'Inscrições abertas' : 'Sem turma aberta'}
+                    </span>
+                    <span style={{
+                      fontWeight: '800', fontSize: '16px',
+                      color: Number(m.price) <= 0 ? '#7C4DFF' : '#F0F0F0',
+                    }}>
+                      {Number(m.price) <= 0 ? 'Gratuita' : `R$ ${Number(m.price).toFixed(2)}`}
                     </span>
                   </div>
                 </div>
