@@ -75,9 +75,23 @@ export async function deletarAula(aulaId: string) {
   return { success: true }
 }
 
+async function temMatriculaAtiva(supabase: any, studentId: string, courseId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from('enrollments')
+    .select('id')
+    .eq('student_id', studentId)
+    .eq('course_id', courseId)
+    .eq('status', 'active')
+    .maybeSingle()
+  return !!data
+}
+
 export async function getAulasDoAluno(courseId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return []
+  if (!(await temMatriculaAtiva(supabase, user.id, courseId))) return []
 
   const { data: modulos, error } = await supabase
     .from('modules')
@@ -87,34 +101,34 @@ export async function getAulasDoAluno(courseId: string) {
 
   if (error || !modulos) return []
 
-  if (user) {
-    const { data: progresso } = await supabase
-      .from('lesson_progress')
-      .select('lesson_id, is_completed')
-      .eq('student_id', user.id)
+  const { data: progresso } = await supabase
+    .from('lesson_progress')
+    .select('lesson_id, is_completed')
+    .eq('student_id', user.id)
 
-    const progressoMap = new Map(
-      (progresso || []).map((p) => [p.lesson_id, p.is_completed])
-    )
+  const progressoMap = new Map(
+    (progresso || []).map((p) => [p.lesson_id, p.is_completed])
+  )
 
-    return modulos.map((m) => ({
-      ...m,
-      lessons: (m.lessons || [])
-        .sort((a: any, b: any) => a.position - b.position)
-        .map((l: any) => ({
-          ...l,
-          completed: progressoMap.get(l.id) || false,
-        })),
-    }))
-  }
-
-  return modulos
+  return modulos.map((m) => ({
+    ...m,
+    lessons: (m.lessons || [])
+      .sort((a: any, b: any) => a.position - b.position)
+      .map((l: any) => ({
+        ...l,
+        completed: progressoMap.get(l.id) || false,
+      })),
+  }))
 }
 
 export async function marcarAulaConcluida(lessonId: string, courseId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autenticado' }
+
+  if (!(await temMatriculaAtiva(supabase, user.id, courseId))) {
+    return { error: 'Sem matrícula ativa neste curso' }
+  }
 
   const { error } = await supabase
     .from('lesson_progress')
