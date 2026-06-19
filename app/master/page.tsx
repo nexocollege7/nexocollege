@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getMasterStats } from '@/app/actions/master-actions'
-import { Building2, Users, BookOpen, DollarSign } from 'lucide-react'
+import { Building2, Users, BookOpen, DollarSign, GraduationCap } from 'lucide-react'
 
 export default function MasterDashboard() {
   const [stats, setStats] = useState<any>(null)
@@ -28,11 +28,13 @@ export default function MasterDashboard() {
     { label: 'Total de Alunos', value: stats.totalAlunos, icon: Users, iconColor: '#60A5FA', iconBg: '#1E3A5F' },
     { label: 'Total de Cursos', value: stats.totalCursos, icon: BookOpen, iconColor: '#FACC15', iconBg: '#2E2100' },
     { label: 'Receita da Plataforma', value: `R$ ${stats.receitaTotal.toFixed(2)}`, icon: DollarSign, iconColor: '#7C4DFF', iconBg: '#1E0E3F' },
+    { label: 'Escolas com Módulo Mentor', value: stats.totalEscolasMentor, icon: GraduationCap, iconColor: '#FF8A65', iconBg: '#3F1F0E' },
   ]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <style>{`
+        @media (max-width: 1024px) { .master-stats-grid { grid-template-columns: repeat(3, 1fr) !important; } }
         @media (max-width: 768px) { .master-stats-grid { grid-template-columns: repeat(2, 1fr) !important; } }
         @media (max-width: 480px) { .master-stats-grid { grid-template-columns: 1fr !important; } }
       `}</style>
@@ -46,7 +48,7 @@ export default function MasterDashboard() {
       </div>
 
       {/* Cards */}
-      <div className="master-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+      <div className="master-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px' }}>
         {cards.map((card) => {
           const Icon = card.icon
           return (

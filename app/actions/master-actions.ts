@@ -24,11 +24,13 @@ export async function getMasterStats() {
     { count: totalAlunos },
     { count: totalCursos },
     { data: pagamentos },
+    { count: totalEscolasMentor },
   ] = await Promise.all([
     adminClient.from('schools').select('*', { count: 'exact', head: true }),
     adminClient.from('users').select('*', { count: 'exact', head: true }).eq('role', 'student'),
     adminClient.from('courses').select('*', { count: 'exact', head: true }),
     adminClient.from('payments').select('amount').eq('status', 'approved'),
+    adminClient.from('schools').select('*', { count: 'exact', head: true }).eq('mentor_module', true),
   ])
 
   const receitaTotal = (pagamentos || []).reduce(
@@ -40,6 +42,7 @@ export async function getMasterStats() {
     totalAlunos: totalAlunos || 0,
     totalCursos: totalCursos || 0,
     receitaTotal,
+    totalEscolasMentor: totalEscolasMentor || 0,
   }
 }
 
@@ -288,6 +291,8 @@ export async function getEscolaDetalhe(id: string): Promise<{
   ownerEmail: string | null
   totalAlunos: number
   totalCursos: number
+  mentor_module: boolean
+  mentor_module_activated_at: string | null
 } | null> {
   const authError = await verifyMaster()
   if (authError) return null
@@ -296,7 +301,7 @@ export async function getEscolaDetalhe(id: string): Promise<{
 
   const { data: school, error } = await adminClient
     .from('schools')
-    .select('id, name, slug, plan, is_active, phone, created_at, owner_id')
+    .select('id, name, slug, plan, is_active, phone, created_at, owner_id, mentor_module, mentor_module_activated_at')
     .eq('id', id)
     .single()
 
@@ -335,7 +340,33 @@ export async function getEscolaDetalhe(id: string): Promise<{
     ownerEmail,
     totalAlunos: totalAlunos ?? 0,
     totalCursos: totalCursos ?? 0,
+    mentor_module: school.mentor_module,
+    mentor_module_activated_at: school.mentor_module_activated_at,
   }
+}
+
+export async function toggleMentorModule(escolaId: string, ativar: boolean) {
+  const authError = await verifyMaster()
+  if (authError) return authError
+
+  const adminClient = createAdminClient()
+
+  const update: { mentor_module: boolean; mentor_module_activated_at?: string } = {
+    mentor_module: ativar,
+  }
+  if (ativar) {
+    update.mentor_module_activated_at = new Date().toISOString()
+  }
+
+  const { error } = await adminClient
+    .from('schools')
+    .update(update)
+    .eq('id', escolaId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/master/escolas/${escolaId}`)
+  return { success: true }
 }
 
 export async function getAnaliseComercial() {

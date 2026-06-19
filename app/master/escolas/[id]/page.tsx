@@ -1,6 +1,7 @@
 import { getEscolaDetalhe } from '@/app/actions/master-actions'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import MentorModuleAcoes from '@/components/master/MentorModuleAcoes'
 
 const PLANO_LABEL: Record<string, string> = {
   starter: 'Starter',
@@ -176,6 +177,49 @@ export default async function EscolaDetalhePage({
             </span>
           </div>
         ))}
+      </div>
+
+      {/* Módulo Mentor */}
+      <div
+        style={{
+          backgroundColor: '#1A1A1A',
+          border: '1px solid #2A2A2A',
+          borderRadius: '12px',
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid #2A2A2A' }}>
+          <p style={{ color: '#888888', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', margin: 0 }}>
+            Módulo Mentor
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid #1E1E1E' }}>
+          <span style={{ color: '#555555', fontSize: '13px' }}>Status</span>
+          <span
+            style={{
+              fontSize: '11px',
+              fontWeight: '700',
+              padding: '3px 10px',
+              borderRadius: '20px',
+              backgroundColor: escola.mentor_module ? '#1A2E00' : '#2A1A1A',
+              color: escola.mentor_module ? '#AEEA00' : '#FF5555',
+            }}
+          >
+            {escola.mentor_module ? 'Ativo' : 'Inativo'}
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px' }}>
+          <span style={{ color: '#555555', fontSize: '13px' }}>Ativado em</span>
+          <span style={{ color: '#F0F0F0', fontSize: '13px', fontWeight: '500', textAlign: 'right' }}>
+            {escola.mentor_module_activated_at ? formatarData(escola.mentor_module_activated_at) : 'Não disponível'}
+          </span>
+        </div>
+
+        <div style={{ padding: '14px 20px', borderTop: '1px solid #1E1E1E' }}>
+          <MentorModuleAcoes escolaId={escola.id} ativo={escola.mentor_module} />
+        </div>
       </div>
 
       {/* Ações rápidas */}

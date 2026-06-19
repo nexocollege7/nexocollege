@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
 
       const { error } = await adminClient
         .from('schools')
-        .update({ mentor_module: true })
+        .update({ mentor_module: true, mentor_module_activated_at: new Date().toISOString() })
         .eq('id', schoolId)
 
       if (error) {
