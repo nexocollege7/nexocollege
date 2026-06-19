@@ -108,6 +108,7 @@ export async function POST(request: NextRequest) {
           }
         ],
         external_reference: `mentoria|${cohortId}|${user.id}`,
+        notification_url: `${baseUrl}/api/pagamento/webhook?school_id=${mentorship.school_id}`,
         back_urls: {
           success: `${baseUrl}/dashboard/minhas-mentorias`,
           failure: `${baseUrl}/vitrine/${school.slug}/mentorias/${mentorship.slug}?erro=pagamento`,

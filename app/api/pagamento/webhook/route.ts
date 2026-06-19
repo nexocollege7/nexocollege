@@ -33,10 +33,6 @@ function validateMPSignature(
   return computed === v1
 }
 
-const client = new MercadoPagoConfig({
-  accessToken: process.env.MP_ACCESS_TOKEN!
-})
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -54,7 +50,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 })
     }
 
-    const payment = new Payment(client)
+    // Admin client bypasses RLS — webhook não tem sessão de usuário
+    const adminClient = createAdminClient()
+
+    // Usa o token MP da escola que gerou a cobrança (se houver); senão cai no token da plataforma
+    const schoolId = request.nextUrl.searchParams.get('school_id')
+    let accessToken = process.env.MP_ACCESS_TOKEN!
+    if (schoolId) {
+      const { data: school } = await adminClient
+        .from('schools')
+        .select('mp_access_token')
+        .eq('id', schoolId)
+        .single()
+      if (school?.mp_access_token) {
+        accessToken = school.mp_access_token
+      }
+    }
+
+    const mpClient = new MercadoPagoConfig({ accessToken })
+    const payment = new Payment(mpClient)
     const data = await payment.get({ id: body.data.id })
 
     if (data.status !== 'approved') {
@@ -62,9 +76,6 @@ export async function POST(request: NextRequest) {
     }
 
     const parts = (data.external_reference || '').split('|')
-
-    // Admin client bypasses RLS — webhook não tem sessão de usuário
-    const adminClient = createAdminClient()
 
     // FLUXO: Inscrição em mentoria (external_reference: "mentoria|cohort_id|student_id")
     if (parts[0] === 'mentoria' && parts.length >= 3) {

@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
     })
 
     const preference = new Preference(mpClient)
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://nexocollege.com.br'
 
     const result = await preference.create({
       body: {
@@ -87,6 +88,7 @@ export async function POST(request: NextRequest) {
           }
         ],
         external_reference: `${courseId}|${user.id}|${appliedCoupon}|${appliedDiscount}`,
+        notification_url: `${baseUrl}/api/pagamento/webhook?school_id=${course.school_id}`,
       }
     })
 
