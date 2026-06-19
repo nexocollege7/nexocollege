@@ -18,6 +18,7 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
     getActiveReviews(school.id),
   ])
   const cor = school.primary_color || '#AEEA00'
+  const mentoriasAbertas = mentorias.filter((m) => m.has_open_cohort)
 
   const host = (await headers()).get('host') || ''
   const isSubdomain = host.endsWith('.nexocollege.com.br') && !host.startsWith('www.')
@@ -59,6 +60,7 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
         liveUrlInitial={school.live_url ?? null}
         liveActiveInitial={school.live_active ?? false}
         courses={courses}
+        mentorias={mentoriasAbertas}
         slug={slug}
         cor={cor}
         basePath={basePath}
@@ -134,12 +136,12 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
       )}
 
       {/* Grid de Mentorias */}
-      {mentorias.length > 0 && (
+      {mentoriasAbertas.length > 0 && (
         <div className="vitrine-grid-section" style={{ padding: '0 48px 80px' }}>
           <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#F0F0F0', margin: '0 0 24px' }}>
             Mentorias
             <span style={{ color: '#555555', fontSize: '15px', fontWeight: '400', marginLeft: '12px' }}>
-              {mentorias.length} disponível{mentorias.length !== 1 ? 'is' : ''}
+              {mentoriasAbertas.length} disponível{mentoriasAbertas.length !== 1 ? 'is' : ''}
             </span>
           </h2>
 
@@ -148,7 +150,7 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
             gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
             gap: '20px',
           }}>
-            {mentorias.map((m) => (
+            {mentoriasAbertas.map((m) => (
               <Link key={m.id} href={`${basePath}/mentorias/${m.slug}`} className="curso-card">
                 <div style={{
                   height: '160px',

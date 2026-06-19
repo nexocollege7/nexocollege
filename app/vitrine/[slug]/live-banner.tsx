@@ -3,21 +3,23 @@
 import { useEffect, useState } from 'react'
 import { getLiveStatus } from '@/app/actions/vitrine-actions'
 import { getEmbedUrl } from '@/lib/video-embed'
-import BannerRotativo from './banner-rotativo'
+import BannerRotativo, { type Slide } from './banner-rotativo'
 
-type Course = Parameters<typeof BannerRotativo>[0]['courses']
+type Course = Extract<Slide, { tipo: 'curso' }>
+type Mentoria = Omit<Extract<Slide, { tipo: 'mentoria' }>, 'tipo'>
 
 type Props = {
   schoolId: string
   liveUrlInitial: string | null
   liveActiveInitial: boolean
-  courses: Course
+  courses: Omit<Course, 'tipo'>[]
+  mentorias: Mentoria[]
   slug: string
   cor: string
   basePath: string
 }
 
-export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, courses, slug, cor, basePath }: Props) {
+export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, courses, mentorias, slug, cor, basePath }: Props) {
   const [liveActive, setLiveActive] = useState(liveActiveInitial)
   const [liveUrl, setLiveUrl] = useState(liveUrlInitial)
 
@@ -59,8 +61,12 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
     )
   }
 
-  if (courses.length > 0) {
-    return <BannerRotativo courses={courses} slug={slug} cor={cor} basePath={basePath} />
+  if (courses.length > 0 || mentorias.length > 0) {
+    const slides: Slide[] = [
+      ...courses.map((c): Slide => ({ tipo: 'curso', ...c })),
+      ...mentorias.map((m): Slide => ({ tipo: 'mentoria', ...m })),
+    ]
+    return <BannerRotativo slides={slides} slug={slug} cor={cor} basePath={basePath} />
   }
 
   return (
