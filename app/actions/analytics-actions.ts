@@ -46,13 +46,18 @@ export async function getDashboardStats() {
   if (!schoolId) return null
 
   const [
-    { count: totalAlunos },
+    { data: alunosAtivosRows },
     { count: totalCursos },
     { count: totalCertificados },
     { data: pagamentos },
     { data: matriculasRecentes },
   ] = await Promise.all([
-    supabase.from('users').select('*', { count: 'exact', head: true }).eq('school_id', schoolId).eq('role', 'student'),
+    supabase
+      .from('enrollments')
+      .select('student_id')
+      .eq('school_id', schoolId)
+      .eq('status', 'active')
+      .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`),
     supabase.from('courses').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
     supabase.from('certificates').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
     supabase.from('payments').select('amount, paid_at, status').eq('school_id', schoolId).eq('status', 'approved').order('paid_at', { ascending: false }).limit(5),
@@ -62,6 +67,8 @@ export async function getDashboardStats() {
       courses ( title )
     `).eq('school_id', schoolId).order('enrolled_at', { ascending: false }).limit(20),
   ])
+
+  const totalAlunos = new Set((alunosAtivosRows ?? []).map((e) => e.student_id)).size
 
   const pagamentosTipados = (pagamentos ?? []) as Pagamento[]
   const matriculasTipadas = (matriculasRecentes ?? []) as unknown as MatriculaRecente[]
