@@ -32,6 +32,33 @@ export async function getMeuscursos() {
   return data || []
 }
 
+export async function getEscolasAoVivo() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data: matriculas } = await supabase
+    .from('enrollments')
+    .select('courses ( school_id )')
+    .eq('student_id', user.id)
+    .eq('status', 'active')
+
+  const schoolIds = [...new Set(
+    (matriculas || [])
+      .map((m: { courses: { school_id: string }[] }) => m.courses?.[0]?.school_id)
+      .filter(Boolean)
+  )]
+  if (schoolIds.length === 0) return []
+
+  const { data: escolas } = await supabase
+    .from('schools')
+    .select('slug, name')
+    .in('id', schoolIds)
+    .eq('live_active', true)
+
+  return escolas || []
+}
+
 export async function getCourseWithLessons(courseId: string) {
   const supabase = await createClient()
 

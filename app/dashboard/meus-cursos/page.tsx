@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { getMeuscursos, getLessonProgress } from '@/app/actions/aluno-actions'
+import { getMeuscursos, getLessonProgress, getEscolasAoVivo } from '@/app/actions/aluno-actions'
 import Link from 'next/link'
 import { diasRestantes, corDiasRestantes } from '@/lib/enrollment'
 
@@ -11,15 +11,18 @@ export default function MeusCursosPage() {
   const [progressos, setProgressos] = useState<{ [courseId: string]: number }>({})
   const [myId, setMyId] = useState('')
   const [loading, setLoading] = useState(true)
+  const [escolasAoVivo, setEscolasAoVivo] = useState<{ slug: string; name: string }[]>([])
 
   useEffect(() => {
     async function load() {
-      const [data, me] = await Promise.all([
+      const [data, me, aoVivo] = await Promise.all([
         getMeuscursos(),
         fetch('/api/me').then(r => r.json()),
+        getEscolasAoVivo(),
       ])
       setCursos(data || [])
       setMyId(me.id || '')
+      setEscolasAoVivo(aoVivo || [])
 
       // Busca progresso de cada curso
       const prog: { [courseId: string]: number } = {}
@@ -46,6 +49,37 @@ export default function MeusCursosPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {escolasAoVivo.map((escola) => (
+        <div key={escola.slug} style={{
+          background: 'linear-gradient(135deg, #2a0d0d, #3f0e0e)',
+          border: '1px solid rgba(255,68,68,0.4)',
+          borderRadius: '14px',
+          padding: '18px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '16px',
+          flexWrap: 'wrap',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '13px', fontWeight: '800', color: '#fff', backgroundColor: '#FF4444', padding: '4px 10px', borderRadius: '20px' }}>
+              🔴 AO VIVO
+            </span>
+            <p style={{ color: '#F0F0F0', fontWeight: '700', fontSize: '15px', margin: 0 }}>
+              {escola.name} está transmitindo agora
+            </p>
+          </div>
+          <Link href={`/vitrine/${escola.slug}`} style={{
+            background: '#FF4444', color: '#fff',
+            fontWeight: '800', fontSize: '14px',
+            padding: '10px 22px', borderRadius: '10px',
+            textDecoration: 'none', whiteSpace: 'nowrap',
+          }}>
+            Assistir agora →
+          </Link>
+        </div>
+      ))}
+
       <div>
         <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#F0F0F0', margin: 0 }}>Meus Cursos</h1>
         <p style={{ color: '#888888', marginTop: '4px', fontSize: '14px' }}>

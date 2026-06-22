@@ -44,7 +44,7 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
         `}</style>
         <iframe
           src={getEmbedUrl(liveUrl)}
-          style={{ width: '100%', height: '100%', border: 'none' }}
+          style={{ position: 'absolute', top: '90px', left: 0, right: 0, bottom: 0, width: '100%', height: 'calc(100% - 90px)', border: 'none' }}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
         />
