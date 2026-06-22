@@ -4,6 +4,18 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { diasRestantes } from '@/lib/enrollment'
 
+export type Pagamento = {
+  amount: number
+  paid_at: string | null
+  status: string
+}
+
+export type MatriculaRecente = {
+  enrolled_at: string
+  users: { full_name: string | null; role: string } | null
+  courses: { title: string } | null
+}
+
 export async function getDashboardStats() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -51,10 +63,13 @@ export async function getDashboardStats() {
     `).eq('school_id', schoolId).order('enrolled_at', { ascending: false }).limit(20),
   ])
 
-  const receita = (pagamentos || []).reduce((acc: number, p: any) => acc + Number(p.amount), 0)
+  const pagamentosTipados = (pagamentos ?? []) as Pagamento[]
+  const matriculasTipadas = (matriculasRecentes ?? []) as unknown as MatriculaRecente[]
 
-  const matriculasFiltradas = (matriculasRecentes || [])
-    .filter((e: any) => e.users !== null && e.users?.role === 'student')
+  const receita = pagamentosTipados.reduce((acc, p) => acc + Number(p.amount), 0)
+
+  const matriculasFiltradas = matriculasTipadas
+    .filter((e) => e.users !== null && e.users?.role === 'student')
     .slice(0, 5)
 
   return {
@@ -62,7 +77,7 @@ export async function getDashboardStats() {
     totalCursos: totalCursos || 0,
     totalCertificados: totalCertificados || 0,
     receita,
-    pagamentos: pagamentos || [],
+    pagamentos: pagamentosTipados,
     matriculasRecentes: matriculasFiltradas,
   }
 }
