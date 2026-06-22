@@ -20,7 +20,7 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
   const [collapsed, setCollapsed] = useState(false)
   const [unread, setUnread] = useState(0)
   const [ajudaPendente, setAjudaPendente] = useState(0)
-  const [escola, setEscola] = useState<{ name: string, slug: string, primary_color: string, logo_url: string | null, mentor_module: boolean } | null>(null)
+  const [escola, setEscola] = useState<{ name: string, slug: string, primary_color: string, logo_url: string | null, mentor_module: boolean, plan: string } | null>(null)
   const [temMentorias, setTemMentorias] = useState(false)
   const [escolaTemMentor, setEscolaTemMentor] = useState(false)
 
@@ -56,7 +56,7 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
       if (profile?.school_id) {
         const { data: schoolData } = await supabase
           .from('schools')
-          .select('name, slug, primary_color, logo_url, mentor_module')
+          .select('name, slug, primary_color, logo_url, mentor_module, plan')
           .eq('id', profile.school_id)
           .single()
 
@@ -157,7 +157,7 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
           ...(escolaTemMentor && temMentorias ? [{ href: '/dashboard/minhas-mentorias', label: 'Minhas Mentorias', icon: '🎓' }] : []),
           ...(escolaTemMentor ? [{ href: '/dashboard/mensagens', label: 'Mensagens', icon: '💬' }] : []),
           ...menuAluno.slice(1),
-        ].map((item) => {
+        ].filter((item) => !(item.href === '/dashboard/ajuda' && ['starter', 'creator'].includes(escola?.plan ?? 'starter'))).map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
           const isMensagens = item.href === '/dashboard/mensagens'
           const isAjuda = item.href === '/dashboard/ajuda'

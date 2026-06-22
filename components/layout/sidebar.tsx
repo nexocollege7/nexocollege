@@ -16,7 +16,6 @@ const menuItems = [
   { href: '/dashboard/depoimentos', label: 'Depoimentos', icon: '🌟' },
   { href: '/dashboard/vitrine', label: 'Vitrine', icon: '🌐' },
   { href: '/dashboard/upgrade', label: 'Upgrade', icon: '⚡' },
-  { href: '/dashboard/chamados', label: 'Suporte ao Aluno', icon: '🎫' },
   { href: '/dashboard/suporte', label: 'Suporte', icon: '🆘' },
 ]
 
@@ -133,7 +132,7 @@ export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, o
         {[
           ...menuItems.slice(0, 3),
           ...(mentorModule ? [{ href: '/dashboard/mentorias', label: 'Mentorias', icon: '🎓' }, { href: '/dashboard/mensagens', label: 'Mensagens', icon: '💬' }] : []),
-          ...(['pro', 'scale', 'enterprise'].includes(planoEscola) ? [{ href: '/dashboard/comunicados', label: 'Comunicados', icon: '📣' }] : []),
+          ...(['pro', 'scale', 'enterprise'].includes(planoEscola) ? [{ href: '/dashboard/comunicados', label: 'Comunicados', icon: '📣' }, { href: '/dashboard/chamados', label: 'Suporte ao Aluno', icon: '🎫' }] : []),
           ...menuItems.slice(3),
         ].map((item) => {
           const isActive = pathname === item.href
