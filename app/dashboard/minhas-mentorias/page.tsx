@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { getMyMentorshipEnrollments } from '@/app/actions/mentor-actions'
 import { GraduationCap, Calendar, Radio } from 'lucide-react'
@@ -15,8 +16,7 @@ function MentoriaCard({ insc }: { insc: any }) {
     <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '24px' }}>
       <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', marginBottom: '16px' }}>
         {mentoria.cover_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={mentoria.cover_url} alt={mentoria.title} style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }} />
+          <Image src={mentoria.cover_url} alt={mentoria.title} width={80} height={60} style={{ objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }} />
         ) : (
           <div style={{ width: '80px', height: '60px', borderRadius: '8px', backgroundColor: '#1E0E3F', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <GraduationCap size={24} color="#7C4DFF" />

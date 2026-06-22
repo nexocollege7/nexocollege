@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { getSchoolBySlug, getMentorshipBySlug } from '@/app/actions/vitrine-actions'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -85,8 +86,9 @@ export default async function MentoriaDetalhePage({
               padding: '24px', position: 'sticky' as const, top: '24px',
             }}>
               {mentoria.cover_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={mentoria.cover_url} alt={mentoria.title} style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '10px', marginBottom: '16px' }} />
+                <div style={{ position: 'relative', width: '100%', height: '140px', borderRadius: '10px', marginBottom: '16px', overflow: 'hidden' }}>
+                  <Image src={mentoria.cover_url} alt={mentoria.title} fill style={{ objectFit: 'cover' }} />
+                </div>
               ) : (
                 <div style={{
                   width: '100%', height: '140px', borderRadius: '10px', marginBottom: '16px',

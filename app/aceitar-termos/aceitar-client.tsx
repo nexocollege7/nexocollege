@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { recordAcceptances } from '@/app/actions/legal-actions'
@@ -79,8 +80,7 @@ export function AceitarTermosClient({ docs }: { docs: LegalDocument[] }) {
         <div style={{ width: '100%', maxWidth: '500px' }}>
 
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="NexoCollege" style={{ height: '40px', mixBlendMode: 'lighten', display: 'inline-block', marginBottom: '16px' }} />
+            <Image src="/logo.png" alt="NexoCollege" width={140} height={48} style={{ height: '40px', width: 'auto', mixBlendMode: 'lighten', display: 'inline-block', marginBottom: '16px' }} />
             <h1 style={{ fontSize: '22px', fontWeight: '700', color: '#F0F0F0', margin: '0 0 8px' }}>
               Documentos atualizados
             </h1>

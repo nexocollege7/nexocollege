@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
@@ -64,7 +65,7 @@ export function MasterSidebar() {
       }}>
         {!collapsed && (
           <div>
-            <img src="/logo.png" alt="NexoCollege" style={{ height: '32px', mixBlendMode: 'lighten', display: 'block', marginBottom: '4px' }} />
+            <Image src="/logo.png" alt="NexoCollege" width={140} height={48} style={{ height: '32px', width: 'auto', mixBlendMode: 'lighten', display: 'block', marginBottom: '4px' }} />
             <div style={{ fontSize: '11px', color: '#7C4DFF', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               ⚡ Painel Master
             </div>

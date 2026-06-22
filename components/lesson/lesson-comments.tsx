@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { getLessonComments, addLessonComment, toggleCommentLike } from '@/app/actions/comment-actions'
 
@@ -142,8 +143,7 @@ export function LessonComments({ lessonId }: { lessonId: string }) {
                     fontSize: '12px', fontWeight: '700', color: '#0D0D0D',
                   }}>
                     {c.avatar_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={c.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <Image src={c.avatar_url} alt="" width={32} height={32} style={{ objectFit: 'cover' }} />
                     ) : getInitials(c.user_name)}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>

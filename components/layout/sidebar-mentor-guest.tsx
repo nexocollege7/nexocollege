@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getMyMentorshipAsGuest } from '@/app/actions/mentor-guest-actions'
@@ -47,8 +48,7 @@ export function SidebarMentorGuest() {
         {!collapsed && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
             {escola?.logo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={escola.logo_url} alt={escola.name} style={{ width: '36px', height: '36px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} />
+              <Image src={escola.logo_url} alt={escola.name} width={36} height={36} style={{ borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} />
             ) : (
               <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: cor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '800', color: '#fff', flexShrink: 0 }}>
                 {escola ? escola.name.charAt(0).toUpperCase() : '🎓'}

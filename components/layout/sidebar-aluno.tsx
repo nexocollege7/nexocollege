@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -106,8 +107,7 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
         {!collapsed && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
             {escola?.logo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={escola.logo_url} alt={escola.name} style={{ width: '36px', height: '36px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} />
+              <Image src={escola.logo_url} alt={escola.name} width={36} height={36} style={{ borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} />
             ) : (
               <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: corEscola, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '800', color: '#0D0D0D', flexShrink: 0 }}>
                 {escola ? escola.name.charAt(0).toUpperCase() : 'N'}
@@ -125,8 +125,7 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
         )}
         {collapsed && (
           escola?.logo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={escola.logo_url} alt={escola.name} style={{ width: '36px', height: '36px', borderRadius: '8px', objectFit: 'cover' }} />
+            <Image src={escola.logo_url} alt={escola.name} width={36} height={36} style={{ borderRadius: '8px', objectFit: 'cover' }} />
           ) : (
             <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: corEscola, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '800', color: '#0D0D0D' }}>
               {escola ? escola.name.charAt(0).toUpperCase() : 'N'}

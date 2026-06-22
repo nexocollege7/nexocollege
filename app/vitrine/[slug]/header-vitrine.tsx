@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
@@ -58,8 +59,7 @@ export default function HeaderVitrine({ slug, cor, nomeEscola, basePath, logoUrl
       {/* Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
         {logoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={logoUrl} alt={nomeEscola} style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} />
+          <Image src={logoUrl} alt={nomeEscola} width={32} height={32} style={{ borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} />
         ) : (
           <div style={{
             width: '32px', height: '32px', borderRadius: '8px', flexShrink: 0,
@@ -89,11 +89,12 @@ export default function HeaderVitrine({ slug, cor, nomeEscola, basePath, logoUrl
             }}
           >
             {user.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={user.avatar_url}
                 alt={user.nome}
-                style={{ width: '26px', height: '26px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                width={26}
+                height={26}
+                style={{ borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
               />
             ) : (
               <div style={{

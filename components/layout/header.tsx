@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface HeaderProps {
   user: {
@@ -55,12 +56,13 @@ export function Header({ user, title }: HeaderProps) {
           {user.full_name || user.email}
         </span>
         {user.avatar_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={user.avatar_url}
             alt={user.full_name || user.email}
+            width={32}
+            height={32}
             style={{
-              width: '32px', height: '32px', borderRadius: '50%',
+              borderRadius: '50%',
               objectFit: 'cover', border: '2px solid #2A2A2A',
               flexShrink: 0,
             }}

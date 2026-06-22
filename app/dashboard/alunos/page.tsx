@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import {
   getAlunosGestao,
@@ -509,8 +510,7 @@ export default function AlunosPage() {
                         display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
                       }}>
                         {l.avatarUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={l.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <Image src={l.avatarUrl} alt="" width={32} height={32} style={{ objectFit: 'cover' }} />
                         ) : getInitials(l.fullName, l.email)}
                       </div>
                       <span style={{ color: '#F0F0F0', fontWeight: '600', whiteSpace: 'nowrap' }}>{l.fullName || 'Sem nome'}</span>

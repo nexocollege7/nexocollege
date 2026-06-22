@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { updateAvatarUrl, ensureAvatarBucket, getMyProfileFull } from '@/app/actions/profile-actions'
@@ -81,11 +82,12 @@ export default function PerfilPage() {
         {/* Avatar */}
         <div style={{ position: 'relative' }}>
           {avatarSrc ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={avatarSrc}
               alt="Avatar"
-              style={{ width: '96px', height: '96px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #2A2A2A' }}
+              width={96}
+              height={96}
+              style={{ borderRadius: '50%', objectFit: 'cover', border: '2px solid #2A2A2A' }}
             />
           ) : (
             <div style={{

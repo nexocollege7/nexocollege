@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getMySchool, updateSchool, updateLiveStatus, saveMpToken, getMpTokenStatus, saveOwnerContact, updateSchoolLogoUrl, ensureSchoolLogosBucket, updateMyName, verificarPermissaoFeature } from '@/app/actions/school-actions'
@@ -317,8 +318,7 @@ export default function EscolaPage() {
             <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 16px' }}>Logo da Escola</h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
               {logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={logoUrl} alt="Logo" style={{ width: '64px', height: '64px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #2a2a2a' }} />
+                <Image src={logoUrl} alt="Logo" width={64} height={64} style={{ borderRadius: '8px', objectFit: 'cover', border: '1px solid #2a2a2a' }} />
               ) : (
                 <div style={{ width: '64px', height: '64px', borderRadius: '8px', backgroundColor: corEscola, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: '800', color: '#0D0D0D', flexShrink: 0 }}>
                   {nomeEscola.charAt(0).toUpperCase() || 'N'}

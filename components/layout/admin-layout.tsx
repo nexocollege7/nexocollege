@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState } from 'react'
 import { Sidebar } from './sidebar'
 import { SidebarAluno } from './sidebar-aluno'
@@ -93,11 +94,12 @@ export function AdminLayout({ children, user, title }: AdminLayoutProps) {
           </button>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flex: 1, overflow: 'hidden', padding: '0 8px' }}>
             {isAluno && user.school_logo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={user.school_logo_url}
                 alt={user.school_name ?? ''}
-                style={{ width: '28px', height: '28px', borderRadius: '6px', objectFit: 'cover', flexShrink: 0 }}
+                width={28}
+                height={28}
+                style={{ borderRadius: '6px', objectFit: 'cover', flexShrink: 0 }}
               />
             ) : isAluno && user.school_name ? (
               <div style={{

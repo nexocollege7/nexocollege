@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 function getInitials(name: string): string {
   const parts = name.trim().split(' ')
   return parts.length >= 2 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : (parts[0]?.[0] || '?').toUpperCase()
@@ -53,8 +55,7 @@ export function DepoimentosVitrine({ reviews, cor }: { reviews: Review[]; cor: s
                 fontSize: '13px', fontWeight: '700', color: '#0D0D0D',
               }}>
                 {r.studentAvatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={r.studentAvatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <Image src={r.studentAvatarUrl} alt="" width={36} height={36} style={{ objectFit: 'cover' }} />
                 ) : getInitials(r.studentName)}
               </div>
               <div style={{ minWidth: 0 }}>

@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
@@ -185,11 +186,12 @@ export default function LoginEscolaPage() {
         {/* Logo da escola */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           {school?.logo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={school.logo_url}
               alt={nomeEscola}
-              style={{ width: '64px', height: '64px', borderRadius: '16px', objectFit: 'cover', margin: '0 auto 16px', display: 'block', border: '1px solid #2A2A2A' }}
+              width={64}
+              height={64}
+              style={{ borderRadius: '16px', objectFit: 'cover', margin: '0 auto 16px', display: 'block', border: '1px solid #2A2A2A' }}
             />
           ) : (
             <div style={{ width: '64px', height: '64px', borderRadius: '16px', backgroundColor: cor, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '28px', fontWeight: '800', color: '#0D0D0D' }}>

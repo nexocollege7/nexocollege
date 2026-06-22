@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { getReviewsGestao, toggleReviewActive } from '@/app/actions/review-actions'
 
@@ -100,8 +101,7 @@ export function DepoimentosAdmin() {
                         display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
                       }}>
                         {l.studentAvatarUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={l.studentAvatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <Image src={l.studentAvatarUrl} alt="" width={32} height={32} style={{ objectFit: 'cover' }} />
                         ) : getInitials(l.studentName)}
                       </div>
                       <span style={{ color: '#F0F0F0', fontWeight: '600', whiteSpace: 'nowrap' }}>{l.studentName}</span>
