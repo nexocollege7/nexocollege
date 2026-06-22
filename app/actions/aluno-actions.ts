@@ -39,13 +39,13 @@ export async function getEscolasAoVivo() {
 
   const { data: matriculas } = await supabase
     .from('enrollments')
-    .select('courses ( school_id )')
+    .select('school_id')
     .eq('student_id', user.id)
     .eq('status', 'active')
 
   const schoolIds = [...new Set(
     (matriculas || [])
-      .map((m: { courses: { school_id: string }[] }) => m.courses?.[0]?.school_id)
+      .map((m: { school_id: string }) => m.school_id)
       .filter(Boolean)
   )]
   if (schoolIds.length === 0) return []
