@@ -6,6 +6,7 @@ import OnboardingBanner from '@/components/OnboardingBanner'
 import AnalyticsSection from '@/app/dashboard/analytics-section'
 import Link from 'next/link'
 import { elegivelParaMentorModule } from '@/lib/mentor-module'
+import { PLAN_LABELS } from '@/lib/plan-features'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -28,6 +29,12 @@ export default async function DashboardPage() {
     .from('schools')
     .select('id, name, slug, primary_color, plan, mentor_module')
     .eq('id', profile?.school_id)
+    .single()
+
+  const { data: planoLimites } = await adminClient
+    .from('plans')
+    .select('max_students, max_courses')
+    .eq('slug', escola?.plan ?? 'starter')
     .single()
 
   const { count: totalCursos } = await adminClient
@@ -60,6 +67,10 @@ export default async function DashboardPage() {
   const cor = escola?.primary_color || '#AEEA00'
 
   const temAnalytics = ['pro', 'scale', 'enterprise'].includes(escola?.plan ?? '')
+
+  const pctAlunos = planoLimites?.max_students ? (stats.totalAlunos / planoLimites.max_students) * 100 : 0
+  const pctCursos = planoLimites?.max_courses ? (stats.totalCursos / planoLimites.max_courses) * 100 : 0
+  const mostrarBannerLimite = (pctAlunos >= 80 || pctCursos >= 80) && escola?.plan !== 'enterprise'
 
   const cards = [
     { label: 'Alunos Ativos', value: stats.totalAlunos, icon: '👥', color: '#60A5FA', bg: '#1E3A5F', link: '/dashboard/alunos' },
@@ -152,6 +163,46 @@ export default async function DashboardPage() {
             flexShrink: 0,
           }}>
             Conheça o Módulo Mentor →
+          </Link>
+        </div>
+      ) : null}
+
+      {/* Banner de Limite — alunos ou cursos perto do limite do plano */}
+      {mostrarBannerLimite ? (
+        <div style={{
+          background: 'linear-gradient(135deg, #0d1f00, #14290a)',
+          border: '1px solid rgba(174,234,0,0.4)',
+          borderRadius: '14px',
+          padding: '18px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '16px',
+          flexWrap: 'wrap',
+        }}>
+          <div>
+            <p style={{ color: '#AEEA00', fontWeight: '800', fontSize: '15px', margin: '0 0 4px' }}>
+              🎉 Parabéns! Sua escola está crescendo!
+            </p>
+            {pctAlunos >= 80 && (
+              <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>
+                Você já tem {stats.totalAlunos} alunos — está quase no limite do plano {PLAN_LABELS[escola?.plan ?? 'starter']}.
+              </p>
+            )}
+            {pctCursos >= 80 && (
+              <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>
+                Você já tem {stats.totalCursos} cursos — está quase no limite do plano {PLAN_LABELS[escola?.plan ?? 'starter']}.
+              </p>
+            )}
+          </div>
+          <Link href="/dashboard/upgrade" style={{
+            background: '#AEEA00', color: '#0D0D0D',
+            fontWeight: '800', fontSize: '14px',
+            padding: '10px 22px', borderRadius: '10px',
+            textDecoration: 'none', whiteSpace: 'nowrap',
+            flexShrink: 0,
+          }}>
+            Fazer upgrade →
           </Link>
         </div>
       ) : null}
