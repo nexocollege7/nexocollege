@@ -25,7 +25,7 @@ export async function getPublishedCourses(schoolId: string) {
 
   if (!data) return []
 
-  return data.map((course: any) => {
+  return data.map((course) => {
     const { lessons, ...rest } = course
     return { ...rest, total_lessons: lessons?.[0]?.count || 0 }
   })

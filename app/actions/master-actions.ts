@@ -77,7 +77,7 @@ export async function getEscolas() {
     }
   }
 
-  return (schools || []).map((school: any) => {
+  return (schools || []).map((school) => {
     const { mp_access_token, ...rest } = school
     return {
       ...rest,

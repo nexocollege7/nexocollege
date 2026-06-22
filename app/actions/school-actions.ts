@@ -176,7 +176,7 @@ export async function saveMpToken(token: string, publicKey?: string) {
 
   if (!profile?.school_id) return { error: 'Escola nao encontrada' }
 
-  const updateData: any = { mp_access_token: token }
+  const updateData: { mp_access_token: string; mp_public_key?: string } = { mp_access_token: token }
   if (publicKey) updateData.mp_public_key = publicKey
 
   const { error } = await adminClient

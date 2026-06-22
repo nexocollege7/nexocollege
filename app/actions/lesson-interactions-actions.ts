@@ -99,7 +99,7 @@ export async function getMeusFavoritos() {
   const courseIds = [...new Set((lessons || []).map((l) => l.course_id))]
   const { data: courses } = courseIds.length
     ? await adminClient.from('courses').select('id, title, thumbnail_url').in('id', courseIds)
-    : { data: [] as any[] }
+    : { data: [] as { id: string; title: string; thumbnail_url: string | null }[] }
 
   const lessonsMap = new Map((lessons || []).map((l) => [l.id, l]))
   const coursesMap = new Map((courses || []).map((c) => [c.id, c]))
