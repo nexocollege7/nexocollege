@@ -11,6 +11,7 @@ const menuAluno = [
   { href: '/dashboard/meus-cursos', label: 'Meus Cursos', icon: '📚' },
   { href: '/dashboard/favoritos', label: 'Favoritos', icon: '⭐' },
   { href: '/dashboard/certificados', label: 'Certificados', icon: '🏆' },
+  { href: '/dashboard/comunicados', label: 'Comunicados', icon: '📣' },
   { href: '/dashboard/ajuda', label: 'Ajuda', icon: '🆘' },
 ]
 
@@ -157,7 +158,9 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
           ...(escolaTemMentor && temMentorias ? [{ href: '/dashboard/minhas-mentorias', label: 'Minhas Mentorias', icon: '🎓' }] : []),
           ...(escolaTemMentor ? [{ href: '/dashboard/mensagens', label: 'Mensagens', icon: '💬' }] : []),
           ...menuAluno.slice(1),
-        ].filter((item) => !(item.href === '/dashboard/ajuda' && ['starter', 'creator'].includes(escola?.plan ?? 'starter'))).map((item) => {
+        ].filter((item) => !(item.href === '/dashboard/ajuda' && ['starter', 'creator'].includes(escola?.plan ?? 'starter')))
+          .filter((item) => !(item.href === '/dashboard/comunicados' && !['pro', 'scale', 'enterprise'].includes(escola?.plan ?? 'starter')))
+          .map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
           const isMensagens = item.href === '/dashboard/mensagens'
           const isAjuda = item.href === '/dashboard/ajuda'
