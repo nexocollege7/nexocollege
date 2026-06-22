@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import {
   getAlunosGestao,
@@ -556,6 +557,18 @@ export default function AlunosPage() {
                     >
                       {estendendoId === l.enrollmentId ? '...' : 'Estender'}
                     </button>
+                    {l.progresso === 100 && (
+                      <Link
+                        href="/dashboard/certificados"
+                        style={{
+                          padding: '5px 12px', borderRadius: '6px', border: '1px solid rgba(174,234,0,0.4)',
+                          backgroundColor: 'rgba(174,234,0,0.08)', color: '#AEEA00', fontSize: '11px', fontWeight: '700',
+                          textDecoration: 'none', fontFamily: 'inherit', marginLeft: '8px', display: 'inline-block',
+                        }}
+                      >
+                        🏆 Certificado
+                      </Link>
+                    )}
                   </td>
                 </tr>
               ))}

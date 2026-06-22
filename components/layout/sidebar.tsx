@@ -12,7 +12,6 @@ const menuItems = [
   { href: '/dashboard/escola', label: 'Minha Escola', icon: '🏫' },
   { href: '/dashboard/cursos', label: 'Cursos', icon: '📚' },
   { href: '/dashboard/alunos', label: 'Alunos', icon: '👥' },
-  { href: '/dashboard/certificados', label: 'Certificados', icon: '🏆' },
   { href: '/dashboard/comentarios', label: 'Comentários de Aulas', icon: '💬' },
   { href: '/dashboard/depoimentos', label: 'Depoimentos', icon: '🌟' },
   { href: '/dashboard/comunicados', label: 'Comunicados', icon: '📣' },
