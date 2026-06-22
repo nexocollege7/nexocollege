@@ -4,12 +4,12 @@ import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getMySchool, updateSchool, saveMpToken, getMpTokenStatus, saveOwnerContact, updateSchoolLogoUrl, ensureSchoolLogosBucket, updateMyName, verificarPermissaoFeature } from '@/app/actions/school-actions'
-import { School, CreditCard, User, Users, Settings } from 'lucide-react'
+import { School, CreditCard, User, Users, Settings, Globe } from 'lucide-react'
 import { PlanLock } from '@/components/PlanLock'
 import type { PermissaoPlano } from '@/lib/plan-permissions'
 import { elegivelParaMentorModule } from '@/lib/mentor-module'
 
-const ABAS = [
+const ABAS_BASE = [
   { id: 'escola', label: 'Minha Escola', icon: School },
   { id: 'pagamentos', label: 'Pagamentos', icon: CreditCard },
   { id: 'perfil', label: 'Meu Perfil', icon: User },
@@ -54,6 +54,11 @@ export default function EscolaPage() {
 
   // Permissões por plano
   const [permissaoColaboradores, setPermissaoColaboradores] = useState<PermissaoPlano | null>(null)
+
+  const ABAS = [
+    ...ABAS_BASE,
+    ...(['pro', 'scale', 'enterprise'].includes(school?.plan ?? '') ? [{ id: 'dominio', label: 'Domínio Próprio', icon: Globe }] : []),
+  ]
 
   useEffect(() => { loadData(); ensureSchoolLogosBucket() }, [])
 
@@ -531,6 +536,27 @@ export default function EscolaPage() {
               Abrir chamado de suporte
             </a>
           </div>
+        </div>
+      )}
+
+      {/* ABA: DOMÍNIO PRÓPRIO */}
+      {abaAtiva === 'dominio' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {!['pro', 'scale', 'enterprise'].includes(school?.plan ?? '') ? (
+            <PlanLock upgradeRequired="pro" mensagem="Domínio próprio disponível a partir do plano Pro" />
+          ) : (
+            <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '24px' }}>
+              <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 8px' }}>🌐 Domínio próprio</h2>
+              <p style={{ color: '#666', fontSize: '13px', margin: '0 0 16px' }}>
+                Configure um domínio personalizado para sua escola (ex: cursos.suaigreja.com.br)
+              </p>
+              <div style={{ background: 'rgba(124,77,255,0.1)', border: '1px solid #7C4DFF', borderRadius: '8px', padding: '12px 16px' }}>
+                <p style={{ margin: 0, color: '#7C4DFF', fontSize: '13px' }}>
+                  Em breve — esta funcionalidade está em desenvolvimento. Entre em contato com o suporte.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
