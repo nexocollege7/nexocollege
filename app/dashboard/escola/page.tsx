@@ -9,6 +9,8 @@ import { PlanLock } from '@/components/PlanLock'
 import type { PermissaoPlano } from '@/lib/plan-permissions'
 import { elegivelParaMentorModule } from '@/lib/mentor-module'
 
+type ResultadoAcao = { error?: string; success?: true }
+
 const ABAS_BASE = [
   { id: 'escola', label: 'Minha Escola', icon: School },
   { id: 'pagamentos', label: 'Pagamentos', icon: CreditCard },
@@ -94,7 +96,7 @@ export default function EscolaPage() {
     // Status MP
     const status = await getMpTokenStatus()
     setHasToken(status.hasToken)
-    setHasPublicKey((status as any).hasPublicKey || false)
+    setHasPublicKey(status.hasPublicKey || false)
 
     // Permissões por plano
     const colabAllowed = await verificarPermissaoFeature('collaborators')
@@ -136,7 +138,7 @@ export default function EscolaPage() {
     const publicUrl = urlData.publicUrl + `?t=${Date.now()}`
 
     const result = await updateSchoolLogoUrl(publicUrl)
-    if ((result as any)?.error) { showMsg('Erro ao salvar: ' + (result as any).error); setUploadingLogo(false); return }
+    if ((result as ResultadoAcao)?.error) { showMsg('Erro ao salvar: ' + (result as ResultadoAcao).error); setUploadingLogo(false); return }
 
     setLogoUrl(publicUrl)
     showMsg('✅ Logo atualizada!')
@@ -147,7 +149,7 @@ export default function EscolaPage() {
     setSaving(true)
     const result = await updateSchool({ name: nomeEscola, description: descEscola, primary_color: corEscola })
     setSaving(false)
-    if ((result as any)?.error) showMsg('Erro: ' + (result as any).error)
+    if ((result as ResultadoAcao)?.error) showMsg('Erro: ' + (result as ResultadoAcao).error)
     else showMsg('✅ Escola atualizada!')
   }
 
@@ -156,7 +158,7 @@ export default function EscolaPage() {
     setSaving(true)
     const result = await saveMpToken(mpToken.trim(), mpPublicKey.trim() || undefined)
     setSaving(false)
-    if ((result as any)?.error) showMsg('Erro: ' + (result as any).error)
+    if ((result as ResultadoAcao)?.error) showMsg('Erro: ' + (result as ResultadoAcao).error)
     else {
       showMsg('✅ Credenciais salvas!')
       setHasToken(true)
@@ -173,7 +175,7 @@ export default function EscolaPage() {
       updateMyName(nomeCompleto),
     ])
     setSaving(false)
-    if ((r1 as any)?.error || (r2 as any)?.error) showMsg('Erro ao salvar perfil')
+    if ((r1 as ResultadoAcao)?.error || (r2 as ResultadoAcao)?.error) showMsg('Erro ao salvar perfil')
     else showMsg('✅ Perfil atualizado!')
   }
 
