@@ -54,9 +54,10 @@ export async function getDashboardStats() {
   ] = await Promise.all([
     supabase
       .from('enrollments')
-      .select('student_id')
+      .select('student_id, users!enrollments_student_id_fkey!inner(role)')
       .eq('school_id', schoolId)
       .eq('status', 'active')
+      .eq('users.role', 'student')
       .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`),
     supabase.from('courses').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
     supabase.from('certificates').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
