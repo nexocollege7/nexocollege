@@ -275,7 +275,7 @@ export default function EditarCursoPage() {
 
             {/* Cupom de desconto — só para cursos pagos */}
             {!curso.is_free && permissaoCupons && !permissaoCupons.allowed && (
-              <PlanLock upgradeRequired={permissaoCupons.upgradeRequired} />
+              <PlanLock upgradeRequired={permissaoCupons.upgradeRequired} mensagem="💡 Quer oferecer cupons de desconto para seus alunos? Disponível a partir do plano Creator." />
             )}
 
             {!curso.is_free && permissaoCupons?.allowed && (
