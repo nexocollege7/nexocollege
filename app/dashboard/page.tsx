@@ -59,6 +59,8 @@ export default async function DashboardPage() {
 
   const cor = escola?.primary_color || '#AEEA00'
 
+  const temAnalytics = ['pro', 'scale', 'enterprise'].includes(escola?.plan ?? '')
+
   const cards = [
     { label: 'Alunos Ativos', value: stats.totalAlunos, icon: '👥', color: '#60A5FA', bg: '#1E3A5F', link: '/dashboard/alunos' },
     { label: 'Cursos', value: stats.totalCursos, icon: '📚', color: cor, bg: '#1A2E00', link: '/dashboard/cursos' },
@@ -192,7 +194,39 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      <AnalyticsSection corEscola={cor} />
+      {temAnalytics ? (
+        <AnalyticsSection corEscola={cor} />
+      ) : (
+        <div style={{
+          background: 'linear-gradient(135deg, #1a2000, #2a3500)',
+          border: '1px solid rgba(174,234,0,0.3)',
+          borderRadius: '14px',
+          padding: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '16px',
+          flexWrap: 'wrap',
+        }}>
+          <div>
+            <p style={{ color: '#AEEA00', fontWeight: '800', fontSize: '15px', margin: '0 0 4px' }}>
+              📊 Analytics Gerencial disponível no plano Pro
+            </p>
+            <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>
+              Tome decisões baseadas em dados — veja matrículas, receita e progresso dos alunos em tempo real.
+            </p>
+          </div>
+          <Link href="/dashboard/upgrade" style={{
+            background: '#AEEA00', color: '#0D0D0D',
+            fontWeight: '800', fontSize: '14px',
+            padding: '10px 22px', borderRadius: '10px',
+            textDecoration: 'none', whiteSpace: 'nowrap',
+            flexShrink: 0,
+          }}>
+            Conhecer o plano Pro →
+          </Link>
+        </div>
+      )}
 
       {/* Acesso rapido */}
       <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '20px' }}>
