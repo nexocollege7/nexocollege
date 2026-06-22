@@ -14,7 +14,6 @@ const menuItems = [
   { href: '/dashboard/alunos', label: 'Alunos', icon: '👥' },
   { href: '/dashboard/comentarios', label: 'Comentários de Aulas', icon: '💬' },
   { href: '/dashboard/depoimentos', label: 'Depoimentos', icon: '🌟' },
-  { href: '/dashboard/comunicados', label: 'Comunicados', icon: '📣' },
   { href: '/dashboard/vitrine', label: 'Vitrine', icon: '🌐' },
   { href: '/dashboard/upgrade', label: 'Upgrade', icon: '⚡' },
   { href: '/dashboard/chamados', label: 'Suporte ao Aluno', icon: '🎫' },
@@ -28,6 +27,7 @@ export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, o
   const [unread, setUnread] = useState(0)
   const [pendingComments, setPendingComments] = useState(0)
   const [mentorModule, setMentorModule] = useState(false)
+  const [planoEscola, setPlanoEscola] = useState<string>('starter')
 
   useEffect(() => {
     async function loadMentorModule() {
@@ -36,12 +36,13 @@ export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, o
 
       const { data: ownedSchool } = await supabase
         .from('schools')
-        .select('mentor_module')
+        .select('mentor_module, plan')
         .eq('owner_id', user.id)
         .maybeSingle()
 
       if (ownedSchool) {
         setMentorModule(!!ownedSchool.mentor_module)
+        setPlanoEscola(ownedSchool?.plan ?? 'starter')
         return
       }
 
@@ -55,11 +56,12 @@ export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, o
 
       const { data: school } = await supabase
         .from('schools')
-        .select('mentor_module')
+        .select('mentor_module, plan')
         .eq('id', profile.school_id)
         .single()
 
       setMentorModule(!!school?.mentor_module)
+      setPlanoEscola(school?.plan ?? 'starter')
     }
     loadMentorModule()
   }, [supabase])
@@ -128,10 +130,12 @@ export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, o
       </div>
 
       <nav style={{ padding: '12px 8px', flex: 1 }}>
-        {(mentorModule
-          ? [...menuItems.slice(0, 3), { href: '/dashboard/mentorias', label: 'Mentorias', icon: '🎓' }, { href: '/dashboard/mensagens', label: 'Mensagens', icon: '💬' }, ...menuItems.slice(3)]
-          : menuItems
-        ).map((item) => {
+        {[
+          ...menuItems.slice(0, 3),
+          ...(mentorModule ? [{ href: '/dashboard/mentorias', label: 'Mentorias', icon: '🎓' }, { href: '/dashboard/mensagens', label: 'Mensagens', icon: '💬' }] : []),
+          ...(['pro', 'scale', 'enterprise'].includes(planoEscola) ? [{ href: '/dashboard/comunicados', label: 'Comunicados', icon: '📣' }] : []),
+          ...menuItems.slice(3),
+        ].map((item) => {
           const isActive = pathname === item.href
           const isMensagens = item.href === '/dashboard/mensagens'
           const isComentarios = item.href === '/dashboard/comentarios'
