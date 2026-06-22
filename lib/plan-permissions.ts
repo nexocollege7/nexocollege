@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { unstable_cache } from 'next/cache'
 import { type PlanFeature, type PermissaoPlano } from '@/lib/plan-features'
 
 export type { PlanFeature, PermissaoPlano }
@@ -16,6 +17,20 @@ type PlanRow = {
 
 // Apenas os planos vendidos publicamente entram na sugestão de upgrade — 'enterprise' é acordo customizado.
 const HIERARQUIA_PUBLICA = ['starter', 'creator', 'pro', 'scale']
+
+// Dado global, não específico de usuário/escola — cliente admin evita cookies() dentro do escopo cacheado.
+const getPlanosCacheados = unstable_cache(
+  async () => {
+    const supabase = createAdminClient()
+    const { data: plans } = await supabase
+      .from('plans')
+      .select('slug, price_yearly, can_use_coupons, can_use_reviews, can_use_live_events, has_custom_domain, max_collaborators')
+
+    return (plans ?? []) as PlanRow[]
+  },
+  ['plans-permissions'],
+  { tags: ['plans'], revalidate: 86400 }
+)
 
 function planPermiteFeature(plan: PlanRow, feature: PlanFeature): boolean {
   switch (feature) {
@@ -37,14 +52,8 @@ export async function verificarPermissao(
   school: { plan: string | null },
   feature: PlanFeature
 ): Promise<PermissaoPlano> {
-  const supabase = await createClient()
   const planSlug = school.plan ?? 'starter'
-
-  const { data: plans } = await supabase
-    .from('plans')
-    .select('slug, price_yearly, can_use_coupons, can_use_reviews, can_use_live_events, has_custom_domain, max_collaborators')
-
-  const planosDisponiveis = (plans ?? []) as PlanRow[]
+  const planosDisponiveis = await getPlanosCacheados()
   const planoAtual = planosDisponiveis.find((p) => p.slug === planSlug)
 
   if (planoAtual && planPermiteFeature(planoAtual, feature)) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { revalidateTag } from 'next/cache'
 
 const MASTER_EMAIL = process.env.MASTER_EMAIL || process.env.NEXT_PUBLIC_MASTER_EMAIL || 'fe.jose7@gmail.com'
 
@@ -46,6 +47,8 @@ export async function PUT(request: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
+
+    revalidateTag('plans', { expire: 0 })
 
     return NextResponse.json({ ok: true })
   } catch (error) {
