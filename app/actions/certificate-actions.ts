@@ -4,6 +4,13 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
+type CourseWithSchool = {
+  id: string
+  title: string
+  total_lessons: number | null
+  schools: { name: string } | null
+}
+
 export async function getMyCertificates() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -46,7 +53,7 @@ export async function getCoursesWithProgress() {
 
   if (!enrollments?.length) return []
 
-  const courseIds = enrollments.map((e: any) => e.course_id as string)
+  const courseIds = enrollments.map((e) => e.course_id as string)
 
   const [progressResult, certsResult] = await Promise.all([
     supabase
@@ -65,17 +72,17 @@ export async function getCoursesWithProgress() {
   const progress = progressResult.data ?? []
   const certs = certsResult.data ?? []
 
-  return enrollments.map((enrollment: any) => {
-    const course = enrollment.courses as any
-    const total = (course?.total_lessons as number) ?? 0
-    const completed = progress.filter((p: any) => p.course_id === enrollment.course_id).length
-    const cert = certs.find((c: any) => c.course_id === enrollment.course_id) ?? null
+  return enrollments.map((enrollment) => {
+    const course = enrollment.courses as unknown as CourseWithSchool | null
+    const total = course?.total_lessons ?? 0
+    const completed = progress.filter((p) => p.course_id === enrollment.course_id).length
+    const cert = certs.find((c) => c.course_id === enrollment.course_id) ?? null
 
     return {
       enrollmentId: enrollment.id as string,
       courseId: enrollment.course_id as string,
-      courseTitle: (course?.title as string) ?? '',
-      schoolName: (course?.schools as any)?.name as string ?? '',
+      courseTitle: course?.title ?? '',
+      schoolName: course?.schools?.name ?? '',
       totalLessons: total,
       completedLessons: completed,
       isComplete: total > 0 && completed >= total,
@@ -170,7 +177,7 @@ export async function getCertificadosGestao() {
 
   const { data: alunos } = studentIds.length
     ? await adminClient.from('users').select('id, full_name, avatar_url').in('id', studentIds)
-    : { data: [] as any[] }
+    : { data: [] as { id: string; full_name: string | null; avatar_url: string | null }[] }
   const alunosMap = new Map((alunos || []).map((a) => [a.id, a]))
 
   const rankingMap = new Map<string, number>()

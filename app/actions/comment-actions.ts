@@ -104,28 +104,28 @@ export async function getAllSchoolComments() {
 
   if (!comments || comments.length === 0) return []
 
-  const userIds = [...new Set(comments.map((c: any) => c.user_id as string))]
-  const lessonIds = [...new Set(comments.map((c: any) => c.lesson_id as string))]
+  const userIds = [...new Set(comments.map((c) => c.user_id as string))]
+  const lessonIds = [...new Set(comments.map((c) => c.lesson_id as string))]
 
   const [usersResult, lessonsResult] = await Promise.all([
     adminClient.from('users').select('id, full_name').in('id', userIds),
     adminClient.from('lessons').select('id, title, course_id').in('id', lessonIds),
   ])
 
-  const courseIds = [...new Set((lessonsResult.data || []).map((l: any) => l.course_id as string).filter(Boolean))]
+  const courseIds = [...new Set((lessonsResult.data || []).map((l) => l.course_id as string).filter(Boolean))]
   const { data: coursesData } = await adminClient
     .from('courses')
     .select('id, title')
     .in('id', courseIds)
 
-  const userMap = new Map((usersResult.data || []).map((u: any) => [u.id as string, u.full_name as string]))
-  const courseMap = new Map((coursesData || []).map((c: any) => [c.id as string, c.title as string]))
-  const lessonMap = new Map((lessonsResult.data || []).map((l: any) => [
+  const userMap = new Map((usersResult.data || []).map((u) => [u.id as string, u.full_name as string]))
+  const courseMap = new Map((coursesData || []).map((c) => [c.id as string, c.title as string]))
+  const lessonMap = new Map((lessonsResult.data || []).map((l) => [
     l.id as string,
     { title: l.title as string, course_id: l.course_id as string },
   ]))
 
-  return comments.map((c: any) => {
+  return comments.map((c) => {
     const lesson = lessonMap.get(c.lesson_id)
     return {
       id: c.id as string,
@@ -230,7 +230,7 @@ export async function getLessonComments(lessonId: string) {
     adminClient.from('users').select('id, full_name, avatar_url').in('id', userIds),
     commentIds.length
       ? adminClient.from('lesson_comment_likes').select('comment_id, user_id').in('comment_id', commentIds)
-      : Promise.resolve({ data: [] as any[] }),
+      : Promise.resolve({ data: [] as { comment_id: string; user_id: string }[] }),
   ])
 
   const userMap = new Map((usersData || []).map((u) => [u.id, u]))

@@ -53,7 +53,7 @@ export async function recordAcceptances(documentIds: string[]): Promise<{ error?
     .eq('user_id', user.id)
     .in('document_id', documentIds)
 
-  const alreadyAccepted = new Set(existing?.map((a: any) => a.document_id) ?? [])
+  const alreadyAccepted = new Set(existing?.map((a) => a.document_id) ?? [])
   const newRows = documentIds
     .filter(docId => !alreadyAccepted.has(docId))
     .map(docId => ({
@@ -95,12 +95,33 @@ export async function getPendingDocuments(userId: string, role: 'school' | 'stud
     return true
   })
 
-  const acceptedIds = new Set(acceptedResult.data?.map((a: any) => a.document_id) ?? [])
+  const acceptedIds = new Set(acceptedResult.data?.map((a) => a.document_id) ?? [])
 
   return activeDocs.filter(doc => !acceptedIds.has(doc.id))
 }
 
 // Painel escola: dados LGPD de um aluno específico
+type EnrollmentComCurso = {
+  id: string
+  course_id: string
+  status: string
+  enrolled_at: string
+  payment_status: string
+  courses: { title: string } | null
+}
+
+type AcceitacaoComDoc = {
+  id: string
+  accepted_at: string
+  ip_address: string | null
+  user_agent: string | null
+  legal_documents: {
+    type: 'terms_of_use' | 'privacy_policy' | 'cookie_policy'
+    title: string
+    version: string
+  } | null
+}
+
 export async function getStudentLgpdData(studentId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -138,8 +159,8 @@ export async function getStudentLgpdData(studentId: string) {
     full_name: student.full_name ?? '',
     email: authUserResult.data?.user?.email ?? '',
     created_at: student.created_at,
-    enrollments: (enrollmentsResult.data ?? []) as any[],
-    acceptances: (acceptancesResult.data ?? []) as any[],
+    enrollments: (enrollmentsResult.data ?? []) as unknown as EnrollmentComCurso[],
+    acceptances: (acceptancesResult.data ?? []) as unknown as AcceitacaoComDoc[],
   }
 }
 
@@ -252,7 +273,7 @@ export async function carregarDocumentosPadrao(): Promise<{ error?: string; inse
     .eq('is_active', true)
 
   const existingSet = new Set(
-    (existing || []).map((d: any) => `${d.target_role}:${d.type}`)
+    (existing || []).map((d) => `${d.target_role}:${d.type}`)
   )
 
   const paraInserir = DOCUMENTOS_PADRAO.filter(
