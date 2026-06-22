@@ -52,6 +52,31 @@ export async function criarAula(
   return { data }
 }
 
+export async function atualizarAula(
+  aulaId: string,
+  title: string,
+  videoUrl: string,
+  materialLinks: string = ''
+) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const { data, error } = await supabase
+    .from('lessons')
+    .update({
+      title,
+      video_url: videoUrl,
+      material_links: materialLinks || null,
+    })
+    .eq('id', aulaId)
+    .select()
+    .single()
+
+  if (error) return { error: error.message }
+  return { data }
+}
+
 export async function deletarAula(aulaId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

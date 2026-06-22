@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { useParams, useRouter } from 'next/navigation'
 import { getCourse, updateCourse } from '@/app/actions/course-actions'
 import { getModulos, criarModulo, deletarModulo } from '@/app/actions/modulo-actions'
-import { criarAula, deletarAula } from '@/app/actions/aula-actions'
+import { criarAula, deletarAula, atualizarAula } from '@/app/actions/aula-actions'
 import { verificarPermissaoFeature } from '@/app/actions/school-actions'
 import { PlanLock } from '@/components/PlanLock'
 import type { PermissaoPlano } from '@/lib/plan-permissions'
@@ -24,6 +24,9 @@ export default function EditarCursoPage() {
   const [novoModulo, setNovoModulo] = useState('')
   const [novaAula, setNovaAula] = useState<{ [key: string]: { titulo: string; url: string; materiais?: string } }>({})
   const [permissaoCupons, setPermissaoCupons] = useState<PermissaoPlano | null>(null)
+  const [aulaEditandoId, setAulaEditandoId] = useState<string | null>(null)
+  const [edicaoAula, setEdicaoAula] = useState<{ titulo: string; url: string; materiais: string }>({ titulo: '', url: '', materiais: '' })
+  const [salvandoAula, setSalvandoAula] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -116,6 +119,31 @@ export default function EditarCursoPage() {
         ? { ...m, lessons: m.lessons.filter((l: any) => l.id !== aulaId) }
         : m
     ))
+  }
+
+  function handleAbrirEdicaoAula(aula: { id: string; title: string; video_url: string; material_links?: string | null }) {
+    setAulaEditandoId(aula.id)
+    setEdicaoAula({ titulo: aula.title, url: aula.video_url, materiais: aula.material_links || '' })
+  }
+
+  function handleCancelarEdicaoAula() {
+    setAulaEditandoId(null)
+    setEdicaoAula({ titulo: '', url: '', materiais: '' })
+  }
+
+  async function handleSalvarEdicaoAula(moduloId: string, aulaId: string) {
+    if (!edicaoAula.titulo.trim() || !edicaoAula.url.trim()) return
+    setSalvandoAula(true)
+    const result = await atualizarAula(aulaId, edicaoAula.titulo.trim(), edicaoAula.url.trim(), edicaoAula.materiais.trim())
+    if (result.data) {
+      setModulos(modulos.map((m) =>
+        m.id === moduloId
+          ? { ...m, lessons: m.lessons.map((l: { id: string; title: string; video_url: string; material_links?: string | null }) => l.id === aulaId ? result.data : l) }
+          : m
+      ))
+      handleCancelarEdicaoAula()
+    }
+    setSalvandoAula(false)
   }
 
   if (loading) return (
@@ -376,8 +404,37 @@ export default function EditarCursoPage() {
               </div>
               <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {(modulo.lessons || [])
-                  .sort((a: any, b: any) => a.position - b.position)
-                  .map((aula: any, aulaIndex: number) => (
+                  .sort((a: { position: number }, b: { position: number }) => a.position - b.position)
+                  .map((aula: { id: string; title: string; video_url: string; material_links?: string | null; position: number }, aulaIndex: number) => (
+                    aulaEditandoId === aula.id ? (
+                      <div key={aula.id} style={{
+                        display: 'flex', flexDirection: 'column', gap: '8px',
+                        padding: '12px', backgroundColor: '#1A1A1A',
+                        borderRadius: '6px', border: '1px solid #AEEA00',
+                      }}>
+                        <input placeholder="Título da aula"
+                          style={{ ...input, padding: '8px 12px' }}
+                          value={edicaoAula.titulo}
+                          onChange={(e) => setEdicaoAula({ ...edicaoAula, titulo: e.target.value })}
+                        />
+                        <input placeholder="URL do vídeo (YouTube ou Vimeo)"
+                          style={{ ...input, padding: '8px 12px' }}
+                          value={edicaoAula.url}
+                          onChange={(e) => setEdicaoAula({ ...edicaoAula, url: e.target.value })}
+                        />
+                        <input placeholder="Links de materiais (um por linha)"
+                          style={{ ...input, padding: '8px 12px' }}
+                          value={edicaoAula.materiais}
+                          onChange={(e) => setEdicaoAula({ ...edicaoAula, materiais: e.target.value })}
+                        />
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                          <button onClick={handleCancelarEdicaoAula} style={btnPerigo}>Cancelar</button>
+                          <button onClick={() => handleSalvarEdicaoAula(modulo.id, aula.id)} disabled={salvandoAula} style={btnNeon}>
+                            {salvandoAula ? 'Salvando...' : 'Salvar'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
                     <div key={aula.id} style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                       padding: '8px 12px', backgroundColor: '#1A1A1A',
@@ -387,8 +444,12 @@ export default function EditarCursoPage() {
                         <span style={{ color: '#555555', fontSize: '12px' }}>▶</span>
                         <span style={{ color: '#F0F0F0', fontSize: '13px' }}>{aulaIndex + 1}. {aula.title}</span>
                       </div>
-                      <button onClick={() => handleDeletarAula(modulo.id, aula.id)} style={btnPerigo}>✕</button>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button onClick={() => handleAbrirEdicaoAula(aula)} style={btnPerigo}>Editar</button>
+                        <button onClick={() => handleDeletarAula(modulo.id, aula.id)} style={btnPerigo}>✕</button>
+                      </div>
                     </div>
+                    )
                   ))}
                 <div style={{
                   display: 'flex', gap: '8px', alignItems: 'center',

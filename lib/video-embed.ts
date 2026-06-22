@@ -21,10 +21,11 @@ export function getEmbedUrl(url: string, opts: EmbedOptions = {}): string {
     return `https://www.youtube.com/embed/${yt[1]}?${params.toString()}`
   }
 
-  const vm = url.match(/vimeo\.com\/(\d+)/)
+  const vm = url.match(/vimeo\.com\/(\d+)(?:\/([a-zA-Z0-9]+))?/)
   if (vm) {
     const params = new URLSearchParams({ autoplay: autoplay ? '1' : '0' })
     if (mute) params.set('muted', '1')
+    if (vm[2]) params.set('h', vm[2])
     return `https://player.vimeo.com/video/${vm[1]}?${params.toString()}`
   }
 

@@ -43,7 +43,7 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
           .live-badge-dot { animation: live-pulse 1.4s ease-in-out infinite; }
         `}</style>
         <iframe
-          src={getEmbedUrl(liveUrl, { mute: true })}
+          src={getEmbedUrl(liveUrl)}
           style={{ width: '100%', height: '100%', border: 'none' }}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen

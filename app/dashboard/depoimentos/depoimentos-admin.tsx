@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
-import { getReviewsGestao, toggleReviewActive } from '@/app/actions/review-actions'
+import { getReviewsGestao, toggleReviewActive, deleteReview } from '@/app/actions/review-actions'
 
 function getInitials(name: string | null | undefined): string {
   if (!name || !name.trim()) return '?'
@@ -33,6 +33,22 @@ export function DepoimentosAdmin() {
         ...prev,
         linhas: prev.linhas.map((l) => l.id === id ? { ...l, isActive: !isActive } : l),
       })
+    }
+    setAtualizandoId(null)
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm('Excluir este depoimento? Esta ação não pode ser desfeita.')) return
+    setAtualizandoId(id)
+    const result = await deleteReview(id)
+    if (!result?.error) {
+      setDados((prev) => prev && {
+        ...prev,
+        total: prev.total - 1,
+        linhas: prev.linhas.filter((l) => l.id !== id),
+      })
+    } else {
+      alert(result.error)
     }
     setAtualizandoId(null)
   }
@@ -122,21 +138,38 @@ export function DepoimentosAdmin() {
                     </span>
                   </td>
                   <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
-                    <button
-                      onClick={() => handleToggle(l.id, l.isActive)}
-                      disabled={atualizandoId === l.id}
-                      style={{
-                        padding: '6px 14px', borderRadius: '6px',
-                        border: `1px solid ${l.isActive ? 'rgba(255,68,68,0.4)' : 'rgba(174,234,0,0.4)'}`,
-                        backgroundColor: l.isActive ? 'rgba(255,68,68,0.08)' : 'rgba(174,234,0,0.08)',
-                        color: l.isActive ? '#FF4444' : '#AEEA00',
-                        fontSize: '12px', fontWeight: '700',
-                        cursor: atualizandoId === l.id ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
-                        opacity: atualizandoId === l.id ? 0.6 : 1,
-                      }}
-                    >
-                      {atualizandoId === l.id ? '...' : l.isActive ? 'Desativar' : 'Ativar'}
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => handleToggle(l.id, l.isActive)}
+                        disabled={atualizandoId === l.id}
+                        style={{
+                          padding: '6px 14px', borderRadius: '6px',
+                          border: `1px solid ${l.isActive ? 'rgba(255,68,68,0.4)' : 'rgba(174,234,0,0.4)'}`,
+                          backgroundColor: l.isActive ? 'rgba(255,68,68,0.08)' : 'rgba(174,234,0,0.08)',
+                          color: l.isActive ? '#FF4444' : '#AEEA00',
+                          fontSize: '12px', fontWeight: '700',
+                          cursor: atualizandoId === l.id ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+                          opacity: atualizandoId === l.id ? 0.6 : 1,
+                        }}
+                      >
+                        {atualizandoId === l.id ? '...' : l.isActive ? 'Desativar' : 'Ativar'}
+                      </button>
+                      <button
+                        onClick={() => handleDelete(l.id)}
+                        disabled={atualizandoId === l.id}
+                        style={{
+                          padding: '6px 14px', borderRadius: '6px',
+                          border: '1px solid rgba(255,68,68,0.4)',
+                          backgroundColor: 'transparent',
+                          color: '#FF4444',
+                          fontSize: '12px', fontWeight: '700',
+                          cursor: atualizandoId === l.id ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+                          opacity: atualizandoId === l.id ? 0.6 : 1,
+                        }}
+                      >
+                        Excluir
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

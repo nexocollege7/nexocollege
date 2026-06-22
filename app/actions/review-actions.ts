@@ -138,3 +138,19 @@ export async function toggleReviewActive(reviewId: string, isActive: boolean) {
   revalidatePath('/dashboard/depoimentos')
   return { success: true }
 }
+
+export async function deleteReview(reviewId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const { error } = await supabase
+    .from('course_reviews')
+    .delete()
+    .eq('id', reviewId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/dashboard/depoimentos')
+  return { success: true }
+}
