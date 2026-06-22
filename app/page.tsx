@@ -355,7 +355,7 @@ export default function LandingPage() {
             <span className="dot"></span><b>Certificados automáticos</b>
           </div>
           <h1 className="reveal d1">Sua escola online. Do zero ao <span className="hl">primeiro aluno</span> em minutos.</h1>
-          <p className="hero-sub reveal d2">Crie cursos, gerencie alunos e emita certificados — tudo em um lugar só.</p>
+          <p className="hero-sub reveal d2">Crie cursos, gerencie alunos e emita certificados, tudo em um lugar só.</p>
           <div className="hero-cta reveal d3">
             <Link href="/cadastro" className="btn btn-primary">Criar minha escola grátis<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></Link>
             <a href="#como" className="btn btn-ghost">Ver como funciona</a>
@@ -510,12 +510,13 @@ export default function LandingPage() {
           </div>
           <div className="plans">
             <div className="plan reveal">
-              <div className="pn">Starter</div><div className="pp pfree">R$ 0</div><div className="pper">Para sempre · gratuito</div>
+              <div className="pn">Starter</div><div className="pp pfree">R$ 0</div><div className="pper">Comece gratuitamente</div>
               <ul>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab"><b>1</b> curso</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab"><b>{limites.starter.max_students}</b> alunos</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Vitrine personalizada</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Certificados automáticos</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Gateway MP próprio</span></li>
               </ul>
               <Link href="/cadastro?plano=starter" className="btn btn-ghost">Começar grátis</Link>
             </div>
@@ -529,6 +530,7 @@ export default function LandingPage() {
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Cupons de desconto</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Depoimentos automáticos</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab"><b>{limites.creator.max_collaborators}</b> colaborador</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Gateway MP próprio</span></li>
               </ul>
               <Link href="/cadastro?plano=creator" className="btn btn-ghost">Assinar Creator</Link>
             </div>

@@ -70,7 +70,8 @@ export default async function DashboardPage() {
 
   const pctAlunos = planoLimites?.max_students ? (stats.totalAlunos / planoLimites.max_students) * 100 : 0
   const pctCursos = planoLimites?.max_courses ? (stats.totalCursos / planoLimites.max_courses) * 100 : 0
-  const mostrarBannerLimite = (pctAlunos >= 80 || pctCursos >= 80) && escola?.plan !== 'enterprise'
+  const mostrarBannerLimite = (pctAlunos >= 80 || pctCursos >= 80) && !['starter', 'enterprise'].includes(escola?.plan ?? '')
+  const podeCriarCurso = stats.totalCursos < (planoLimites?.max_courses ?? 1)
 
   const cards = [
     { label: 'Alunos Ativos', value: stats.totalAlunos, icon: '👥', color: '#60A5FA', bg: '#1E3A5F', link: '/dashboard/alunos' },
@@ -217,13 +218,29 @@ export default async function DashboardPage() {
             Visao geral de <strong style={{ color: cor }}>{escola?.name}</strong>
           </p>
         </div>
-        <Link href="/dashboard/cursos/novo" style={{
-          backgroundColor: cor, color: '#0D0D0D', fontWeight: '700',
-          fontSize: '14px', padding: '10px 20px', borderRadius: '8px',
-          textDecoration: 'none',
-        }}>
-          + Novo Curso
-        </Link>
+        {podeCriarCurso ? (
+          <Link href="/dashboard/cursos/novo" style={{
+            backgroundColor: cor, color: '#0D0D0D', fontWeight: '700',
+            fontSize: '14px', padding: '10px 20px', borderRadius: '8px',
+            textDecoration: 'none',
+          }}>
+            + Novo Curso
+          </Link>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+            <span style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              backgroundColor: '#2A2A2A', color: '#666666', fontWeight: '700',
+              fontSize: '14px', padding: '10px 20px', borderRadius: '8px',
+              cursor: 'not-allowed',
+            }}>
+              🔒 Novo Curso
+            </span>
+            <Link href="/dashboard/upgrade" style={{ color: cor, fontSize: '12px', textDecoration: 'none', fontWeight: '600' }}>
+              Limite do plano atingido — fazer upgrade
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Cards */}
@@ -283,18 +300,32 @@ export default async function DashboardPage() {
       <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '20px' }}>
         <h2 style={{ color: '#888888', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 16px' }}>Acesso Rapido</h2>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          {acessoRapido.map((item) => (
-            <Link key={item.href} href={item.href} style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              padding: '10px 16px', borderRadius: '8px',
-              border: '1px solid #2A2A2A', backgroundColor: '#111111',
-              textDecoration: 'none', color: '#CCCCCC', fontSize: '13px', fontWeight: '500',
-              transition: 'border-color 0.2s',
-            }}>
-              <span style={{ fontSize: '16px' }}>{item.icon}</span>
-              {item.label}
-            </Link>
-          ))}
+          {acessoRapido.map((item) => {
+            const bloqueado = item.label === 'Novo Curso' && !podeCriarCurso
+            return bloqueado ? (
+              <span key={item.href} title="Limite de cursos do plano atingido — faça upgrade para criar mais" style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '10px 16px', borderRadius: '8px',
+                border: '1px solid #2A2A2A', backgroundColor: '#111111',
+                color: '#555555', fontSize: '13px', fontWeight: '500',
+                cursor: 'not-allowed',
+              }}>
+                <span style={{ fontSize: '16px' }}>🔒</span>
+                {item.label}
+              </span>
+            ) : (
+              <Link key={item.href} href={item.href} style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '10px 16px', borderRadius: '8px',
+                border: '1px solid #2A2A2A', backgroundColor: '#111111',
+                textDecoration: 'none', color: '#CCCCCC', fontSize: '13px', fontWeight: '500',
+                transition: 'border-color 0.2s',
+              }}>
+                <span style={{ fontSize: '16px' }}>{item.icon}</span>
+                {item.label}
+              </Link>
+            )
+          })}
         </div>
       </div>
 
