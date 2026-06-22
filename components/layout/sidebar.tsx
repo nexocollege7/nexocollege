@@ -12,7 +12,6 @@ const menuItems = [
   { href: '/dashboard/escola', label: 'Minha Escola', icon: '🏫' },
   { href: '/dashboard/cursos', label: 'Cursos', icon: '📚' },
   { href: '/dashboard/alunos', label: 'Alunos', icon: '👥' },
-  { href: '/dashboard/mensagens', label: 'Mensagens', icon: '💬' },
   { href: '/dashboard/certificados', label: 'Certificados', icon: '🏆' },
   { href: '/dashboard/comentarios', label: 'Comentários de Aulas', icon: '💬' },
   { href: '/dashboard/depoimentos', label: 'Depoimentos', icon: '🌟' },
@@ -131,7 +130,7 @@ export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, o
 
       <nav style={{ padding: '12px 8px', flex: 1 }}>
         {(mentorModule
-          ? [...menuItems.slice(0, 3), { href: '/dashboard/mentorias', label: 'Mentorias', icon: '🎓' }, ...menuItems.slice(3)]
+          ? [...menuItems.slice(0, 3), { href: '/dashboard/mentorias', label: 'Mentorias', icon: '🎓' }, { href: '/dashboard/mensagens', label: 'Mensagens', icon: '💬' }, ...menuItems.slice(3)]
           : menuItems
         ).map((item) => {
           const isActive = pathname === item.href
