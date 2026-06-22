@@ -154,7 +154,7 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
       <nav style={{ padding: '12px 8px', flex: 1 }}>
         {[
           ...menuAluno.slice(0, 1),
-          ...(temMentorias ? [{ href: '/dashboard/minhas-mentorias', label: 'Minhas Mentorias', icon: '🎓' }] : []),
+          ...(escolaTemMentor && temMentorias ? [{ href: '/dashboard/minhas-mentorias', label: 'Minhas Mentorias', icon: '🎓' }] : []),
           ...(escolaTemMentor ? [{ href: '/dashboard/mensagens', label: 'Mensagens', icon: '💬' }] : []),
           ...menuAluno.slice(1),
         ].map((item) => {
