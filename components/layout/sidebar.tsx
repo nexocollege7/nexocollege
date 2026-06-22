@@ -18,7 +18,7 @@ const menuItems = [
   { href: '/dashboard/comunicados', label: 'Comunicados', icon: '📣' },
   { href: '/dashboard/vitrine', label: 'Vitrine', icon: '🌐' },
   { href: '/dashboard/upgrade', label: 'Upgrade', icon: '⚡' },
-  { href: '/dashboard/chamados', label: 'Chamados dos Alunos', icon: '🎫' },
+  { href: '/dashboard/chamados', label: 'Suporte ao Aluno', icon: '🎫' },
   { href: '/dashboard/suporte', label: 'Suporte', icon: '🆘' },
 ]
 

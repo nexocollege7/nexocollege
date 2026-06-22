@@ -125,7 +125,7 @@ export default function ChamadosPage() {
   return (
     <div style={{ padding: '32px', maxWidth: '1400px', margin: '0 auto' }}>
       <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#fff', margin: 0 }}>Chamados dos Alunos</h1>
+        <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#fff', margin: 0 }}>Suporte ao Aluno</h1>
         <p style={{ color: '#888', margin: '4px 0 0', fontSize: '14px' }}>
           {tickets.length} chamado{tickets.length !== 1 ? 's' : ''} no total
           {ticketsByStatus('aberto').length > 0 && <span style={{ color: '#AEEA00', marginLeft: '12px' }}>● {ticketsByStatus('aberto').length} aguardando resposta</span>}
