@@ -46,5 +46,13 @@ export default async function AprenderPage({
     )
   }
 
-  return <AprenderClient />
+  const { data: course } = await supabase
+    .from('courses')
+    .select('school_id, schools!courses_school_id_fkey(plan)')
+    .eq('id', courseId)
+    .single()
+
+  const planoEscola = (course?.schools as any)?.plan ?? 'starter'
+
+  return <AprenderClient planoEscola={planoEscola} />
 }

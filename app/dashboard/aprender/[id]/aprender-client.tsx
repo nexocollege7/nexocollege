@@ -7,7 +7,7 @@ import { getLessonInteractions, toggleLessonLike, toggleLessonFavorite } from '@
 import { LessonComments } from '@/components/lesson/lesson-comments'
 import { getEmbedUrl } from '@/lib/video-embed'
 
-export function AprenderClient() {
+export function AprenderClient({ planoEscola }: { planoEscola: string }) {
   const params = useParams()
   const id = params.id as string
   const searchParams = useSearchParams()
@@ -237,7 +237,16 @@ export function AprenderClient() {
         {/* Comentários — flexShrink:0 garante tamanho real do conteúdo, sem disputa de espaço no flex */}
         {aulaAtual && (
           <div style={{ flexShrink: 0 }}>
-            <LessonComments lessonId={aulaAtual.id} />
+            {planoEscola === 'starter' ? (
+              <div style={{
+                padding: '16px', backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A',
+                borderRadius: '12px', color: '#888888', fontSize: '13px', textAlign: 'center',
+              }}>
+                💬 Comentários disponíveis a partir do plano Creator
+              </div>
+            ) : (
+              <LessonComments lessonId={aulaAtual.id} />
+            )}
           </div>
         )}
       </div>
