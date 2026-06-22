@@ -109,7 +109,7 @@ export async function getAnalyticsCompleto(periodoDias: 30 | 60 | 90 = 30) {
 
   const [{ data: cursos }, { data: enrollments }, { data: payments }] = await Promise.all([
     adminClient.from('courses').select('id, title, status, total_lessons').eq('school_id', schoolId),
-    adminClient.from('enrollments').select('id, student_id, course_id, expires_at').eq('school_id', schoolId).eq('status', 'active'),
+    adminClient.from('enrollments').select('id, student_id, course_id, expires_at, users!enrollments_student_id_fkey!inner(role)').eq('school_id', schoolId).eq('status', 'active').eq('users.role', 'student'),
     adminClient.from('payments').select('amount, course_id, paid_at').eq('school_id', schoolId).eq('status', 'approved'),
   ])
 
