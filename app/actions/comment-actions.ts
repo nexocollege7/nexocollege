@@ -37,7 +37,6 @@ export async function addLessonComment(lessonId: string, content: string) {
     .select('id, status, expires_at')
     .eq('course_id', courseId)
     .eq('student_id', user.id)
-    .in('payment_status', ['paid', 'manual'])
     .maybeSingle()
 
   if (!enrollment || !matriculaValida(enrollment)) return { error: 'Você não está matriculado neste curso.' }
