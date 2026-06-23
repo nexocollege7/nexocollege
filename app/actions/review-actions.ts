@@ -61,10 +61,28 @@ export async function submitCourseReview(courseId: string, content: string) {
       student_avatar_url: profile?.avatar_url || null,
     })
 
-  if (error) return { error: error.message }
+  if (error) {
+    if (error.code === '23505') return { error: 'Você já enviou um depoimento para este curso.' }
+    return { error: error.message }
+  }
 
   revalidatePath('/dashboard/depoimentos')
   return { success: true }
+}
+
+export async function getStudentReview(courseId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data } = await supabase
+    .from('course_reviews')
+    .select('id, content, created_at')
+    .eq('course_id', courseId)
+    .eq('student_id', user.id)
+    .maybeSingle()
+
+  return data
 }
 
 export async function getReviewsGestao() {

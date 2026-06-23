@@ -4,8 +4,20 @@ import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import { getAulasDoAluno, marcarAulaConcluida } from '@/app/actions/aula-actions'
 import { getLessonInteractions, toggleLessonLike, toggleLessonFavorite } from '@/app/actions/lesson-interactions-actions'
+import { getStudentReview, submitCourseReview } from '@/app/actions/review-actions'
 import { LessonComments } from '@/components/lesson/lesson-comments'
 import { getEmbedUrl } from '@/lib/video-embed'
+
+type Aula = {
+  id: string
+  title: string
+  video_url: string | null
+  position: number
+  is_free: boolean
+  type: string | null
+  completed: boolean
+  material_links?: string | null
+}
 
 export function AprenderClient({ planoEscola }: { planoEscola: string }) {
   const params = useParams()
@@ -13,9 +25,14 @@ export function AprenderClient({ planoEscola }: { planoEscola: string }) {
   const searchParams = useSearchParams()
 
   const [modulos, setModulos] = useState<any[]>([])
-  const [aulaAtual, setAulaAtual] = useState<any>(null)
+  const [aulaAtual, setAulaAtual] = useState<Aula | null>(null)
   const [loading, setLoading] = useState(true)
   const [interacoes, setInteracoes] = useState({ likeCount: 0, liked: false, favorited: false })
+  const [reviewExistente, setReviewExistente] = useState<{ content: string } | null>(null)
+  const [reviewCarregado, setReviewCarregado] = useState(false)
+  const [reviewTexto, setReviewTexto] = useState('')
+  const [reviewEnviando, setReviewEnviando] = useState(false)
+  const [reviewMsg, setReviewMsg] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -28,6 +45,13 @@ export function AprenderClient({ planoEscola }: { planoEscola: string }) {
       setLoading(false)
     }
     load()
+  }, [id])
+
+  useEffect(() => {
+    getStudentReview(id).then((r) => {
+      setReviewExistente(r ? { content: r.content } : null)
+      setReviewCarregado(true)
+    })
   }, [id])
 
   useEffect(() => {
@@ -79,6 +103,20 @@ export function AprenderClient({ planoEscola }: { planoEscola: string }) {
       }))
     )
     setAulaAtual({ ...aulaAtual, completed: true })
+  }
+
+  async function handleEnviarReview() {
+    if (!reviewTexto.trim()) return
+    setReviewEnviando(true)
+    setReviewMsg('')
+    const result = await submitCourseReview(id, reviewTexto)
+    if (result?.error) {
+      setReviewMsg(result.error)
+    } else {
+      setReviewExistente({ content: reviewTexto.trim() })
+      setReviewTexto('')
+    }
+    setReviewEnviando(false)
   }
 
   const totalAulas = modulos.reduce((acc, m) => acc + (m.lessons?.length || 0), 0)
@@ -181,6 +219,60 @@ export function AprenderClient({ planoEscola }: { planoEscola: string }) {
                 {interacoes.favorited ? '⭐ Favoritado' : '☆ Favoritar'}
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Depoimento opcional — aparece após concluir a aula */}
+        {aulaAtual?.completed && reviewCarregado && (
+          <div style={{ flexShrink: 0, padding: '16px 24px', borderBottom: '1px solid #2A2A2A' }}>
+            {reviewExistente ? (
+              <div>
+                <p style={{ color: '#888888', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>
+                  Seu depoimento sobre este curso
+                </p>
+                <p style={{ color: '#F0F0F0', fontSize: '13px', lineHeight: '1.6', margin: 0, whiteSpace: 'pre-wrap' }}>
+                  {reviewExistente.content}
+                </p>
+              </div>
+            ) : (
+              <div>
+                <p style={{ color: '#888888', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>
+                  Deixe seu depoimento sobre esta aula
+                </p>
+                <textarea
+                  value={reviewTexto}
+                  onChange={(e) => setReviewTexto(e.target.value)}
+                  maxLength={300}
+                  rows={3}
+                  placeholder="Conte o que achou do curso até aqui... (opcional)"
+                  style={{
+                    width: '100%', backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A',
+                    borderRadius: '8px', padding: '10px 14px', color: '#F0F0F0',
+                    fontSize: '13px', outline: 'none', boxSizing: 'border-box',
+                    fontFamily: 'inherit', resize: 'vertical',
+                  }}
+                />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
+                  {reviewMsg ? (
+                    <p style={{ fontSize: '12px', color: '#FF5555', margin: 0 }}>{reviewMsg}</p>
+                  ) : <span />}
+                  <button
+                    onClick={handleEnviarReview}
+                    disabled={reviewEnviando || !reviewTexto.trim()}
+                    style={{
+                      padding: '8px 20px', borderRadius: '8px', border: 'none',
+                      backgroundColor: reviewEnviando || !reviewTexto.trim() ? '#1A2E00' : '#AEEA00',
+                      color: reviewEnviando || !reviewTexto.trim() ? '#AEEA00' : '#0D0D0D',
+                      fontWeight: '700', fontSize: '13px',
+                      cursor: reviewEnviando || !reviewTexto.trim() ? 'not-allowed' : 'pointer',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    {reviewEnviando ? 'Enviando...' : 'Enviar depoimento'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
