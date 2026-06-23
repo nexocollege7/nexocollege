@@ -16,8 +16,9 @@ type Review = {
 export function DepoimentosVitrine({ reviews, cor }: { reviews: Review[]; cor: string }) {
   if (reviews.length === 0) return null
 
-  // Duplica a lista para o efeito de scroll infinito sem salto
-  const loop = [...reviews, ...reviews]
+  // Duplica a lista para o efeito de scroll infinito sem salto — só compensa com 4+ depoimentos
+  const isScrolling = reviews.length >= 4
+  const loop = isScrolling ? [...reviews, ...reviews] : reviews
 
   return (
     <div style={{ padding: '48px 0 80px', overflow: 'hidden' }}>
@@ -38,7 +39,16 @@ export function DepoimentosVitrine({ reviews, cor }: { reviews: Review[]; cor: s
         O que estão falando dos nossos cursos
       </h2>
 
-      <div style={{ display: 'flex', width: 'max-content' }} className="depoimentos-track">
+      <div
+        style={{
+          display: 'flex',
+          width: isScrolling ? 'max-content' : '100%',
+          justifyContent: isScrolling ? 'flex-start' : 'center',
+          flexWrap: isScrolling ? 'nowrap' : 'wrap',
+          padding: isScrolling ? 0 : '0 48px',
+        }}
+        className={isScrolling ? 'depoimentos-track' : undefined}
+      >
         {loop.map((r, i) => (
           <div
             key={`${r.id}-${i}`}
