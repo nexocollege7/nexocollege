@@ -29,8 +29,7 @@ export default function LoginPage() {
     const res = await fetch('/api/me')
     const profile = await res.json()
 
-    const masterEmail = process.env.NEXT_PUBLIC_MASTER_EMAIL
-    if (data.user?.email === masterEmail) {
+    if (profile.isMaster) {
       router.push('/master')
     } else if (profile.role === 'collaborator') {
       router.push('/dashboard')

@@ -20,6 +20,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'mentorshipId obrigatório' }, { status: 400 })
     }
 
+    const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+    const MAX_FILE_SIZE = 5 * 1024 * 1024
+
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+      return NextResponse.json({ error: 'Tipo de arquivo não permitido. Use JPEG, PNG ou WEBP.' }, { status: 400 })
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: 'Arquivo muito grande. Máximo de 5MB.' }, { status: 400 })
+    }
+
     const adminClient = createAdminClient()
 
     const [mentorshipResult, profileResult] = await Promise.all([

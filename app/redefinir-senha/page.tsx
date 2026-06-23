@@ -67,10 +67,10 @@ function RedefinirSenhaContent() {
     setSucesso(true)
 
     // Redirecionar após sucesso
-    const { data: { user } } = await supabase.auth.getUser()
-    const masterEmail = process.env.NEXT_PUBLIC_MASTER_EMAIL
+    const res = await fetch('/api/me')
+    const profile = await res.json()
     setTimeout(() => {
-      if (user?.email === masterEmail) {
+      if (profile.isMaster) {
         router.push('/master')
       } else {
         router.push('/dashboard')

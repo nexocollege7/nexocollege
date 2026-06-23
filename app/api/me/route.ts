@@ -6,7 +6,7 @@ export async function GET() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) return NextResponse.json({ id: null, role: null, school_id: null })
+  if (!user) return NextResponse.json({ id: null, role: null, school_id: null, isMaster: false })
 
   const adminClient = createAdminClient()
   const { data: profile } = await adminClient
@@ -15,10 +15,13 @@ export async function GET() {
     .eq('id', user.id)
     .single()
 
+  const masterEmail = process.env.MASTER_EMAIL || process.env.NEXT_PUBLIC_MASTER_EMAIL
+
   return NextResponse.json({
     id: user.id,
     role: profile?.role || 'student',
     school_id: profile?.school_id || null,
     full_name: profile?.full_name || user.email,
+    isMaster: user.email === masterEmail,
   })
 }

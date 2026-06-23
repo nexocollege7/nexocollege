@@ -1,3 +1,9 @@
+// LIMITAÇÃO CONHECIDA: este store é um Map em memória, isolado por processo.
+// Em ambiente serverless (múltiplas instâncias/cold starts), cada instância tem
+// seu próprio contador — o limite NÃO é global e pode ser contornado distribuindo
+// requisições entre instâncias. Para um rate limit real e global, seria necessário
+// um store compartilhado (ex: Redis/Upstash). Mantido assim por simplicidade até
+// que o volume de abuso justifique a complexidade adicional.
 type Entry = { count: number; resetAt: number }
 
 const store = new Map<string, Entry>()
