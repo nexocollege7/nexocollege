@@ -130,6 +130,7 @@ export async function getAulasDoAluno(courseId: string) {
     .from('lesson_progress')
     .select('lesson_id, is_completed')
     .eq('student_id', user.id)
+    .eq('course_id', courseId)
 
   const progressoMap = new Map(
     (progresso || []).map((p) => [p.lesson_id, p.is_completed])

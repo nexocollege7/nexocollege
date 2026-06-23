@@ -1,16 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { getAnalyticsCompleto } from '@/app/actions/analytics-actions'
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
+
+const VendasChart = dynamic(() => import('./vendas-chart'), {
+  ssr: false,
+  loading: () => <p style={{ color: '#555555', fontSize: '13px' }}>Carregando gráfico...</p>,
+})
 
 type Analytics = Awaited<ReturnType<typeof getAnalyticsCompleto>>
 
@@ -166,19 +163,7 @@ export default function AnalyticsSection({ corEscola }: { corEscola: string }) {
           </div>
         </div>
         <div style={{ width: '100%', height: '240px' }}>
-          <ResponsiveContainer>
-            <BarChart data={dados.grafico}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" vertical={false} />
-              <XAxis dataKey="data" stroke="#555555" fontSize={11} interval={Math.ceil(periodo / 10)} />
-              <YAxis stroke="#555555" fontSize={11} width={50} />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#111111', border: '1px solid #2A2A2A', borderRadius: '8px' }}
-                labelStyle={{ color: '#F0F0F0' }}
-                formatter={(value) => [formatBRL(Number(value)), 'Vendas']}
-              />
-              <Bar dataKey="valor" fill={corEscola} radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <VendasChart data={dados.grafico} periodo={periodo} corEscola={corEscola} />
         </div>
       </div>
     </div>

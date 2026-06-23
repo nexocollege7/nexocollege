@@ -24,15 +24,20 @@ export default function MeusCursosPage() {
       setMyId(me.id || '')
       setEscolasAoVivo(aoVivo || [])
 
-      // Busca progresso de cada curso
+      // Busca progresso de cada curso em paralelo
+      const cursosData = (data || []) as unknown as { courses: { id: string } | null }[]
+      const courseIds = cursosData
+        .map((matricula) => matricula.courses?.id)
+        .filter((id): id is string => Boolean(id))
+
+      const progressResults = await Promise.all(
+        courseIds.map((courseId) => getLessonProgress(me.id, courseId))
+      )
+
       const prog: { [courseId: string]: number } = {}
-      for (const matricula of (data || [])) {
-        const courseId = (matricula as any).courses?.id
-        if (!courseId) continue
-        const progress = await getLessonProgress(me.id, courseId)
-        const concluidas = progress.filter((p: any) => p.is_completed).length
-        prog[courseId] = concluidas
-      }
+      courseIds.forEach((courseId, i) => {
+        prog[courseId] = progressResults[i].filter((p: { is_completed: boolean }) => p.is_completed).length
+      })
       setProgressos(prog)
       setLoading(false)
     }
