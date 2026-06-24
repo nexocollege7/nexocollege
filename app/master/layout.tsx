@@ -10,7 +10,7 @@ export default async function MasterLayout({
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user || user.email !== process.env.NEXT_PUBLIC_MASTER_EMAIL) {
+  if (!user || user.email !== process.env.MASTER_EMAIL) {
     redirect('/dashboard')
   }
 

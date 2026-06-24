@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidateTag } from 'next/cache'
 
-const MASTER_EMAIL = process.env.MASTER_EMAIL || process.env.NEXT_PUBLIC_MASTER_EMAIL || 'fe.jose7@gmail.com'
+const MASTER_EMAIL = process.env.MASTER_EMAIL
 
 export async function PUT(request: NextRequest) {
   try {

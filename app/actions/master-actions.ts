@@ -8,7 +8,7 @@ async function verifyMaster(): Promise<{ error: string } | null> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autorizado' }
-  const masterEmail = process.env.MASTER_EMAIL || process.env.NEXT_PUBLIC_MASTER_EMAIL
+  const masterEmail = process.env.MASTER_EMAIL
   if (user.email !== masterEmail) return { error: 'Acesso negado' }
   return null
 }

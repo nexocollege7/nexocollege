@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Notificar master (AJUSTE 4A) — falha silenciosa para não bloquear o cadastro
-    const masterEmail = process.env.MASTER_EMAIL || process.env.NEXT_PUBLIC_MASTER_EMAIL
+    const masterEmail = process.env.MASTER_EMAIL
     if (masterEmail) {
       const dataHora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
       sendEmail(

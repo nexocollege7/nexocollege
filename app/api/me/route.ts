@@ -15,7 +15,7 @@ export async function GET() {
     .eq('id', user.id)
     .single()
 
-  const masterEmail = process.env.MASTER_EMAIL || process.env.NEXT_PUBLIC_MASTER_EMAIL
+  const masterEmail = process.env.MASTER_EMAIL
 
   return NextResponse.json({
     id: user.id,

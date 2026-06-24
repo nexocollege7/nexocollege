@@ -17,7 +17,7 @@ export default async function DashboardLayout({
   }
 
   // Master vai direto para /master
-  const masterEmail = process.env.NEXT_PUBLIC_MASTER_EMAIL
+  const masterEmail = process.env.MASTER_EMAIL
   if (user.email === masterEmail) {
     redirect('/master')
   }
