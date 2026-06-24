@@ -3,11 +3,6 @@ import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 
-const adminClient = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 async function getSessionUser() {
   const cookieStore = await cookies()
   const supabase = createServerClient(
@@ -24,6 +19,10 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const adminClient = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 

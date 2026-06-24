@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { headers } from 'next/headers'
 import { verificarPermissao, type PlanFeature, type PermissaoPlano } from '@/lib/plan-permissions'
 
 // Busca escola pelo school_id do perfil do usuário
@@ -135,6 +136,23 @@ export async function createSchool(formData: {
 
   const adminClient = createAdminClient()
 
+  // Limite de 3 escolas por IP
+  const headersList = await headers()
+  const ip = headersList.get('x-forwarded-for')?.split(',')[0]?.trim()
+    ?? headersList.get('x-real-ip')
+    ?? null
+
+  if (ip) {
+    const { count } = await adminClient
+      .from('schools')
+      .select('*', { count: 'exact', head: true })
+      .eq('registration_ip', ip)
+
+    if ((count ?? 0) >= 3) {
+      return { error: 'Limite de cadastros atingido para este endereço.' }
+    }
+  }
+
   // 1. Cria a escola com owner_id preenchido
   const { data: school, error } = await adminClient
     .from('schools')
@@ -143,6 +161,7 @@ export async function createSchool(formData: {
       description: formData.description,
       slug: `${slug}-${Date.now()}`,
       owner_id: user.id,
+      registration_ip: ip,
     })
     .select('id')
     .single()

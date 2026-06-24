@@ -12,14 +12,16 @@ import {
 } from '@/app/actions/matricula-actions'
 import { getStudentLgpdData } from '@/app/actions/legal-actions'
 import { corDiasRestantes } from '@/lib/enrollment'
+import type { CursoEscola, CursoBasico, LinhaAluno } from '@/app/actions/matricula-actions'
+import type { EnrollmentComCurso, AcceitacaoComDoc } from '@/app/actions/legal-actions'
 
 type StudentDetails = {
   id: string
   full_name: string
   email: string
   created_at: string
-  enrollments: any[]
-  acceptances: any[]
+  enrollments: EnrollmentComCurso[]
+  acceptances: AcceitacaoComDoc[]
 }
 
 const DOC_TYPE_LABELS: Record<string, string> = {
@@ -140,7 +142,7 @@ function StudentModal({
   onUpdated: () => void
 }) {
   const [details, setDetails] = useState<StudentDetails | null>(null)
-  const [modalCourses, setModalCourses] = useState<any[]>([])
+  const [modalCourses, setModalCourses] = useState<CursoEscola[]>([])
   const [loading, setLoading] = useState(true)
   const [generatingPdf, setGeneratingPdf] = useState(false)
   const [actioningCourseId, setActioningCourseId] = useState<string | null>(null)
@@ -249,7 +251,7 @@ function StudentModal({
                   <p style={{ color: '#444444', fontSize: '13px', margin: 0 }}>Nenhum curso criado ainda.</p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {modalCourses.map((course: any) => {
+                    {modalCourses.map((course) => {
                       const enr = activeEnrollmentMap.get(course.id)
                       // 'paid' = pago via MP; 'manual' ou null = liberado pelo admin (revogável)
                       const isPaid = enr?.payment_status === 'paid'
@@ -306,7 +308,7 @@ function StudentModal({
                     <p style={{ color: '#444444', fontSize: '13px', margin: 0 }}>Nenhum aceite registrado.</p>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      {details.acceptances.map((acc: any) => {
+                      {details.acceptances.map((acc) => {
                         const docInfo = acc.legal_documents as any
                         return (
                           <div key={acc.id} style={{ backgroundColor: '#111111', borderRadius: '8px', padding: '10px 14px' }}>
@@ -362,7 +364,7 @@ function getInitials(name: string | null | undefined, email: string | null | und
 }
 
 export default function AlunosPage() {
-  const [dados, setDados] = useState<{ totalAlunos: number; totalAtivos: number; cursos: any[]; linhas: any[] }>({
+  const [dados, setDados] = useState<{ totalAlunos: number; totalAtivos: number; cursos: CursoBasico[]; linhas: LinhaAluno[] }>({
     totalAlunos: 0, totalAtivos: 0, cursos: [], linhas: [],
   })
   const [loading, setLoading] = useState(true)
@@ -498,7 +500,7 @@ export default function AlunosPage() {
               </tr>
             </thead>
             <tbody>
-              {linhasFiltradas.map((l: any) => (
+              {linhasFiltradas.map((l) => (
                 <tr key={l.enrollmentId} style={{ borderBottom: '1px solid #1A1A1A' }}>
                   <td style={{ padding: '12px 16px' }}>
                     <button

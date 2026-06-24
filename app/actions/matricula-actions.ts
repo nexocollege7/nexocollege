@@ -5,6 +5,33 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { diasRestantes } from '@/lib/enrollment'
 
+export type CursoEscola = {
+  id: string
+  title: string
+  is_free: boolean
+  price: number
+}
+
+export type CursoBasico = {
+  id: string
+  title: string
+  total_lessons: number
+}
+
+export type LinhaAluno = {
+  enrollmentId: string
+  studentId: string
+  fullName: string | null
+  avatarUrl: string | null
+  email: string
+  courseId: string
+  courseTitle: string
+  enrolledAt: string
+  progresso: number
+  dias: number | null
+  expirado: boolean
+}
+
 export async function getCursosEscola() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

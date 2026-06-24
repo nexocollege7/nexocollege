@@ -4,11 +4,6 @@ import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { verificarPermissao, PLAN_LABELS } from '@/lib/plan-permissions'
 
-const adminClient = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 async function getSessionUser() {
   const cookieStore = await cookies()
   const supabase = createServerClient(
@@ -22,6 +17,10 @@ async function getSessionUser() {
 
 // GET — listar colaboradores da escola
 export async function GET() {
+  const adminClient = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
@@ -46,6 +45,10 @@ export async function GET() {
 
 // POST — adicionar colaborador
 export async function POST(req: NextRequest) {
+  const adminClient = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 

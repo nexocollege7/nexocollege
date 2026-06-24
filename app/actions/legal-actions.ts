@@ -101,7 +101,7 @@ export async function getPendingDocuments(userId: string, role: 'school' | 'stud
 }
 
 // Painel escola: dados LGPD de um aluno específico
-type EnrollmentComCurso = {
+export type EnrollmentComCurso = {
   id: string
   course_id: string
   status: string
@@ -110,7 +110,7 @@ type EnrollmentComCurso = {
   courses: { title: string } | null
 }
 
-type AcceitacaoComDoc = {
+export type AcceitacaoComDoc = {
   id: string
   accepted_at: string
   ip_address: string | null
