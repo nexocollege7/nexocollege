@@ -103,6 +103,7 @@ export async function POST(request: NextRequest) {
         slug,
         plan: 'starter',
         owner_id: userId,
+        registration_ip: ip ?? null,
         terms_accepted_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
       })
