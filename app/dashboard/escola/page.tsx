@@ -69,19 +69,26 @@ export default function EscolaPage() {
     if (!user) return
     setEmailUsuario(user.email ?? '')
 
-    // Busca perfil e school_id
-    const { data: profileData, error: profileError } = await supabase
+    const { data: profileData } = await supabase
       .from('users')
       .select('school_id, full_name')
       .eq('id', user.id)
       .single()
 
     if (!profileData?.school_id) { setLoading(false); return }
-
     setNomeCompleto(profileData.full_name || '')
 
-    // Busca dados da escola via server action (bypassa RLS)
-    const schoolData = await getMySchool()
+    // Buscar dados independentes em paralelo
+    const [schoolData, status, colabAllowed, colabsResult] = await Promise.all([
+      getMySchool(),
+      getMpTokenStatus(),
+      verificarPermissaoFeature('collaborators'),
+      supabase
+        .from('users')
+        .select('id, full_name, name')
+        .eq('school_id', profileData.school_id)
+        .eq('role', 'collaborator'),
+    ])
 
     if (schoolData) {
       setSchool(schoolData)
@@ -93,23 +100,10 @@ export default function EscolaPage() {
       setTelefone(schoolData.owner_phone || '')
     }
 
-    // Status MP
-    const status = await getMpTokenStatus()
     setHasToken(status.hasToken)
     setHasPublicKey(status.hasPublicKey || false)
-
-    // Permissões por plano
-    const colabAllowed = await verificarPermissaoFeature('collaborators')
     setPermissaoColaboradores(colabAllowed)
-
-    // Colaboradores
-    const { data: colabs } = await supabase
-      .from('users')
-      .select('id, full_name, name')
-      .eq('school_id', profileData.school_id)
-      .eq('role', 'collaborator')
-
-    setColaboradores(colabs || [])
+    setColaboradores(colabsResult.data || [])
     setLoading(false)
   }
 
