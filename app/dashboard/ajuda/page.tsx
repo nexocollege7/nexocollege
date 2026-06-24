@@ -47,8 +47,15 @@ export default function AjudaPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     setUserId(user.id)
-    const { data } = await supabase.from('users').select('school_id').eq('id', user.id).single()
-    if (data?.school_id) setSchoolId(data.school_id)
+    // Alunos: buscar school_id via enrollment ativo
+    const { data: enrollment } = await supabase
+      .from('enrollments')
+      .select('school_id')
+      .eq('student_id', user.id)
+      .eq('status', 'active')
+      .limit(1)
+      .single()
+    if (enrollment?.school_id) setSchoolId(enrollment.school_id)
     setLoading(false)
   }
 
@@ -91,7 +98,7 @@ export default function AjudaPage() {
   }
 
   async function sendMessage() {
-    if (!newMessage.trim() || !selectedTicket) return
+    if (!newMessage.trim() || !selectedTicket || !userId) return
     setSending(true)
     await supabase.from('support_messages').insert({
       ticket_id: selectedTicket.id, sender_id: userId, sender_role: 'student', content: newMessage,
