@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { MercadoPagoConfig, Payment } from 'mercadopago'
-import { createClient } from '@supabase/supabase-js'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { createHmac } from 'crypto'
 
 const PLANOS_VALIDOS = ['starter', 'creator', 'pro', 'scale', 'enterprise']
@@ -37,10 +37,7 @@ function validateMPSignature(
 }
 
 export async function POST(request: NextRequest) {
-  const adminClient = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  const adminClient = createAdminClient()
 
   try {
     const body = await request.json()
@@ -155,32 +152,20 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Curso não encontrado' }, { status: 404 })
       }
 
-      // Verifica se já está matriculado
-      const { data: existing } = await adminClient
+      const { error: enrollError } = await adminClient
         .from('enrollments')
-        .select('id')
-        .eq('student_id', studentId)
-        .eq('course_id', courseId)
-        .single()
+        .upsert({
+          student_id: studentId,
+          course_id: courseId,
+          school_id: course.school_id,
+          status: 'active',
+          payment_status: 'paid',
+          expires_at: new Date(Date.now() + 365 * 86_400_000).toISOString(),
+        }, { onConflict: 'course_id,student_id' })
 
-      if (!existing) {
-        // Cria matrícula
-        const { error: enrollError } = await adminClient
-          .from('enrollments')
-          .insert({
-            student_id: studentId,
-            course_id: courseId,
-            school_id: course.school_id,
-            status: 'active',
-            payment_status: 'paid',
-          })
-
-        if (enrollError) {
-          console.error('Erro ao criar matrícula:', enrollError)
-          return NextResponse.json({ error: enrollError.message }, { status: 500 })
-        }
-
-        console.log(`Matrícula criada: aluno ${studentId} no curso ${courseId}`)
+      if (enrollError) {
+        console.error('Erro ao criar matrícula:', enrollError)
+        return NextResponse.json({ error: enrollError.message }, { status: 500 })
       }
 
       return NextResponse.json({ ok: true })

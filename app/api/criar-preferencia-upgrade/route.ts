@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
           failure: `${baseUrl}/dashboard/upgrade?erro=pagamento`,
           pending: `${baseUrl}/dashboard/upgrade?status=pendente`,
         },
+        notification_url: `${baseUrl}/api/webhook-upgrade`,
       }
     })
 
