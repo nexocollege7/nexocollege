@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
@@ -40,10 +40,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Operação não permitida' }, { status: 403 })
     }
 
-    const adminClient = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const adminClient = createAdminClient()
 
     // Valida que a escola existe antes de associar
     const { data: school } = await adminClient
