@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { matriculaValida } from '@/lib/enrollment'
 
 export async function POST(request: NextRequest) {
@@ -12,6 +13,8 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
     }
+
+    const adminClient = createAdminClient()
 
     // Verifica se o curso é realmente gratuito
     const { data: course, error: courseError } = await supabase
@@ -53,7 +56,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Cria a matrícula
-    const { error: enrollError } = await supabase
+    const { error: enrollError } = await adminClient
       .from('enrollments')
       .insert({
         student_id: user.id,

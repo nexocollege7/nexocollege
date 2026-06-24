@@ -79,7 +79,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true, url: data.publicUrl })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Erro interno' }, { status: 500 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Erro interno'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
