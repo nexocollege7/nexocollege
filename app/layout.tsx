@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Inter, Sora } from "next/font/google";
 import "./globals.css";
+import JsonLd from './_components/JsonLd'
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -24,8 +25,53 @@ const sora = Sora({
 });
 
 export const metadata: Metadata = {
-  title: "NexoCollege",
-  description: "Plataforma de ensino online",
+  metadataBase: new URL('https://nexocollege.com.br'),
+  title: {
+    default: 'NexoCollege — Crie sua escola online gratuitamente',
+    template: '%s | NexoCollege',
+  },
+  description: 'Plataforma brasileira para criar escolas online. Crie cursos, gerencie alunos, emita certificados e receba pagamentos via Mercado Pago. Comece gratuitamente.',
+  keywords: ['plataforma de cursos online', 'criar escola online', 'EAD brasileiro', 'vender cursos online', 'plataforma EAD', 'certificado online', 'Mercado Pago cursos', 'escola virtual'],
+  authors: [{ name: 'NexoCollege', url: 'https://nexocollege.com.br' }],
+  creator: 'NexoCollege',
+  publisher: 'NexoCollege',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'pt_BR',
+    url: 'https://nexocollege.com.br',
+    siteName: 'NexoCollege',
+    title: 'NexoCollege — Crie sua escola online gratuitamente',
+    description: 'Plataforma brasileira para criar escolas online. Cursos, certificados e pagamentos via Mercado Pago. Comece grátis.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'NexoCollege — Plataforma de ensino online brasileira',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'NexoCollege — Crie sua escola online gratuitamente',
+    description: 'Plataforma brasileira para criar escolas online. Comece grátis.',
+    images: ['/og-image.png'],
+    creator: '@nexocollege',
+  },
+  alternates: {
+    canonical: 'https://nexocollege.com.br',
+  },
 };
 
 export default function RootLayout({
@@ -43,6 +89,7 @@ export default function RootLayout({
           minHeight: "100vh",
         }}
       >
+        <JsonLd />
         {children}
       </body>
     </html>
