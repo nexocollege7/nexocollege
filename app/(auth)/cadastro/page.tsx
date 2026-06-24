@@ -80,6 +80,50 @@ function CadastroContent() {
   const [docs, setDocs] = useState<LegalDocument[]>([])
   const [accepted, setAccepted] = useState<Record<string, boolean>>({})
   const [modalDoc, setModalDoc] = useState<LegalDocument | null>(null)
+  const [slugPreview, setSlugPreview] = useState('')
+  const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
+  const [slugSugestoes, setSlugSugestoes] = useState<string[]>([])
+  const [slugCustom, setSlugCustom] = useState('')
+
+  function gerarSlugLocal(nome: string): string {
+    const palavras = nome
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s]/g, '')
+      .trim()
+      .split(/\s+/)
+    let slug = ''
+    for (const palavra of palavras) {
+      if ((slug + palavra).length > 20) break
+      slug += palavra
+    }
+    return slug || palavras[0]?.slice(0, 20) || ''
+  }
+
+  async function verificarSlug() {
+    if (!nomeEscola.trim()) return
+    setSlugStatus('checking')
+    setSlugSugestoes([])
+    try {
+      const res = await fetch('/api/verificar-slug', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nomeEscola: slugCustom || nomeEscola }),
+      })
+      const data = await res.json()
+      if (data.disponivel) {
+        setSlugStatus('available')
+        setSlugPreview(data.slug)
+      } else {
+        setSlugStatus('taken')
+        setSlugSugestoes(data.sugestoes || [])
+      }
+    } catch {
+      setSlugStatus('idle')
+    }
+  }
+
   const router = useRouter()
   const searchParams = useSearchParams()
   const planoParam = searchParams.get('plano')
@@ -128,7 +172,7 @@ function CadastroContent() {
     const res = await fetch('/api/register-school', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nome, email, password, nomeEscola, termosAceitos: true }),
+      body: JSON.stringify({ nome, email, password, nomeEscola, termosAceitos: true, slug: slugCustom || undefined }),
     })
 
     const data = await res.json()
@@ -231,10 +275,105 @@ function CadastroContent() {
               <div style={{ borderTop: '1px solid #2A2A2A', paddingTop: '4px' }}>
                 <p style={{ fontSize: '12px', color: '#666666', margin: '0 0 16px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>DADOS DA SUA ESCOLA</p>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#CCCCCC', marginBottom: '8px' }}>Nome da sua escola</label>
-                  <input type="text" value={nomeEscola} onChange={(e) => setNomeEscola(e.target.value)} placeholder="Ex: Academia Biblica Online"
-                    style={{ width: '100%', backgroundColor: '#111111', border: '1px solid #7C4DFF', borderRadius: '8px', padding: '12px 16px', color: '#FFFFFF', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }} />
-                  <p style={{ fontSize: '12px', color: '#666666', marginTop: '6px' }}>Este sera o nome da sua plataforma para os alunos.</p>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#CCCCCC', marginBottom: '8px' }}>
+                    Nome da sua escola
+                  </label>
+                  <input
+                    type="text"
+                    value={nomeEscola}
+                    onChange={(e) => {
+                      setNomeEscola(e.target.value)
+                      setSlugPreview(gerarSlugLocal(e.target.value))
+                      setSlugStatus('idle')
+                      setSlugCustom('')
+                      setSlugSugestoes([])
+                    }}
+                    placeholder="Ex: Academia Biblica Online"
+                    style={{ width: '100%', backgroundColor: '#111111', border: '1px solid #7C4DFF', borderRadius: '8px', padding: '12px 16px', color: '#FFFFFF', fontSize: '15px', outline: 'none', boxSizing: 'border-box' as const }}
+                  />
+
+                  {/* Alerta de subdomínio permanente */}
+                  <div style={{ marginTop: '10px', backgroundColor: 'rgba(124,77,255,0.08)', border: '1px solid rgba(124,77,255,0.3)', borderRadius: '8px', padding: '12px 14px' }}>
+                    <p style={{ color: '#7C4DFF', fontSize: '12px', fontWeight: '700', margin: '0 0 4px' }}>
+                      ⚠️ Atenção: este nome se tornará seu endereço permanente
+                    </p>
+                    {slugPreview ? (
+                      <p style={{ color: '#CCCCCC', fontSize: '12px', margin: '0 0 4px', fontFamily: 'monospace' }}>
+                        🌐 {slugPreview}.nexocollege.com.br
+                      </p>
+                    ) : (
+                      <p style={{ color: '#666', fontSize: '12px', margin: '0 0 4px' }}>
+                        🌐 seuslug.nexocollege.com.br
+                      </p>
+                    )}
+                    <p style={{ color: '#666666', fontSize: '11px', margin: 0 }}>
+                      O endereço não poderá ser alterado após o cadastro. Alteração disponível a partir do plano Pro.
+                    </p>
+                  </div>
+
+                  {/* Verificação de disponibilidade */}
+                  {slugPreview && (
+                    <div style={{ marginTop: '8px' }}>
+                      <button
+                        type="button"
+                        onClick={verificarSlug}
+                        disabled={slugStatus === 'checking'}
+                        style={{ padding: '6px 14px', borderRadius: '6px', border: '1px solid #2A2A2A', backgroundColor: '#111', color: '#888', fontSize: '12px', cursor: slugStatus === 'checking' ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
+                      >
+                        {slugStatus === 'checking' ? 'Verificando...' : '🔍 Verificar disponibilidade'}
+                      </button>
+
+                      {slugStatus === 'available' && (
+                        <p style={{ color: '#AEEA00', fontSize: '12px', marginTop: '6px' }}>
+                          ✅ Disponível! Seu endereço será: <strong>{slugPreview}.nexocollege.com.br</strong>
+                        </p>
+                      )}
+
+                      {slugStatus === 'taken' && (
+                        <div style={{ marginTop: '6px' }}>
+                          <p style={{ color: '#FF5555', fontSize: '12px', margin: '0 0 6px' }}>
+                            ❌ Este endereço já está em uso.
+                          </p>
+                          {slugSugestoes.length > 0 && (
+                            <div>
+                              <p style={{ color: '#888', fontSize: '12px', margin: '0 0 6px' }}>Sugestões disponíveis:</p>
+                              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                {slugSugestoes.map((s) => (
+                                  <button
+                                    key={s}
+                                    type="button"
+                                    onClick={() => { setSlugCustom(s); setSlugPreview(s); setSlugStatus('available') }}
+                                    style={{ padding: '4px 10px', borderRadius: '6px', border: '1px solid rgba(174,234,0,0.4)', backgroundColor: 'rgba(174,234,0,0.08)', color: '#AEEA00', fontSize: '12px', cursor: 'pointer', fontFamily: 'monospace' }}
+                                  >
+                                    {s}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          <div style={{ marginTop: '8px' }}>
+                            <p style={{ color: '#888', fontSize: '12px', margin: '0 0 4px' }}>Ou escolha outro nome:</p>
+                            <input
+                              type="text"
+                              value={slugCustom}
+                              onChange={(e) => {
+                                const val = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '')
+                                setSlugCustom(val)
+                                setSlugPreview(val)
+                                setSlugStatus('idle')
+                              }}
+                              placeholder="meuslug"
+                              maxLength={20}
+                              style={{ width: '100%', backgroundColor: '#111111', border: '1px solid #333', borderRadius: '6px', padding: '8px 12px', color: '#FFF', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const, fontFamily: 'monospace' }}
+                            />
+                            <p style={{ color: '#555', fontSize: '11px', margin: '4px 0 0' }}>
+                              Apenas letras minúsculas e números, máx. 20 caracteres
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 

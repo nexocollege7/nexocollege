@@ -23,6 +23,10 @@ function gerarSlug(nome: string): string {
   return slug || palavras[0].slice(0, 20)
 }
 
+function sanitizeSlug(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20)
+}
+
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request.headers)
   if (!checkRateLimit(`register-school:${ip}`, 5, 60 * 60 * 1000)) {
@@ -33,7 +37,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { nome, email, password, nomeEscola, termosAceitos } = await request.json()
+    const { nome, email, password, nomeEscola, termosAceitos, slug: slugDesejado } = await request.json()
 
     if (!nome || !email || !password || !nomeEscola) {
       return NextResponse.json({ error: 'Preencha todos os campos.' }, { status: 400 })
@@ -80,7 +84,7 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = authData.user.id
-    const slugBase = gerarSlug(nomeEscola)
+    const slugBase = slugDesejado ? (sanitizeSlug(slugDesejado) || gerarSlug(nomeEscola)) : gerarSlug(nomeEscola)
 
     // Garantir slug único
     let slug = slugBase
