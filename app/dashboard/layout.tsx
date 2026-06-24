@@ -3,6 +3,39 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { AdminLayout } from '@/components/layout/admin-layout'
 import { getPendingDocuments } from '@/app/actions/legal-actions'
+import { unstable_cache } from 'next/cache'
+
+const getLayoutData = (userId: string) =>
+  unstable_cache(
+    async () => {
+      const adminClient = createAdminClient()
+
+      const { data: profile } = await adminClient
+        .from('users')
+        .select('role, full_name, avatar_url, school_id')
+        .eq('id', userId)
+        .single()
+
+      let schoolName: string | null = null
+      let schoolLogoUrl: string | null = null
+      let schoolSlug: string | null = null
+
+      if (profile?.school_id) {
+        const { data: school } = await adminClient
+          .from('schools')
+          .select('name, logo_url, slug')
+          .eq('id', profile.school_id)
+          .single()
+        schoolName = school?.name ?? null
+        schoolLogoUrl = school?.logo_url ?? null
+        schoolSlug = school?.slug ?? null
+      }
+
+      return { profile, schoolName, schoolLogoUrl, schoolSlug }
+    },
+    [`layout-data-${userId}`],
+    { revalidate: 300, tags: [`user-${userId}`] }
+  )()
 
 export default async function DashboardLayout({
   children,
@@ -22,37 +55,13 @@ export default async function DashboardLayout({
     redirect('/master')
   }
 
-  // Busca o perfil real do banco
-  const adminClient = createAdminClient()
-  const { data: profile } = await adminClient
-    .from('users')
-    .select('role, full_name, avatar_url, school_id')
-    .eq('id', user.id)
-    .single()
+  const { profile, schoolName, schoolLogoUrl, schoolSlug } = await getLayoutData(user.id)
 
   const role = profile?.role || 'student'
-
-  // Verificar se há documentos LGPD pendentes de aceite
-  // Usa mesma lógica de aceitar-termos/page.tsx: null/desconhecido = 'school'
-  const docRole = profile?.role === 'student' ? 'student' : 'school'
+  const docRole = role === 'student' ? 'student' : 'school'
   const pendingDocs = await getPendingDocuments(user.id, docRole)
   if (pendingDocs.length > 0) {
     redirect('/aceitar-termos')
-  }
-
-  // Busca dados da escola para exibir logo no dashboard
-  let schoolName: string | null = null
-  let schoolLogoUrl: string | null = null
-  let schoolSlug: string | null = null
-  if (profile?.school_id) {
-    const { data: school } = await adminClient
-      .from('schools')
-      .select('name, logo_url, slug')
-      .eq('id', profile.school_id)
-      .single()
-    schoolName = school?.name ?? null
-    schoolLogoUrl = school?.logo_url ?? null
-    schoolSlug = school?.slug ?? null
   }
 
   return (
