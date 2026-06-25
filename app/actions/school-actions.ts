@@ -72,6 +72,43 @@ export async function updateSchool(formData: {
   return { success: true }
 }
 
+export async function savePixSettings(formData: {
+  pix_key: string
+  pix_holder_name: string
+  whatsapp_contact: string
+  pending_expiration_days: number
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Nao autenticado' }
+
+  const adminClient = createAdminClient()
+
+  const { data: school } = await adminClient
+    .from('schools')
+    .select('id')
+    .eq('owner_id', user.id)
+    .single()
+
+  if (!school) return { error: 'Escola não encontrada' }
+
+  const { error } = await adminClient
+    .from('schools')
+    .update({
+      pix_key: formData.pix_key.trim() || null,
+      pix_holder_name: formData.pix_holder_name.trim() || null,
+      whatsapp_contact: formData.whatsapp_contact.trim() || null,
+      pending_expiration_days: formData.pending_expiration_days,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', school.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/dashboard/escola')
+  return { success: true }
+}
+
 export async function updateLiveStatus(liveUrl: string, liveActive: boolean) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

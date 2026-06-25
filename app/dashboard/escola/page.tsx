@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { getMySchool, updateSchool, saveMpToken, getMpTokenStatus, saveOwnerContact, updateSchoolLogoUrl, ensureSchoolLogosBucket, updateMyName, verificarPermissaoFeature } from '@/app/actions/school-actions'
+import { getMySchool, updateSchool, savePixSettings, saveMpToken, getMpTokenStatus, saveOwnerContact, updateSchoolLogoUrl, ensureSchoolLogosBucket, updateMyName, verificarPermissaoFeature } from '@/app/actions/school-actions'
 import { School, CreditCard, User, Users, Settings, Globe } from 'lucide-react'
 import { PlanLock } from '@/components/PlanLock'
 import type { PermissaoPlano } from '@/lib/plan-permissions'
@@ -40,6 +40,10 @@ export default function EscolaPage() {
   const [mpPublicKey, setMpPublicKey] = useState('')
   const [hasToken, setHasToken] = useState(false)
   const [hasPublicKey, setHasPublicKey] = useState(false)
+  const [pixKey, setPixKey] = useState('')
+  const [pixHolderName, setPixHolderName] = useState('')
+  const [whatsappContact, setWhatsappContact] = useState('')
+  const [pendingExpirationDays, setPendingExpirationDays] = useState(7)
 
   // Perfil
   const [nomeResponsavel, setNomeResponsavel] = useState('')
@@ -98,6 +102,10 @@ export default function EscolaPage() {
       setLogoUrl(schoolData.logo_url || null)
       setNomeResponsavel(schoolData.owner_name || '')
       setTelefone(schoolData.owner_phone || '')
+      setPixKey(schoolData.pix_key || '')
+      setPixHolderName(schoolData.pix_holder_name || '')
+      setWhatsappContact(schoolData.whatsapp_contact || '')
+      setPendingExpirationDays(schoolData.pending_expiration_days ?? 7)
     }
 
     setHasToken(status.hasToken)
@@ -160,6 +168,19 @@ export default function EscolaPage() {
       setMpToken('')
       setMpPublicKey('')
     }
+  }
+
+  async function salvarPix() {
+    setSaving(true)
+    const result = await savePixSettings({
+      pix_key: pixKey,
+      pix_holder_name: pixHolderName,
+      whatsapp_contact: whatsappContact,
+      pending_expiration_days: pendingExpirationDays,
+    })
+    setSaving(false)
+    if ((result as ResultadoAcao)?.error) showMsg('Erro: ' + (result as ResultadoAcao).error)
+    else showMsg('✅ Configurações de PIX salvas!')
   }
 
   async function salvarPerfil() {
@@ -373,6 +394,35 @@ export default function EscolaPage() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <button onClick={salvarPagamento} disabled={saving || !mpToken.trim()} style={btnStyle}>Salvar credenciais</button>
+              </div>
+            </div>
+          </div>
+
+          {/* PIX Manual */}
+          <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '24px' }}>
+            <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 8px' }}>PIX Manual</h2>
+            <p style={{ color: '#666', fontSize: '13px', margin: '0 0 20px' }}>
+              Aceite pagamentos via PIX manual: o aluno envia o comprovante e você libera o acesso pelo painel de Pendências.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={labelStyle}>Chave PIX</label>
+                <input value={pixKey} onChange={e => setPixKey(e.target.value)} style={inputStyle} placeholder="CPF, e-mail, telefone ou chave aleatória" />
+              </div>
+              <div>
+                <label style={labelStyle}>Nome do titular</label>
+                <input value={pixHolderName} onChange={e => setPixHolderName(e.target.value)} style={inputStyle} placeholder="Nome que aparece no PIX" />
+              </div>
+              <div>
+                <label style={labelStyle}>WhatsApp para contato</label>
+                <input value={whatsappContact} onChange={e => setWhatsappContact(e.target.value)} style={inputStyle} placeholder="Ex: 11999999999" />
+              </div>
+              <div>
+                <label style={labelStyle}>Prazo para expiração da pendência (dias)</label>
+                <input type="number" min={1} value={pendingExpirationDays} onChange={e => setPendingExpirationDays(Number(e.target.value))} style={{ ...inputStyle, width: '120px' }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button onClick={salvarPix} disabled={saving} style={btnStyle}>Salvar PIX</button>
               </div>
             </div>
           </div>
