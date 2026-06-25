@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { releasePendingEnrollment, refusePendingEnrollment } from '@/app/actions/pending-enrollments-actions'
+import { releasePendingEnrollment, refusePendingEnrollment, getReceiptSignedUrl } from '@/app/actions/pending-enrollments-actions'
 import type { PendingEnrollmentWithDetails } from '@/lib/pending-enrollments'
 
 type Props = {
@@ -28,6 +28,9 @@ function PendenciaCard({
 }) {
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
+  const [signedUrl, setSignedUrl] = useState('')
+  const [loadingReceipt, setLoadingReceipt] = useState(false)
+  const [receiptError, setReceiptError] = useState('')
 
   async function handleLiberar() {
     setLoading(true)
@@ -61,6 +64,18 @@ function PendenciaCard({
     window.open(`https://wa.me/${numero}`, '_blank')
   }
 
+  async function handleVerComprovante() {
+    setLoadingReceipt(true)
+    setReceiptError('')
+    const result = await getReceiptSignedUrl(pendencia.id)
+    setLoadingReceipt(false)
+    if (!result.success || !result.url) {
+      setReceiptError(result.error || 'Erro ao carregar comprovante')
+      return
+    }
+    setSignedUrl(result.url)
+  }
+
   const isAwaitingRelease = pendencia.status === 'awaiting_release'
 
   return (
@@ -88,6 +103,7 @@ function PendenciaCard({
         </div>
 
         {erro && <p style={{ color: '#FF5555', fontSize: '13px', margin: 0 }}>{erro}</p>}
+        {receiptError && <p style={{ color: '#FF5555', fontSize: '13px', margin: 0 }}>{receiptError}</p>}
 
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {isAwaitingRelease ? (
@@ -95,9 +111,10 @@ function PendenciaCard({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => alert('Visualização de comprovante em breve')}
+                disabled={loadingReceipt}
+                onClick={handleVerComprovante}
               >
-                Ver comprovante
+                {loadingReceipt ? 'Carregando...' : 'Ver comprovante'}
               </Button>
               <Button
                 size="sm"
@@ -128,6 +145,24 @@ function PendenciaCard({
           )}
         </div>
       </CardContent>
+
+      {signedUrl && (
+        <div
+          onClick={() => setSignedUrl('')}
+          style={{
+            position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '24px', zIndex: 50,
+          }}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <img src={signedUrl} alt="Comprovante" style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: '8px', objectFit: 'contain' }} />
+            <Button onClick={() => setSignedUrl('')} style={{ backgroundColor: '#AEEA00', color: '#0D0D0D', fontWeight: 700 }}>
+              Fechar
+            </Button>
+          </div>
+        </div>
+      )}
     </Card>
   )
 }

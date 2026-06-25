@@ -261,3 +261,36 @@ export async function getOrCreatePendingEnrollment(
     receiptUrl: null,
   }
 }
+
+export async function getReceiptSignedUrl(
+  pendingId: string
+): Promise<{ success: boolean; url?: string; error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'Não autenticado' }
+
+  const adminClient = createAdminClient()
+
+  const { data: pending } = await adminClient
+    .from('pending_enrollments')
+    .select('id, school_id, receipt_url')
+    .eq('id', pendingId)
+    .single()
+    .returns<{ id: string; school_id: string; receipt_url: string | null }>()
+
+  if (!pending) return { success: false, error: 'Pendência não encontrada' }
+
+  if (!(await isSchoolOwner(adminClient, pending.school_id, user.id))) {
+    return { success: false, error: 'Acesso negado' }
+  }
+
+  if (!pending.receipt_url) return { success: false, error: 'Nenhum comprovante enviado' }
+
+  const { data: signed, error } = await adminClient.storage
+    .from('payment-receipts')
+    .createSignedUrl(pending.receipt_url, 3600)
+
+  if (error) return { success: false, error: error.message }
+
+  return { success: true, url: signed.signedUrl }
+}
