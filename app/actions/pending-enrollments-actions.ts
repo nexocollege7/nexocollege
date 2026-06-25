@@ -218,3 +218,46 @@ export async function getActivePendingCount(): Promise<number> {
 
   return countActivePendingBySchool(school.id)
 }
+
+export async function getOrCreatePendingEnrollment(
+  courseId: string,
+  schoolId: string
+): Promise<{
+  success: boolean
+  error?: string
+  id?: string
+  status?: string
+  receiptUrl?: string | null
+}> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'Não autenticado' }
+
+  const { data: existing } = await supabase
+    .from('pending_enrollments')
+    .select('id, status, receipt_url')
+    .eq('student_id', user.id)
+    .eq('course_id', courseId)
+    .in('status', ['awaiting_payment', 'awaiting_release'])
+    .maybeSingle()
+    .returns<{ id: string; status: string; receipt_url: string | null }>()
+
+  if (existing) {
+    return {
+      success: true,
+      id: existing.id,
+      status: existing.status,
+      receiptUrl: existing.receipt_url,
+    }
+  }
+
+  const created = await createPendingEnrollment(courseId, schoolId)
+  if (!created.success) return created
+
+  return {
+    success: true,
+    id: created.id,
+    status: 'awaiting_payment',
+    receiptUrl: null,
+  }
+}

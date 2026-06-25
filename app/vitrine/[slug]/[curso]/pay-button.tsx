@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 type Props = {
@@ -13,6 +14,7 @@ type Props = {
   courseSlug: string
   primaryColor: string
   hasCoupon: boolean
+  hasPix: boolean
 }
 
 type CouponResult = {
@@ -31,6 +33,7 @@ export function PayButton({
   courseSlug,
   primaryColor,
   hasCoupon,
+  hasPix,
 }: Props) {
   const [loading, setLoading] = useState(false)
   const [couponInput, setCouponInput] = useState('')
@@ -225,6 +228,20 @@ export function PayButton({
           ? `Matricular por R$${fmt(displayPrice)}`
           : 'Matricular agora'}
       </button>
+
+      {!isFree && hasPix && (
+        <Link
+          href={`/vitrine/${schoolSlug}/${courseSlug}/pix`}
+          style={{
+            display: 'block', textAlign: 'center', width: '100%', padding: '12px',
+            borderRadius: '12px', border: '1px solid #2A2A2A', backgroundColor: 'transparent',
+            color: '#888888', fontWeight: '600', fontSize: '14px', textDecoration: 'none',
+            fontFamily: 'inherit',
+          }}
+        >
+          Pagar com PIX (manual)
+        </Link>
+      )}
     </div>
   )
 }
