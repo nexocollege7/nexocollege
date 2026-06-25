@@ -81,7 +81,6 @@ function PendenciaCard({
       </CardHeader>
       <CardContent style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px' }}>
-          <p style={{ color: '#888888', margin: 0 }}>{pendencia.student.email}</p>
           <p style={{ color: '#CCCCCC', margin: 0 }}>{pendencia.course.title}</p>
           <p style={{ color: '#555555', margin: 0 }}>
             Inscrito em {formatarData(pendencia.created_at)} · Expira em {formatarData(pendencia.expires_at)}

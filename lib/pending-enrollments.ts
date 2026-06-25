@@ -24,7 +24,6 @@ export type PendingEnrollment = {
 export type PendingEnrollmentStudent = {
   id: string
   full_name: string | null
-  email: string | null
 }
 
 export type PendingEnrollmentCourse = {
@@ -43,7 +42,7 @@ const ACTIVE_STATUSES: PendingEnrollmentStatus[] = ['awaiting_payment', 'awaitin
 const WITH_DETAILS_SELECT = `
   id, school_id, student_id, course_id, payment_method, status,
   receipt_url, admin_note, expires_at, created_at, updated_at,
-  student:users ( id, full_name, email ),
+  student:users ( id, full_name ),
   course:courses ( id, title, thumbnail_url )
 `
 
