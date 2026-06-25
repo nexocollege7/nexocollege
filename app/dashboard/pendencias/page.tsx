@@ -22,6 +22,7 @@ export default async function PendenciasPage() {
   if (!school) redirect('/dashboard')
 
   const pendencias = await getPendingEnrollmentsBySchool(school.id)
+  console.log('[pendencias] count:', pendencias.length, 'school.id:', school.id)
 
   const aguardandoLiberacao = pendencias.filter((p) => p.status === 'awaiting_release')
   const aguardandoPagamento = pendencias.filter((p) => p.status === 'awaiting_payment')
