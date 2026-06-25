@@ -6,12 +6,14 @@ import { createClient } from '@/lib/supabase/client'
 import { useState, useEffect } from 'react'
 import { getUnreadCount } from '@/app/actions/chat-actions'
 import { getPendingCommentsCount } from '@/app/actions/comment-actions'
+import { getActivePendingCount } from '@/app/actions/pending-enrollments-actions'
 
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: '⊞' },
   { href: '/dashboard/escola', label: 'Minha Escola', icon: '🏫' },
   { href: '/dashboard/cursos', label: 'Cursos', icon: '📚' },
   { href: '/dashboard/alunos', label: 'Alunos', icon: '👥' },
+  { href: '/dashboard/pendencias', label: 'Pendências de Liberação', icon: '🧾' },
   { href: '/dashboard/comentarios', label: 'Comentários de Aulas', icon: '💬' },
   { href: '/dashboard/vitrine', label: 'Vitrine', icon: '🌐' },
   { href: '/dashboard/upgrade', label: 'Upgrade', icon: '⚡' },
@@ -24,6 +26,7 @@ export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, o
   const [collapsed, setCollapsed] = useState(false)
   const [unread, setUnread] = useState(0)
   const [pendingComments, setPendingComments] = useState(0)
+  const [pendingApprovals, setPendingApprovals] = useState(0)
   const [mentorModule, setMentorModule] = useState(false)
   const [planoEscola, setPlanoEscola] = useState<string>('starter')
 
@@ -89,6 +92,16 @@ export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, o
     }
   }, [])
 
+  useEffect(() => {
+    async function loadPendingApprovals() {
+      const count = await getActivePendingCount()
+      setPendingApprovals(count)
+    }
+    loadPendingApprovals()
+    const interval = setInterval(loadPendingApprovals, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
   async function handleSair() {
     await supabase.auth.signOut()
     window.location.href = schoolSlug ? `/vitrine/${schoolSlug}/login` : '/login'
@@ -138,6 +151,7 @@ export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, o
           const isActive = pathname === item.href
           const isMensagens = item.href === '/dashboard/mensagens'
           const isComentarios = item.href === '/dashboard/comentarios'
+          const isPendencias = item.href === '/dashboard/pendencias'
           return (
             <Link key={item.href} href={item.href} title={collapsed ? item.label : undefined} style={{
               display: 'flex',
@@ -182,6 +196,18 @@ export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, o
                     {pendingComments > 9 ? '9+' : pendingComments}
                   </span>
                 )}
+                {isPendencias && pendingApprovals > 0 && (
+                  <span style={{
+                    position: 'absolute', top: '-4px', right: '-6px',
+                    backgroundColor: '#FF5555', color: '#fff',
+                    fontSize: '9px', fontWeight: '700',
+                    borderRadius: '10px', padding: '1px 4px',
+                    minWidth: '14px', textAlign: 'center',
+                    lineHeight: '14px',
+                  }}>
+                    {pendingApprovals > 9 ? '9+' : pendingApprovals}
+                  </span>
+                )}
               </span>
               {!collapsed && item.label}
               {!collapsed && isMensagens && unread > 0 && (
@@ -204,6 +230,17 @@ export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, o
                   minWidth: '18px', textAlign: 'center',
                 }}>
                   {pendingComments > 9 ? '9+' : pendingComments}
+                </span>
+              )}
+              {!collapsed && isPendencias && pendingApprovals > 0 && (
+                <span style={{
+                  marginLeft: 'auto',
+                  backgroundColor: '#FF5555', color: '#fff',
+                  fontSize: '10px', fontWeight: '700',
+                  borderRadius: '10px', padding: '1px 6px',
+                  minWidth: '18px', textAlign: 'center',
+                }}>
+                  {pendingApprovals > 9 ? '9+' : pendingApprovals}
                 </span>
               )}
             </Link>
