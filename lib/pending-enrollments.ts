@@ -51,14 +51,12 @@ export async function getPendingEnrollmentsBySchool(
 ): Promise<PendingEnrollmentWithDetails[]> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('pending_enrollments')
     .select(WITH_DETAILS_SELECT)
     .eq('school_id', schoolId)
     .order('created_at', { ascending: false })
     .returns<PendingEnrollmentWithDetails[]>()
-
-  if (error) console.error('[getPendingEnrollmentsBySchool] error:', error.message, error.code)
 
   return data ?? []
 }
