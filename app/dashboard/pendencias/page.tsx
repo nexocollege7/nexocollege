@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { getPendingEnrollmentsBySchool } from '@/lib/pending-enrollments'
 import { PendenciasAdmin } from './pendencias-admin'
 
+export const dynamic = 'force-dynamic'
+
 export default async function PendenciasPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
