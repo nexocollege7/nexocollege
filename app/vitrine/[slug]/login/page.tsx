@@ -150,14 +150,18 @@ export default function LoginEscolaPage() {
     }
 
     if (data.user) {
-      await fetch('/api/register-student', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: data.user.id, email, fullName: nome, schoolId }),
-      })
+      // Aguarda registro do aluno e aceites LGPD antes de redirecionar
+      await Promise.all([
+        fetch('/api/register-student', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: data.user.id, email, fullName: nome, schoolId }),
+        }),
+        recordAcceptances(studentDocs.map(d => d.id)),
+      ])
 
-      // Registrar aceites LGPD
-      await recordAcceptances(studentDocs.map(d => d.id))
+      // Pequeno delay para garantir que a sessão foi estabelecida
+      await new Promise(resolve => setTimeout(resolve, 500))
     }
 
     router.push(redirectTo)
