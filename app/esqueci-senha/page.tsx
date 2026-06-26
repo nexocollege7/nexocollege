@@ -22,7 +22,7 @@ export default function EsqueciSenhaPage() {
     }
 
     const { error: supabaseError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://nexocollege.com.br/auth/callback?type=recovery',
+      redirectTo: 'https://nexocollege.com.br/redefinir-senha',
     })
 
     if (supabaseError) {

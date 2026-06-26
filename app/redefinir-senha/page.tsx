@@ -18,7 +18,26 @@ function RedefinirSenhaContent() {
   const supabase = createClient()
 
   useEffect(() => {
-    // O Supabase troca o token da URL por uma sessão automaticamente ao carregar
+    // Processar hash fragment da URL (token enviado pelo Supabase)
+    const hash = window.location.hash
+    if (hash && hash.includes('access_token')) {
+      const params = new URLSearchParams(hash.replace('#', ''))
+      const accessToken = params.get('access_token')
+      const refreshToken = params.get('refresh_token')
+      const type = params.get('type')
+
+      if (accessToken && refreshToken && type === 'recovery') {
+        supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }).then(({ error }) => {
+          if (!error) {
+            setSessaoAtiva(true)
+          }
+          setVerificando(false)
+        })
+        return
+      }
+    }
+
+    // Fallback: verificar sessão ativa existente
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setSessaoAtiva(true)
@@ -26,7 +45,6 @@ function RedefinirSenhaContent() {
       setVerificando(false)
     })
 
-    // Verificar se já há sessão ativa (caso o token já tenha sido processado)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) setSessaoAtiva(true)
       setVerificando(false)
