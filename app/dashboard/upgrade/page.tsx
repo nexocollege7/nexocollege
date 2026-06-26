@@ -61,6 +61,7 @@ export default function UpgradePage() {
             'Certificados automáticos',
             'Cupons de desconto',
             'Depoimentos automáticos',
+            'Gateway próprio MP',
             '1 colaborador',
           ],
           pro: [
