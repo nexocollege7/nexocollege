@@ -235,14 +235,18 @@ export async function getOrCreatePendingEnrollment(
 
   const { data: existing } = await supabase
     .from('pending_enrollments')
-    .select('id, status, receipt_url')
+    .select('id, status, receipt_url, student_id')
     .eq('student_id', user.id)
     .eq('course_id', courseId)
     .in('status', ['awaiting_payment', 'awaiting_release', 'refused', 'released'])
     .maybeSingle()
-    .returns<{ id: string; status: string; receipt_url: string | null }>()
+    .returns<{ id: string; status: string; receipt_url: string | null; student_id: string }>()
 
   if (existing) {
+    if (existing.student_id !== user.id) {
+      return { success: false, error: 'Acesso negado' }
+    }
+
     if (existing.status === 'refused' || existing.status === 'released') {
       const adminClient = createAdminClient()
 

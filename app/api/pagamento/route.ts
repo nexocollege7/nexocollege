@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { MercadoPagoConfig, Preference } from 'mercadopago'
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,10 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Busca preço e school_id diretamente do banco — nunca usa preço do cliente
-    const adminClient = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const adminClient = createAdminClient()
 
     const { data: course, error: courseError } = await adminClient
       .from('courses')
@@ -88,7 +85,7 @@ export async function POST(request: NextRequest) {
           }
         ],
         external_reference: `${courseId}|${user.id}|${appliedCoupon}|${appliedDiscount}`,
-        notification_url: `${baseUrl}/api/pagamento/webhook?school_id=${course.school_id}`,
+        notification_url: `${baseUrl}/api/pagamento/webhook`,
       }
     })
 
