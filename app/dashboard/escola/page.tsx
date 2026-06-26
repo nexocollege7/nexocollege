@@ -36,6 +36,7 @@ export default function EscolaPage() {
   const logoInputRef = useRef<HTMLInputElement>(null)
 
   // Pagamentos
+  const [emailConfirmado, setEmailConfirmado] = useState(true)
   const [mpToken, setMpToken] = useState('')
   const [mpPublicKey, setMpPublicKey] = useState('')
   const [hasToken, setHasToken] = useState(false)
@@ -72,6 +73,7 @@ export default function EscolaPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     setEmailUsuario(user.email ?? '')
+    setEmailConfirmado(!!user.email_confirmed_at)
 
     const { data: profileData } = await supabase
       .from('users')
@@ -118,6 +120,12 @@ export default function EscolaPage() {
   function showMsg(m: string) {
     setMsg(m)
     setTimeout(() => setMsg(''), 3000)
+  }
+
+  async function reenviarEmail() {
+    const { error } = await supabase.auth.resend({ type: 'signup', email: emailUsuario })
+    if (error) showMsg('Erro ao reenviar: ' + error.message)
+    else showMsg('✅ Email reenviado! Verifique sua caixa de entrada.')
   }
 
   async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -363,6 +371,13 @@ export default function EscolaPage() {
       {/* ABA: PAGAMENTOS */}
       {abaAtiva === 'pagamentos' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+          {!emailConfirmado && (
+            <div style={{ background: 'rgba(255,170,0,0.08)', border: '1px solid rgba(255,170,0,0.25)', borderRadius: '10px', padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+              <span style={{ color: '#FFAA00', fontSize: '13px' }}>⚠️ Confirme seu email para habilitar pagamentos. Verifique sua caixa de entrada.</span>
+              <button onClick={reenviarEmail} style={{ background: 'rgba(255,170,0,0.15)', border: '1px solid rgba(255,170,0,0.35)', color: '#FFAA00', borderRadius: '6px', padding: '6px 14px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}>Reenviar email</button>
+            </div>
+          )}
 
           {/* Status */}
           <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '24px' }}>

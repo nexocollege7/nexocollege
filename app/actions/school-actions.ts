@@ -81,6 +81,7 @@ export async function savePixSettings(formData: {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Nao autenticado' }
+  if (!user.email_confirmed_at) return { error: 'Confirme seu email antes de cadastrar formas de pagamento.' }
 
   const adminClient = createAdminClient()
 
@@ -221,6 +222,7 @@ export async function saveMpToken(token: string, publicKey?: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Nao autenticado' }
+  if (!user.email_confirmed_at) return { error: 'Confirme seu email antes de cadastrar formas de pagamento.' }
 
   const adminClient = createAdminClient()
 
