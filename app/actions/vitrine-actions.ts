@@ -8,7 +8,6 @@ export async function getSchoolBySlug(slug: string) {
     .from('schools')
     .select('id, name, slug, logo_url, description, primary_color, is_active, featured_course_id, featured_course_ids, live_url, live_active, pix_key, pix_holder_name, whatsapp_contact, mp_access_token, suspended_at')
     .eq('slug', slug)
-    .eq('is_active', true)
     .single()
   if (error) console.error('[vitrine] getSchoolBySlug error for slug=' + slug + ':', error.message, error.code)
   return data

@@ -1,6 +1,19 @@
 import { getSchoolBySlug, getPublishedCourses, getPublishedMentorships, getActiveReviews } from '@/app/actions/vitrine-actions'
 
 export const revalidate = 300 // 5 minutos
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const school = await getSchoolBySlug(slug)
+  return {
+    title: school?.name ?? 'NexoCollege',
+    icons: {
+      icon: '/favicon-32x32.png',
+      shortcut: '/favicon.ico',
+      apple: '/apple-touch-icon.png',
+    },
+  }
+}
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
