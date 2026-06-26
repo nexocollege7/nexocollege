@@ -91,7 +91,8 @@ export async function middleware(request: NextRequest) {
     url.pathname === '/sitemap.xml' ||
     url.pathname === '/robots.txt' ||
     url.pathname.startsWith('/esqueci-senha') ||
-    url.pathname.startsWith('/redefinir-senha')
+    url.pathname.startsWith('/redefinir-senha') ||
+    url.pathname === '/suspensa'
 
   const isMasterRoute = url.pathname.startsWith('/master')
   const isDashboardRoute = url.pathname.startsWith('/dashboard')
@@ -137,6 +138,20 @@ export async function middleware(request: NextRequest) {
       .single()
 
     const role = profile?.role || 'student'
+
+    // Owner com escola suspensa → redirecionar para /suspensa
+    if (role === 'owner' || role === 'admin') {
+      const { data: school } = await supabase
+        .from('schools')
+        .select('suspended_at')
+        .eq('owner_id', user.id)
+        .single()
+      if (school?.suspended_at) {
+        const redirect = url.clone()
+        redirect.pathname = '/suspensa'
+        return NextResponse.redirect(redirect)
+      }
+    }
 
     // Aluno tentando acessar rota de admin
     if (role === 'student' && !alunoTemAcesso(url.pathname)) {

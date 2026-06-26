@@ -111,6 +111,7 @@ export default async function CursoDetalhePage({
                 hasCoupon={!!(course as any).coupon_code}
                 hasPix={!!school.pix_key}
                 hasToken={!!school.mp_access_token}
+                escolaSuspensa={!!school.suspended_at}
               />
 
               <p className="text-gray-500 text-xs text-center mt-3">

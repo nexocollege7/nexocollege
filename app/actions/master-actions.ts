@@ -279,6 +279,32 @@ export async function deleteEscola(id: string): Promise<{ success: true } | { er
   return { success: true }
 }
 
+export async function suspenderEscola(id: string): Promise<{ success: true } | { error: string }> {
+  const authError = await verifyMaster()
+  if (authError) return { error: 'Não autorizado' }
+  const adminClient = createAdminClient()
+  const { error } = await adminClient
+    .from('schools')
+    .update({ suspended_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath(`/master/escolas/${id}`)
+  return { success: true }
+}
+
+export async function reativarEscola(id: string): Promise<{ success: true } | { error: string }> {
+  const authError = await verifyMaster()
+  if (authError) return { error: 'Não autorizado' }
+  const adminClient = createAdminClient()
+  const { error } = await adminClient
+    .from('schools')
+    .update({ suspended_at: null })
+    .eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath(`/master/escolas/${id}`)
+  return { success: true }
+}
+
 export async function deleteEscolaComSenha(
   id: string,
   senha: string,
@@ -313,6 +339,7 @@ export async function getEscolaDetalhe(id: string): Promise<{
   totalCursos: number
   mentor_module: boolean
   mentor_module_activated_at: string | null
+  suspended_at: string | null
 } | null> {
   const authError = await verifyMaster()
   if (authError) return null
@@ -321,7 +348,7 @@ export async function getEscolaDetalhe(id: string): Promise<{
 
   const { data: school, error } = await adminClient
     .from('schools')
-    .select('id, name, slug, plan, is_active, phone, created_at, owner_id, mentor_module, mentor_module_activated_at')
+    .select('id, name, slug, plan, is_active, phone, created_at, owner_id, mentor_module, mentor_module_activated_at, suspended_at')
     .eq('id', id)
     .single()
 
@@ -362,6 +389,7 @@ export async function getEscolaDetalhe(id: string): Promise<{
     totalCursos: totalCursos ?? 0,
     mentor_module: school.mentor_module,
     mentor_module_activated_at: school.mentor_module_activated_at,
+    suspended_at: school.suspended_at,
   }
 }
 

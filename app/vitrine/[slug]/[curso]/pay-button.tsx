@@ -16,6 +16,7 @@ type Props = {
   hasCoupon: boolean
   hasPix: boolean
   hasToken: boolean
+  escolaSuspensa: boolean
 }
 
 type CouponResult = {
@@ -36,6 +37,7 @@ export function PayButton({
   hasCoupon,
   hasPix,
   hasToken,
+  escolaSuspensa,
 }: Props) {
   const [loading, setLoading] = useState(false)
   const [couponInput, setCouponInput] = useState('')
@@ -134,6 +136,21 @@ export function PayButton({
   }
 
   const displayPrice = couponResult ? couponResult.finalPrice : price
+
+  if (escolaSuspensa) {
+    return (
+      <button
+        disabled
+        style={{
+          width: '100%', padding: '14px', borderRadius: '12px', border: 'none',
+          backgroundColor: '#2A2A2A', color: '#666666', fontWeight: '700',
+          fontSize: '16px', cursor: 'not-allowed', opacity: 0.7, fontFamily: 'inherit',
+        }}
+      >
+        Escola temporariamente indisponível
+      </button>
+    )
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

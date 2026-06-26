@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import MentorModuleAcoes from '@/components/master/MentorModuleAcoes'
 import DeleteEscolaModal from '@/components/master/DeleteEscolaModal'
+import SuspenderEscolaAcoes from '@/components/master/SuspenderEscolaAcoes'
 
 const PLANO_LABEL: Record<string, string> = {
   starter: 'Starter',
@@ -161,6 +162,7 @@ export default async function EscolaDetalhePage({
           { label: 'Status', value: escola.is_active ? 'Ativa' : 'Suspensa' },
           { label: 'Cadastro', value: formatarData(escola.created_at) },
           { label: 'Slug', value: escola.slug ?? '—' },
+          { label: 'Suspensão master', value: escola.suspended_at ? formatarData(escola.suspended_at) : 'Nenhuma' },
         ].map((item, idx, arr) => (
           <div
             key={item.label}
@@ -259,6 +261,7 @@ export default async function EscolaDetalhePage({
           </a>
         )}
         <DeleteEscolaModal escolaId={escola.id} escolaNome={escola.name} />
+        <SuspenderEscolaAcoes escolaId={escola.id} suspensa={!!escola.suspended_at} />
       </div>
     </div>
   )
