@@ -13,11 +13,24 @@ export default async function AceitarTermosPage() {
   const adminClient = createAdminClient()
   const { data: profile } = await adminClient
     .from('users')
-    .select('role')
+    .select('role, school_id')
     .eq('id', user.id)
     .single()
 
-  const role = profile?.role === 'student' ? 'student' : 'school'
+  // Usuário sem profile = foi deletado (escola excluída) — encerrar sessão
+  if (!profile) redirect('/auth/signout?msg=escola-excluida')
+
+  // Não-student com school_id definido: verificar se a escola ainda existe
+  if (profile.role !== 'student' && profile.school_id) {
+    const { data: escola } = await adminClient
+      .from('schools')
+      .select('id')
+      .eq('id', profile.school_id)
+      .single()
+    if (!escola) redirect('/auth/signout?msg=escola-excluida')
+  }
+
+  const role = profile.role === 'student' ? 'student' : 'school'
   const pendingDocs = await getPendingDocuments(user.id, role)
 
   // Se não há documentos pendentes, redirecionar para o dashboard

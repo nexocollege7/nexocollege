@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
 export default function LoginPage() {
@@ -12,6 +12,8 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const msg = searchParams.get('msg')
   const supabase = createClient()
 
   async function handleLogin() {
@@ -70,6 +72,12 @@ export default function LoginPage() {
         </div>
 
         <div style={{ backgroundColor: '#1A1A1A', borderRadius: '16px', padding: '36px', border: '1px solid #2A2A2A' }}>
+
+          {msg === 'escola-excluida' && (
+            <div style={{ backgroundColor: 'rgba(255,170,0,0.1)', border: '1px solid rgba(255,170,0,0.3)', color: '#FFAA00', borderRadius: '8px', padding: '12px 16px', marginBottom: '24px', fontSize: '14px' }}>
+              Sua escola foi encerrada e seu acesso foi removido.
+            </div>
+          )}
 
           {error && (
             <div style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '8px', padding: '12px 16px', marginBottom: '24px', fontSize: '14px' }}>

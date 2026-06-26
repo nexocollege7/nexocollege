@@ -57,7 +57,15 @@ export default async function DashboardLayout({
 
   const { profile, schoolName, schoolLogoUrl, schoolSlug } = await getLayoutData(user.id)
 
-  const role = profile?.role || 'student'
+  // Usuário sem profile = foi deletado (escola excluída) — encerrar sessão
+  if (!profile) redirect('/auth/signout?msg=escola-excluida')
+
+  // Não-student com school_id definido mas escola não existe mais — encerrar sessão
+  if (profile.role !== 'student' && profile.school_id && !schoolName) {
+    redirect('/auth/signout?msg=escola-excluida')
+  }
+
+  const role = profile.role || 'student'
   const docRole = role === 'student' ? 'student' : 'school'
   const pendingDocs = await getPendingDocuments(user.id, docRole)
   if (pendingDocs.length > 0) {
