@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getEscolas, toggleEscolaStatus, alterarPlanoEscola, deleteEscola } from '@/app/actions/master-actions'
+import { getEscolas, toggleEscolaStatus, alterarPlanoEscola, deleteEscolaComSenha } from '@/app/actions/master-actions'
 import Link from 'next/link'
 
 type ModalExcluir = { id: string; nome: string }
@@ -12,6 +12,7 @@ export default function EscolasPage() {
   const [salvando, setSalvando] = useState<string | null>(null)
   const [excluindo, setExcluindo] = useState(false)
   const [modalExcluir, setModalExcluir] = useState<ModalExcluir | null>(null)
+  const [senhaExcluir, setSenhaExcluir] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -36,14 +37,19 @@ export default function EscolasPage() {
 
   async function handleExcluir() {
     if (!modalExcluir) return
-    setExcluindo(true)
-    const result = await deleteEscola(modalExcluir.id)
-    setExcluindo(false)
-    setModalExcluir(null)
-    if ('error' in result) {
-      alert('Erro ao excluir: ' + result.error)
+    if (!senhaExcluir.trim()) {
+      alert('Digite sua senha para confirmar.')
       return
     }
+    setExcluindo(true)
+    const result = await deleteEscolaComSenha(modalExcluir.id, senhaExcluir)
+    setExcluindo(false)
+    if ('error' in result) {
+      alert(result.error)
+      return
+    }
+    setModalExcluir(null)
+    setSenhaExcluir('')
     setEscolas(escolas.filter((e) => e.id !== modalExcluir.id))
   }
 
@@ -65,7 +71,7 @@ export default function EscolasPage() {
       {/* Modal de confirmação de exclusão */}
       {modalExcluir && (
         <div
-          onClick={() => !excluindo && setModalExcluir(null)}
+          onClick={() => { if (!excluindo) { setModalExcluir(null); setSenhaExcluir('') } }}
           style={{
             position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.75)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -88,15 +94,28 @@ export default function EscolasPage() {
               </h2>
             </div>
 
-            <p style={{ color: '#CCCCCC', fontSize: '14px', lineHeight: '1.6', margin: '0 0 24px' }}>
+            <p style={{ color: '#CCCCCC', fontSize: '14px', lineHeight: '1.6', margin: '0 0 16px' }}>
               Tem certeza que deseja excluir a escola{' '}
               <strong style={{ color: '#F0F0F0' }}>{modalExcluir.nome}</strong>?{' '}
               Esta ação é irreversível e removerá todos os dados relacionados.
             </p>
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', color: '#888888', fontSize: '13px', marginBottom: '8px' }}>
+                Digite sua senha para confirmar
+              </label>
+              <input
+                type="password"
+                value={senhaExcluir}
+                onChange={(e) => setSenhaExcluir(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleExcluir()}
+                placeholder="Sua senha"
+                style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #3A3A3A', backgroundColor: '#111111', color: '#F0F0F0', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
 
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button
-                onClick={() => setModalExcluir(null)}
+                onClick={() => { setModalExcluir(null); setSenhaExcluir('') }}
                 disabled={excluindo}
                 style={{
                   padding: '10px 20px', borderRadius: '8px', border: '1px solid #2A2A2A',
