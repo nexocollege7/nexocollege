@@ -2,6 +2,7 @@ import { getEscolaDetalhe } from '@/app/actions/master-actions'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import MentorModuleAcoes from '@/components/master/MentorModuleAcoes'
+import DeleteEscolaModal from '@/components/master/DeleteEscolaModal'
 
 const PLANO_LABEL: Record<string, string> = {
   starter: 'Starter',
@@ -257,6 +258,7 @@ export default async function EscolaDetalhePage({
             Ver vitrine ↗
           </a>
         )}
+        <DeleteEscolaModal escolaId={escola.id} escolaNome={escola.name} />
       </div>
     </div>
   )

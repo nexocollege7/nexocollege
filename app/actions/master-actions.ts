@@ -279,6 +279,26 @@ export async function deleteEscola(id: string): Promise<{ success: true } | { er
   return { success: true }
 }
 
+export async function deleteEscolaComSenha(
+  id: string,
+  senha: string,
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autorizado' }
+
+  const masterEmail = process.env.MASTER_EMAIL
+  if (!masterEmail || user.email !== masterEmail) return { error: 'Acesso negado' }
+
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: masterEmail,
+    password: senha,
+  })
+  if (signInError) return { error: 'Senha incorreta. A escola não foi excluída.' }
+
+  return deleteEscola(id)
+}
+
 export async function getEscolaDetalhe(id: string): Promise<{
   id: string
   name: string
