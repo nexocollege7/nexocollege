@@ -244,7 +244,9 @@ export async function getOrCreatePendingEnrollment(
 
   if (existing) {
     if (existing.status === 'refused' || existing.status === 'released') {
-      const { data: school } = await supabase
+      const adminClient = createAdminClient()
+
+      const { data: school } = await adminClient
         .from('schools')
         .select('pending_expiration_days')
         .eq('id', schoolId)
@@ -257,7 +259,7 @@ export async function getOrCreatePendingEnrollment(
         Date.now() + school.pending_expiration_days * 86_400_000
       ).toISOString()
 
-      const { error: updateError } = await supabase
+      const { error: updateError } = await adminClient
         .from('pending_enrollments')
         .update({
           status: 'awaiting_payment',
