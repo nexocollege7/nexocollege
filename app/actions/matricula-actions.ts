@@ -156,7 +156,8 @@ export async function getAlunosGestao() {
   const { data: authData } = await adminClient.auth.admin.listUsers({ perPage: 1000 })
   const emailMap = new Map((authData?.users || []).map((u) => [u.id, u.email]))
 
-  const linhas = (enrollments || [])
+  // Alunos com matrícula
+  const linhasComMatricula = (enrollments || [])
     .filter((e) => alunosMap.has(e.student_id))
     .map((e) => {
       const aluno = alunosMap.get(e.student_id)!
@@ -182,7 +183,27 @@ export async function getAlunosGestao() {
       }
     })
 
-  const studentsAtivos = new Set(linhas.filter((l) => !l.expirado).map((l) => l.studentId))
+  // Alunos sem nenhuma matrícula — aparecem na lista com dados zerados
+  const studentIdsComMatricula = new Set(linhasComMatricula.map((l) => l.studentId))
+  const linhasSemMatricula = (alunos || [])
+    .filter((a) => !studentIdsComMatricula.has(a.id))
+    .map((a) => ({
+      enrollmentId: '',
+      studentId: a.id,
+      fullName: a.full_name,
+      avatarUrl: a.avatar_url,
+      email: emailMap.get(a.id) ?? '',
+      courseId: '',
+      courseTitle: 'Sem matrícula',
+      enrolledAt: new Date().toISOString(),
+      progresso: 0,
+      dias: null,
+      expirado: false,
+    }))
+
+  const linhas = [...linhasComMatricula, ...linhasSemMatricula]
+
+  const studentsAtivos = new Set(linhasComMatricula.filter((l) => !l.expirado).map((l) => l.studentId))
 
   return {
     totalAlunos: alunos?.length ?? 0,
