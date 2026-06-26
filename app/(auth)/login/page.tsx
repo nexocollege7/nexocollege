@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
-export default function LoginPage() {
+function LoginContent() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -140,5 +140,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginContent />
+    </Suspense>
   )
 }
