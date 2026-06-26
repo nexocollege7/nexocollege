@@ -50,7 +50,7 @@ export async function getDashboardStats(schoolIdParam?: string) {
   if (!schoolId) return null
 
   const [
-    { count: totalAlunosCount },
+    { data: alunosAtivosRows },
     { count: totalCursos },
     { count: totalCertificados },
     { data: pagamentos },
@@ -58,7 +58,7 @@ export async function getDashboardStats(schoolIdParam?: string) {
   ] = await Promise.all([
     supabase
       .from('enrollments')
-      .select('*', { count: 'exact', head: true })
+      .select('student_id')
       .eq('school_id', schoolId)
       .eq('status', 'active')
       .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`),
@@ -72,7 +72,7 @@ export async function getDashboardStats(schoolIdParam?: string) {
     `).eq('school_id', schoolId).order('enrolled_at', { ascending: false }).limit(20),
   ])
 
-  const totalAlunos = totalAlunosCount ?? 0
+  const totalAlunos = new Set((alunosAtivosRows ?? []).map((e) => e.student_id)).size
 
   const pagamentosTipados = (pagamentos ?? []) as Pagamento[]
   const matriculasTipadas = (matriculasRecentes ?? []) as unknown as MatriculaRecente[]
