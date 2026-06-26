@@ -26,14 +26,20 @@ const sora = Sora({
 
 export const metadata: Metadata = {
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'NexoCollege',
   },
-  icons: {
-    apple: '/apple-touch-icon.png',
-  },
+
   metadataBase: new URL('https://nexocollege.com.br'),
   title: {
     default: 'NexoCollege — Crie sua escola online gratuitamente',
