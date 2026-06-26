@@ -1,4 +1,6 @@
 import { getSchoolBySlug, getCourseBySlug } from '@/app/actions/vitrine-actions'
+
+export const revalidate = 300 // 5 minutos
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, BookOpen, GraduationCap, Clock, Users } from 'lucide-react'
