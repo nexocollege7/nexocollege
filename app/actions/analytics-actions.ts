@@ -50,7 +50,7 @@ export async function getDashboardStats(schoolIdParam?: string) {
   if (!schoolId) return null
 
   const [
-    { data: alunosAtivosRows },
+    { count: totalAlunosCount },
     { count: totalCursos },
     { count: totalCertificados },
     { data: pagamentos },
@@ -58,10 +58,9 @@ export async function getDashboardStats(schoolIdParam?: string) {
   ] = await Promise.all([
     supabase
       .from('enrollments')
-      .select('student_id, users!enrollments_student_id_fkey!inner(role)')
+      .select('*', { count: 'exact', head: true })
       .eq('school_id', schoolId)
       .eq('status', 'active')
-      .eq('users.role', 'student')
       .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`),
     supabase.from('courses').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
     supabase.from('certificates').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
@@ -73,7 +72,7 @@ export async function getDashboardStats(schoolIdParam?: string) {
     `).eq('school_id', schoolId).order('enrolled_at', { ascending: false }).limit(20),
   ])
 
-  const totalAlunos = new Set((alunosAtivosRows ?? []).map((e) => e.student_id)).size
+  const totalAlunos = totalAlunosCount ?? 0
 
   const pagamentosTipados = (pagamentos ?? []) as Pagamento[]
   const matriculasTipadas = (matriculasRecentes ?? []) as unknown as MatriculaRecente[]
@@ -113,7 +112,7 @@ export async function getAnalyticsCompleto(periodoDias: 30 | 60 | 90 = 30) {
 
   const [{ data: cursos }, { data: enrollments }, { data: payments }] = await Promise.all([
     adminClient.from('courses').select('id, title, status, total_lessons').eq('school_id', schoolId),
-    adminClient.from('enrollments').select('id, student_id, course_id, expires_at, users!enrollments_student_id_fkey!inner(role)').eq('school_id', schoolId).eq('status', 'active').eq('users.role', 'student'),
+    adminClient.from('enrollments').select('id, student_id, course_id, expires_at, users!enrollments_student_id_fkey!inner(role)').eq('school_id', schoolId).eq('status', 'active').eq('users.role', 'student').limit(2000),
     adminClient.from('payments').select('amount, course_id, paid_at').eq('school_id', schoolId).eq('status', 'approved'),
   ])
 
@@ -121,7 +120,7 @@ export async function getAnalyticsCompleto(periodoDias: 30 | 60 | 90 = 30) {
   const studentIds = [...new Set((enrollments || []).map((e) => e.student_id))]
 
   const { data: progresso } = studentIds.length
-    ? await adminClient.from('lesson_progress').select('student_id, course_id').in('student_id', studentIds).eq('is_completed', true)
+    ? await adminClient.from('lesson_progress').select('student_id, course_id').in('student_id', studentIds).eq('is_completed', true).limit(10000)
     : { data: [] as any[] }
 
   const progressoCount = new Map<string, number>()
