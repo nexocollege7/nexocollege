@@ -84,6 +84,9 @@ function CadastroContent() {
   const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
   const [slugSugestoes, setSlugSugestoes] = useState<string[]>([])
   const [slugCustom, setSlugCustom] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   function gerarSlugLocal(nome: string): string {
     const palavras = nome
@@ -159,6 +162,12 @@ function CadastroContent() {
 
     if (password.length < 6) {
       setError('A senha precisa ter pelo menos 6 caracteres.')
+      setLoading(false)
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setError('As senhas não coincidem. Verifique e tente novamente.')
       setLoading(false)
       return
     }
@@ -268,8 +277,29 @@ function CadastroContent() {
 
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#CCCCCC', marginBottom: '8px' }}>Senha</label>
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Minimo 6 caracteres"
-                  style={{ width: '100%', backgroundColor: '#111111', border: '1px solid #333333', borderRadius: '8px', padding: '12px 16px', color: '#FFFFFF', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }} />
+                <div style={{ position: 'relative' }}>
+                  <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres"
+                    style={{ width: '100%', backgroundColor: '#111111', border: '1px solid #333333', borderRadius: '8px', padding: '12px 44px 12px 16px', color: '#FFFFFF', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }} />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)}
+                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#888888', fontSize: '16px', padding: '0' }}>
+                    {showPassword ? '🙈' : '👁️'}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#CCCCCC', marginBottom: '8px' }}>Confirmar senha</label>
+                <div style={{ position: 'relative' }}>
+                  <input type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repita a senha"
+                    style={{ width: '100%', backgroundColor: '#111111', border: `1px solid ${confirmPassword && confirmPassword !== password ? '#FF5555' : '#333333'}`, borderRadius: '8px', padding: '12px 44px 12px 16px', color: '#FFFFFF', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }} />
+                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#888888', fontSize: '16px', padding: '0' }}>
+                    {showConfirmPassword ? '🙈' : '👁️'}
+                  </button>
+                </div>
+                {confirmPassword && confirmPassword !== password && (
+                  <p style={{ color: '#FF5555', fontSize: '12px', marginTop: '6px' }}>As senhas não coincidem.</p>
+                )}
               </div>
 
               <div style={{ borderTop: '1px solid #2A2A2A', paddingTop: '4px' }}>

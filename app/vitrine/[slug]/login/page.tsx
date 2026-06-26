@@ -72,6 +72,9 @@ export default function LoginEscolaPage() {
   const [studentDocs, setStudentDocs] = useState<LegalDocument[]>([])
   const [accepted, setAccepted] = useState<Record<string, boolean>>({})
   const [modalDoc, setModalDoc] = useState<LegalDocument | null>(null)
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -120,6 +123,12 @@ export default function LoginEscolaPage() {
 
     if (!isEmailValido(email)) {
       setEmailError('Por favor, informe um e-mail válido.')
+      setLoading(false)
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setError('As senhas não coincidem. Verifique e tente novamente.')
       setLoading(false)
       return
     }
@@ -270,15 +279,43 @@ export default function LoginEscolaPage() {
 
             <div>
               <label style={{ color: '#888888', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Senha</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #2A2A2A', backgroundColor: '#0D0D0D', color: '#F0F0F0', fontSize: '14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
-                onKeyDown={(e) => e.key === 'Enter' && (modo === 'login' ? handleLogin() : handleCadastro())}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  style={{ width: '100%', padding: '12px 44px 12px 14px', borderRadius: '8px', border: '1px solid #2A2A2A', backgroundColor: '#0D0D0D', color: '#F0F0F0', fontSize: '14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                  onKeyDown={(e) => e.key === 'Enter' && (modo === 'login' ? handleLogin() : handleCadastro())}
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#888888', fontSize: '16px', padding: '0' }}>
+                  {showPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
             </div>
+
+            {modo === 'cadastro' && (
+              <div>
+                <label style={{ color: '#888888', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Confirmar senha</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Repita a senha"
+                    style={{ width: '100%', padding: '12px 44px 12px 14px', borderRadius: '8px', border: `1px solid ${confirmPassword && confirmPassword !== password ? '#FF5555' : '#2A2A2A'}`, backgroundColor: '#0D0D0D', color: '#F0F0F0', fontSize: '14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                  />
+                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#888888', fontSize: '16px', padding: '0' }}>
+                    {showConfirmPassword ? '🙈' : '👁️'}
+                  </button>
+                </div>
+                {confirmPassword && confirmPassword !== password && (
+                  <p style={{ color: '#FF5555', fontSize: '12px', marginTop: '6px' }}>As senhas não coincidem.</p>
+                )}
+              </div>
+            )}
 
             {/* LGPD — só no cadastro */}
             {modo === 'cadastro' && studentDocs.length > 0 && (
