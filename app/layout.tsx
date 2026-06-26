@@ -25,6 +25,15 @@ const sora = Sora({
 });
 
 export const metadata: Metadata = {
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'NexoCollege',
+  },
+  icons: {
+    apple: '/apple-touch-icon.png',
+  },
   metadataBase: new URL('https://nexocollege.com.br'),
   title: {
     default: 'NexoCollege — Crie sua escola online gratuitamente',
