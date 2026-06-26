@@ -161,11 +161,11 @@ export default function LoginEscolaPage() {
       ])
 
       // Pequeno delay para garantir que a sessão foi estabelecida
-      await new Promise(resolve => setTimeout(resolve, 500))
+      await new Promise(resolve => setTimeout(resolve, 800))
     }
 
-    router.push(redirectTo)
-    router.refresh()
+    // Usar window.location para forçar reload completo e propagar sessão
+    window.location.href = redirectTo
   }
 
   if (loadingSchool) {
