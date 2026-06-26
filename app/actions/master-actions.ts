@@ -150,9 +150,13 @@ export async function toggleEscolaStatus(escolaId: string, isActive: boolean) {
   const adminClient = createAdminClient()
   const { error } = await adminClient
     .from('schools')
-    .update({ is_active: isActive })
+    .update({
+      is_active: isActive,
+      suspended_at: isActive ? null : new Date().toISOString(),
+    })
     .eq('id', escolaId)
   if (error) return { error: error.message }
+  revalidatePath('/master/escolas')
   return { success: true }
 }
 
