@@ -15,6 +15,7 @@ type Props = {
   primaryColor: string
   hasCoupon: boolean
   hasPix: boolean
+  hasToken: boolean
 }
 
 type CouponResult = {
@@ -34,6 +35,7 @@ export function PayButton({
   primaryColor,
   hasCoupon,
   hasPix,
+  hasToken,
 }: Props) {
   const [loading, setLoading] = useState(false)
   const [couponInput, setCouponInput] = useState('')
@@ -207,29 +209,45 @@ export function PayButton({
       )}
 
       {/* Botão principal */}
-      <button
-        onClick={handlePay}
-        disabled={loading}
-        style={{
-          width: '100%', padding: '14px', borderRadius: '12px', border: 'none',
-          backgroundColor: loading ? '#555' : primaryColor,
-          color: '#0D0D0D', fontWeight: '700', fontSize: '16px',
-          cursor: loading ? 'not-allowed' : 'pointer',
-          opacity: loading ? 0.6 : 1,
-          fontFamily: 'inherit',
-          transition: 'opacity 0.15s',
-        }}
-      >
-        {loading
-          ? 'Processando...'
-          : isFree
-          ? '🎁 Acessar gratuitamente'
-          : couponResult
-          ? `Matricular por R$${fmt(displayPrice)}`
-          : 'Matricular agora'}
-      </button>
+      {!isFree && !hasToken && hasPix ? (
+        <Link
+          href={`/vitrine/${schoolSlug}/${courseSlug}/pix`}
+          style={{
+            display: 'block', textAlign: 'center', width: '100%', padding: '14px',
+            borderRadius: '12px', border: 'none', backgroundColor: primaryColor,
+            color: '#0D0D0D', fontWeight: '700', fontSize: '16px', textDecoration: 'none',
+            fontFamily: 'inherit',
+          }}
+        >
+          Pagar com PIX
+        </Link>
+      ) : (
+        <button
+          onClick={handlePay}
+          disabled={loading}
+          style={{
+            width: '100%', padding: '14px', borderRadius: '12px', border: 'none',
+            backgroundColor: loading ? '#555' : primaryColor,
+            color: '#0D0D0D', fontWeight: '700', fontSize: '16px',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            opacity: loading ? 0.6 : 1,
+            fontFamily: 'inherit',
+            transition: 'opacity 0.15s',
+          }}
+        >
+          {loading
+            ? 'Processando...'
+            : isFree
+            ? '🎁 Acessar gratuitamente'
+            : couponResult
+            ? `Matricular por R$${fmt(displayPrice)}`
+            : hasToken && hasPix
+            ? 'Pagar com Cartão ou PIX (Mercado Pago)'
+            : 'Matricular agora'}
+        </button>
+      )}
 
-      {!isFree && hasPix && (
+      {!isFree && hasToken && hasPix && (
         <Link
           href={`/vitrine/${schoolSlug}/${courseSlug}/pix`}
           style={{
@@ -239,7 +257,7 @@ export function PayButton({
             fontFamily: 'inherit',
           }}
         >
-          Pagar com PIX (manual)
+          Pagar com PIX direto
         </Link>
       )}
     </div>

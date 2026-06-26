@@ -108,6 +108,7 @@ export default async function CursoDetalhePage({
                 primaryColor={school.primary_color || '#22c55e'}
                 hasCoupon={!!(course as any).coupon_code}
                 hasPix={!!school.pix_key}
+                hasToken={!!school.mp_access_token}
               />
 
               <p className="text-gray-500 text-xs text-center mt-3">

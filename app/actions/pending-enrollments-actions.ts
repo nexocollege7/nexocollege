@@ -238,11 +238,40 @@ export async function getOrCreatePendingEnrollment(
     .select('id, status, receipt_url')
     .eq('student_id', user.id)
     .eq('course_id', courseId)
-    .in('status', ['awaiting_payment', 'awaiting_release'])
+    .in('status', ['awaiting_payment', 'awaiting_release', 'refused', 'released'])
     .maybeSingle()
     .returns<{ id: string; status: string; receipt_url: string | null }>()
 
   if (existing) {
+    if (existing.status === 'refused' || existing.status === 'released') {
+      const { data: school } = await supabase
+        .from('schools')
+        .select('pending_expiration_days')
+        .eq('id', schoolId)
+        .single()
+        .returns<{ pending_expiration_days: number }>()
+
+      if (!school) return { success: false, error: 'Escola não encontrada' }
+
+      const expiresAt = new Date(
+        Date.now() + school.pending_expiration_days * 86_400_000
+      ).toISOString()
+
+      const { error: updateError } = await supabase
+        .from('pending_enrollments')
+        .update({
+          status: 'awaiting_payment',
+          receipt_url: null,
+          admin_note: null,
+          expires_at: expiresAt,
+        })
+        .eq('id', existing.id)
+
+      if (updateError) return { success: false, error: updateError.message }
+
+      return { success: true, id: existing.id, status: 'awaiting_payment', receiptUrl: null }
+    }
+
     return {
       success: true,
       id: existing.id,

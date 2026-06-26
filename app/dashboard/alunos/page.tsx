@@ -404,8 +404,25 @@ export default function AlunosPage() {
     setEstendendoId(null)
   }
 
-  const linhasFiltradas = dados.linhas.filter((l) => {
-    if (filtroCurso && l.courseId !== filtroCurso) return false
+  type AlunoAgrupado = LinhaAluno & { cursoCount: number; courseIds: string[] }
+
+  const alunosAgrupados = new Map<string, AlunoAgrupado>()
+  for (const l of dados.linhas) {
+    const existing = alunosAgrupados.get(l.studentId)
+    if (!existing) {
+      alunosAgrupados.set(l.studentId, { ...l, cursoCount: 1, courseIds: [l.courseId] })
+    } else {
+      existing.cursoCount += 1
+      existing.courseIds.push(l.courseId)
+      if (new Date(l.enrolledAt) > new Date(existing.enrolledAt)) {
+        const { cursoCount, courseIds } = existing
+        alunosAgrupados.set(l.studentId, { ...l, cursoCount, courseIds })
+      }
+    }
+  }
+
+  const linhasFiltradas = [...alunosAgrupados.values()].filter((l) => {
+    if (filtroCurso && !l.courseIds.includes(filtroCurso)) return false
     if (busca) {
       const termo = busca.toLowerCase()
       const nome = (l.fullName || '').toLowerCase()
@@ -501,7 +518,7 @@ export default function AlunosPage() {
             </thead>
             <tbody>
               {linhasFiltradas.map((l) => (
-                <tr key={l.enrollmentId} style={{ borderBottom: '1px solid #1A1A1A' }}>
+                <tr key={l.studentId} style={{ borderBottom: '1px solid #1A1A1A' }}>
                   <td style={{ padding: '12px 16px' }}>
                     <button
                       onClick={() => setSelectedStudentId(l.studentId)}
@@ -520,7 +537,9 @@ export default function AlunosPage() {
                     </button>
                   </td>
                   <td style={{ padding: '12px 16px', color: '#888888', whiteSpace: 'nowrap' }}>{l.email}</td>
-                  <td style={{ padding: '12px 16px', color: '#CCCCCC', whiteSpace: 'nowrap' }}>{l.courseTitle}</td>
+                  <td style={{ padding: '12px 16px', color: '#CCCCCC', whiteSpace: 'nowrap' }}>
+                    {l.cursoCount === 1 ? l.courseTitle : `${l.cursoCount} cursos`}
+                  </td>
                   <td style={{ padding: '12px 16px', color: '#888888', whiteSpace: 'nowrap' }}>
                     {new Date(l.enrolledAt).toLocaleDateString('pt-BR')}
                   </td>
