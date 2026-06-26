@@ -72,6 +72,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://nexocollege.com.br',
   },
+  verification: {
+    google: 'ewYJdD2wU4lX6zroQtpke3I_q4-hQxF2L3ouCBjKveQ',
+  },
 };
 
 export default function RootLayout({
