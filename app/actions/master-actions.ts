@@ -192,13 +192,15 @@ export async function deleteEscola(id: string): Promise<{ success: true } | { er
     .eq('school_id', id)
   const courseIds = (courses ?? []).map((c) => c.id)
 
-  // 2. lesson_progress via enrollments da escola (query correta, sem cast inválido)
+  // 2. lesson_progress via enrollments da escola + coletar student_ids antes de deletar
+  let studentIds: string[] = []
   if (courseIds.length > 0) {
     const { data: enrollments } = await adminClient
       .from('enrollments')
-      .select('id')
+      .select('id, student_id')
       .in('course_id', courseIds)
     const enrollmentIds = (enrollments ?? []).map((e) => e.id)
+    studentIds = [...new Set((enrollments ?? []).map((e) => e.student_id))]
     if (enrollmentIds.length > 0) {
       await adminClient.from('lesson_progress').delete().in('enrollment_id', enrollmentIds)
     }
@@ -206,6 +208,10 @@ export async function deleteEscola(id: string): Promise<{ success: true } | { er
   // 3. enrollments via courses da escola
   if (courseIds.length > 0) {
     await adminClient.from('enrollments').delete().in('course_id', courseIds)
+  }
+  // Deletar alunos do auth.users (têm school_id NULL, vinculados apenas via enrollments)
+  for (const studentId of studentIds) {
+    await adminClient.auth.admin.deleteUser(studentId)
   }
 
   // 4. payments
@@ -273,6 +279,11 @@ export async function deleteEscola(id: string): Promise<{ success: true } | { er
   if (ownerError) {
     console.error('Erro ao deletar owner:', ownerError)
     return { error: ownerError.message }
+  }
+
+  // Deletar owner do auth.users
+  if (escolaData?.owner_id) {
+    await adminClient.auth.admin.deleteUser(escolaData.owner_id)
   }
 
   revalidatePath('/master/escolas')
