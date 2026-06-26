@@ -89,7 +89,9 @@ export async function middleware(request: NextRequest) {
     url.pathname.startsWith('/api/register-school') ||
     url.pathname.startsWith('/api/webhook') ||
     url.pathname === '/sitemap.xml' ||
-    url.pathname === '/robots.txt'
+    url.pathname === '/robots.txt' ||
+    url.pathname.startsWith('/esqueci-senha') ||
+    url.pathname.startsWith('/redefinir-senha')
 
   const isMasterRoute = url.pathname.startsWith('/master')
   const isDashboardRoute = url.pathname.startsWith('/dashboard')
