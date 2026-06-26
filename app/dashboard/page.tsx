@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
+import { unstable_cache } from 'next/cache'
 import { getDashboardStats } from '@/app/actions/analytics-actions'
 import OnboardingBanner from '@/components/OnboardingBanner'
 import AnalyticsSection from '@/app/dashboard/analytics-section'
@@ -13,34 +14,44 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const adminClient = createAdminClient()
+  const getDashboardData = unstable_cache(
+    async () => {
+      const adminClient = createAdminClient()
 
-  const { data: profile } = await adminClient
-    .from('users')
-    .select('role, school_id, full_name')
-    .eq('id', user.id)
-    .single()
+      const { data: profile } = await adminClient
+        .from('users')
+        .select('role, school_id, full_name')
+        .eq('id', user.id)
+        .single()
+
+      const { data: escola } = await adminClient
+        .from('schools')
+        .select('id, name, slug, primary_color, plan, mentor_module')
+        .eq('id', profile?.school_id)
+        .single()
+
+      const { data: planoLimites } = await adminClient
+        .from('plans')
+        .select('max_students, max_courses')
+        .eq('slug', escola?.plan ?? 'starter')
+        .single()
+
+      const { count: totalCursos } = await adminClient
+        .from('courses')
+        .select('*', { count: 'exact', head: true })
+        .eq('school_id', escola?.id)
+
+      return { profile, escola, planoLimites, totalCursos }
+    },
+    [`dashboard-page-${user.id}`],
+    { revalidate: 120, tags: [`user-${user.id}`] }
+  )
+
+  const { profile, escola, planoLimites, totalCursos } = await getDashboardData()
 
   const role = profile?.role || 'student'
 
   if (role === 'student') redirect('/dashboard/meus-cursos')
-
-  const { data: escola } = await adminClient
-    .from('schools')
-    .select('id, name, slug, primary_color, plan, mentor_module')
-    .eq('id', profile?.school_id)
-    .single()
-
-  const { data: planoLimites } = await adminClient
-    .from('plans')
-    .select('max_students, max_courses')
-    .eq('slug', escola?.plan ?? 'starter')
-    .single()
-
-  const { count: totalCursos } = await adminClient
-    .from('courses')
-    .select('*', { count: 'exact', head: true })
-    .eq('school_id', escola?.id)
 
   const isPrimeiroAcesso = (totalCursos || 0) === 0
 
