@@ -3,7 +3,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-export async function createUserProfile(userId: string, fullName: string, role: 'student' | 'admin' = 'student') {
+export async function createUserProfile(userId: string, fullName: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+  if (user.id !== userId) return { error: 'Acesso negado' }
+
   const adminClient = createAdminClient()
 
   const { data: existing } = await adminClient
@@ -19,7 +24,7 @@ export async function createUserProfile(userId: string, fullName: string, role: 
     .insert({
       id: userId,
       full_name: fullName,
-      role,
+      role: 'student',
       created_at: new Date().toISOString(),
     })
 

@@ -31,7 +31,7 @@ export default function MeusCursosPage() {
         .filter((id): id is string => Boolean(id))
 
       const progressResults = await Promise.all(
-        courseIds.map((courseId) => getLessonProgress(me.id, courseId))
+        courseIds.map((courseId) => getLessonProgress(courseId))
       )
 
       const prog: { [courseId: string]: number } = {}

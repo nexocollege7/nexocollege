@@ -55,7 +55,7 @@ export default async function DashboardPage() {
 
   const isPrimeiroAcesso = (totalCursos || 0) === 0
 
-  const stats = await getDashboardStats(escola?.id)
+  const stats = await getDashboardStats()
 
   if (isPrimeiroAcesso) {
     return (

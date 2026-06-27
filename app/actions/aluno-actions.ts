@@ -59,42 +59,16 @@ export async function getEscolasAoVivo() {
   return escolas || []
 }
 
-export async function getCourseWithLessons(courseId: string) {
+
+export async function getLessonProgress(courseId: string) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
 
-  const { data: course } = await supabase
-    .from('courses')
-    .select(`
-      *,
-      schools!courses_school_id_fkey ( name, primary_color ),
-      modules (
-        id,
-        title,
-        position,
-        lessons (
-          id,
-          title,
-          type,
-          video_url,
-          content,
-          duration_sec,
-          position,
-          is_free
-        )
-      )
-    `)
-    .eq('id', courseId)
-    .single()
-
-  return course
-}
-
-export async function getLessonProgress(studentId: string, courseId: string) {
-  const supabase = await createClient()
   const { data } = await supabase
     .from('lesson_progress')
     .select('lesson_id, is_completed')
-    .eq('student_id', studentId)
+    .eq('student_id', user.id)
     .eq('course_id', courseId)
   return data || []
 }

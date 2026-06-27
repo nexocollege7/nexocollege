@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { matriculaValida } from '@/lib/enrollment'
 
 async function atualizarTotalAulas(supabase: any, courseId: string) {
@@ -61,6 +62,33 @@ export async function atualizarAula(
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autenticado' }
+
+  const adminClient = createAdminClient()
+
+  // Verifica que a aula pertence à escola do usuário autenticado
+  const { data: lesson } = await adminClient
+    .from('lessons')
+    .select('course_id')
+    .eq('id', aulaId)
+    .single()
+
+  if (!lesson) return { error: 'Aula não encontrada' }
+
+  const { data: course } = await adminClient
+    .from('courses')
+    .select('school_id')
+    .eq('id', lesson.course_id)
+    .single()
+
+  if (!course) return { error: 'Curso não encontrado' }
+
+  const { data: school } = await supabase
+    .from('schools')
+    .select('id')
+    .eq('owner_id', user.id)
+    .single()
+
+  if (!school || course.school_id !== school.id) return { error: 'Acesso negado' }
 
   const { data, error } = await supabase
     .from('lessons')
@@ -174,6 +202,33 @@ export async function salvarMateriais(aulaId: string, links: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autenticado' }
+
+  const adminClient = createAdminClient()
+
+  // Verifica que a aula pertence à escola do usuário autenticado
+  const { data: lesson } = await adminClient
+    .from('lessons')
+    .select('course_id')
+    .eq('id', aulaId)
+    .single()
+
+  if (!lesson) return { error: 'Aula não encontrada' }
+
+  const { data: course } = await adminClient
+    .from('courses')
+    .select('school_id')
+    .eq('id', lesson.course_id)
+    .single()
+
+  if (!course) return { error: 'Curso não encontrado' }
+
+  const { data: school } = await supabase
+    .from('schools')
+    .select('id')
+    .eq('owner_id', user.id)
+    .single()
+
+  if (!school || course.school_id !== school.id) return { error: 'Acesso negado' }
 
   const { error } = await supabase
     .from('lessons')

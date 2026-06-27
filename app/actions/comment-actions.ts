@@ -211,6 +211,7 @@ export async function deleteComment(commentId: string) {
 export async function getLessonComments(lessonId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
 
   const adminClient = createAdminClient()
 

@@ -16,35 +16,31 @@ export type MatriculaRecente = {
   courses: { title: string } | null
 }
 
-export async function getDashboardStats(schoolIdParam?: string) {
+export async function getDashboardStats() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
   let schoolId: string | null = null
 
-  if (schoolIdParam) {
-    schoolId = schoolIdParam
-  } else {
-    // Buscar perfil para verificar role
-    const { data: profile } = await supabase
-      .from('users')
-      .select('role, school_id')
-      .eq('id', user.id)
-      .single()
+  // Buscar perfil para verificar role
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role, school_id')
+    .eq('id', user.id)
+    .single()
 
-    if (profile?.role === 'collaborator') {
-      // Colaborador usa o school_id do perfil
-      schoolId = profile.school_id
-    } else {
-      // Dono da escola busca pelo owner_id
-      const { data: school } = await supabase
-        .from('schools')
-        .select('id')
-        .eq('owner_id', user.id)
-        .single()
-      schoolId = school?.id || null
-    }
+  if (profile?.role === 'collaborator') {
+    // Colaborador usa o school_id do perfil
+    schoolId = profile.school_id
+  } else {
+    // Dono da escola busca pelo owner_id
+    const { data: school } = await supabase
+      .from('schools')
+      .select('id')
+      .eq('owner_id', user.id)
+      .single()
+    schoolId = school?.id || null
   }
 
   if (!schoolId) return null
