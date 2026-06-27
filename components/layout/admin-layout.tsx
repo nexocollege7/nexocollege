@@ -1,13 +1,14 @@
 'use client'
 
 import Image from 'next/image'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Sidebar } from './sidebar'
 import { SidebarAluno } from './sidebar-aluno'
 import { SidebarMentorGuest } from './sidebar-mentor-guest'
 import { Header } from './header'
 import { SessionProvider } from '@/components/auth/session-provider'
 import { ProfessorOnlineBanner } from '@/components/ProfessorOnlineBanner'
+import { SplashScreen } from '@/components/SplashScreen'
 
 interface AdminLayoutProps {
   children: React.ReactNode
@@ -27,9 +28,16 @@ export function AdminLayout({ children, user, title }: AdminLayoutProps) {
   const isAluno = user.role === 'student'
   const isMentorGuest = user.role === 'mentor_guest'
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [splashKey] = useState<number>(() => Date.now())
+  const [showSplash, setShowSplash] = useState<boolean>(true)
+
+  useEffect(() => {
+    setShowSplash(true)
+  }, [])
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0D0D0D' }}>
+      {showSplash && <SplashScreen key={splashKey} onComplete={() => setShowSplash(false)} />}
       <SessionProvider />
 
       {/* OVERLAY — aparece atrás do drawer no mobile */}

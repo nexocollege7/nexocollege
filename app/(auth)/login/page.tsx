@@ -34,7 +34,7 @@ function LoginContent() {
     if (profile.isMaster) {
       router.push('/master')
     } else if (profile.role === 'collaborator') {
-      router.push('/dashboard')
+      window.location.href = '/dashboard/meus-cursos?t=' + Date.now()
     } else if (profile.role === 'student') {
       if (profile.school_id) {
         const { data: school } = await supabase
@@ -48,12 +48,10 @@ function LoginContent() {
           return
         }
       }
-      router.push('/dashboard/meus-cursos')
+      window.location.href = '/dashboard/meus-cursos?t=' + Date.now()
     } else {
-      router.push('/dashboard')
+      window.location.href = '/dashboard/meus-cursos?t=' + Date.now()
     }
-
-    router.refresh()
   }
 
   return (
