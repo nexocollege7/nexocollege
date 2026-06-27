@@ -91,13 +91,6 @@ export default async function DashboardPage() {
     { label: 'Receita Total', value: `R$ ${stats.receita.toFixed(2)}`, icon: '💰', color: '#7C4DFF', bg: '#1E0E3F', link: null },
   ]
 
-  const acessoRapido = [
-    { label: 'Novo Curso', icon: '➕', href: '/dashboard/cursos/novo', cor: cor },
-    { label: 'Ver Alunos', icon: '👥', href: '/dashboard/alunos', cor: '#60A5FA' },
-    { label: 'Mensagens', icon: '💬', href: '/dashboard/mensagens', cor: '#7C4DFF' },
-    { label: 'Minha Vitrine', icon: '🌐', href: '/dashboard/vitrine', cor: '#FACC15' },
-    { label: 'Minha Escola', icon: '🏫', href: '/dashboard/escola', cor: '#888888' },
-  ]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -307,40 +300,6 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* Acesso rapido */}
-      <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '20px' }}>
-        <h2 style={{ color: '#888888', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 16px' }}>Acesso Rapido</h2>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          {acessoRapido.map((item) => {
-            const bloqueado = item.label === 'Novo Curso' && !podeCriarCurso
-            return bloqueado ? (
-              <span key={item.href} title="Limite de cursos do plano atingido — faça upgrade para criar mais" style={{
-                display: 'flex', alignItems: 'center', gap: '8px',
-                padding: '10px 16px', borderRadius: '8px',
-                border: '1px solid #2A2A2A', backgroundColor: '#111111',
-                color: '#555555', fontSize: '13px', fontWeight: '500',
-                cursor: 'not-allowed',
-              }}>
-                <span style={{ fontSize: '16px' }}>🔒</span>
-                {item.label}
-              </span>
-            ) : (
-              <Link key={item.href} href={item.href} style={{
-                display: 'flex', alignItems: 'center', gap: '8px',
-                padding: '10px 16px', borderRadius: '8px',
-                border: '1px solid #2A2A2A', backgroundColor: '#111111',
-                textDecoration: 'none', color: '#CCCCCC', fontSize: '13px', fontWeight: '500',
-                transition: 'border-color 0.2s',
-              }}>
-                <span style={{ fontSize: '16px' }}>{item.icon}</span>
-                {item.label}
-              </Link>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Matriculas e pagamentos */}
       <div className="matriculas-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
         <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '20px' }}>
           <h2 style={{ color: '#F0F0F0', fontWeight: '600', fontSize: '14px', margin: '0 0 16px' }}>Matriculas Recentes</h2>
