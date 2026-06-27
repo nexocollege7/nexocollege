@@ -1,4 +1,4 @@
-import { getSchoolBySlug, getCourseBySlug } from '@/app/actions/vitrine-actions'
+import { getSchoolBySlug, getCourseBySlug, getSchoolHasMpToken } from '@/app/actions/vitrine-actions'
 
 export const revalidate = 300 // 5 minutos
 import Link from 'next/link'
@@ -15,7 +15,10 @@ export default async function CursoDetalhePage({
   const school = await getSchoolBySlug(slug)
   if (!school) notFound()
 
-  const course = await getCourseBySlug(curso, school.id)
+  const [course, hasMpToken] = await Promise.all([
+    getCourseBySlug(curso, school.id),
+    getSchoolHasMpToken(school.id),
+  ])
   if (!course) notFound()
 
   return (
@@ -110,7 +113,7 @@ export default async function CursoDetalhePage({
                 primaryColor={school.primary_color || '#22c55e'}
                 hasCoupon={!!(course as any).coupon_code}
                 hasPix={!!school.pix_key}
-                hasToken={!!school.mp_access_token}
+                hasToken={hasMpToken}
                 escolaSuspensa={!!school.suspended_at}
               />
 

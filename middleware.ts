@@ -50,6 +50,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.rewrite(rewriteUrl)
   }
 
+  // Rotas /api/ são excluídas das verificações de auth do middleware.
+  // CADA rota é responsável por verificar autenticação e ownership individualmente.
+  // Rotas intencionalmente públicas (sem auth própria):
+  //   /api/register-school  — cadastro de nova escola (rate-limited)
+  //   /api/webhook*         — webhooks do Mercado Pago (validados por HMAC)
+  //   /api/me               — lê sessão mas não exige auth obrigatória
+  // Rotas que implementam auth própria:
+  //   /api/collaborators, /api/courses, /api/pagamento*, /api/upload*,
+  //   /api/register-student e demais — verificam getUser() internamente
   if (url.pathname.startsWith('/api/')) {
     return NextResponse.next()
   }

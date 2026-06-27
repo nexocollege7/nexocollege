@@ -94,9 +94,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Limite de ${limiteColaboradores} colaborador(es) do seu plano atingido.` }, { status: 400 })
   }
 
-  // Verificar se email já existe no auth
-  const { data: existingUsers } = await adminClient.auth.admin.listUsers()
-  const existingUser = existingUsers?.users?.find(u => u.email === email)
+  // Busca usuário por email via REST API do GoTrue (O(1), sem paginação)
+  // O SDK instalado não expõe getUserByEmail, mas o endpoint suporta filtro por email
+  const authRes = await fetch(
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users?email=${encodeURIComponent(email)}&per_page=1`,
+    { headers: { Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`, apikey: process.env.SUPABASE_SERVICE_ROLE_KEY! } }
+  )
+  const authJson: { users?: { id: string; email: string }[] } = await authRes.json()
+  const existingUser = authJson.users?.find(u => u.email === email) ?? null
 
   let collaboratorUserId: string
 

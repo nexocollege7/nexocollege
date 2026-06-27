@@ -6,7 +6,7 @@ export async function getSchoolBySlug(slug: string) {
   const adminClient = createAdminClient()
   const { data, error } = await adminClient
     .from('schools')
-    .select('id, name, slug, logo_url, description, primary_color, is_active, featured_course_id, featured_course_ids, live_url, live_active, pix_key, pix_holder_name, whatsapp_contact, mp_access_token, suspended_at')
+    .select('id, name, slug, logo_url, description, primary_color, is_active, featured_course_id, featured_course_ids, live_url, live_active, pix_key, pix_holder_name, whatsapp_contact, suspended_at')
     .eq('slug', slug)
     .single()
   if (error) console.error('[vitrine] getSchoolBySlug error for slug=' + slug + ':', error.message, error.code)
@@ -76,6 +76,17 @@ export async function getPublishedMentorships(schoolId: string) {
   const openMentorshipIds = new Set((cohorts || []).map((c) => c.mentorship_id))
 
   return mentorships.map((m) => ({ ...m, has_open_cohort: openMentorshipIds.has(m.id) }))
+}
+
+// Retorna apenas se a escola tem token MP configurado — sem expor o valor do token
+export async function getSchoolHasMpToken(schoolId: string): Promise<boolean> {
+  const adminClient = createAdminClient()
+  const { data } = await adminClient
+    .from('schools')
+    .select('mp_access_token')
+    .eq('id', schoolId)
+    .single()
+  return !!data?.mp_access_token
 }
 
 export async function getMentorshipBySlug(mentorshipSlug: string, schoolId: string) {

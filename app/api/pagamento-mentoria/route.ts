@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { MercadoPagoConfig, Preference } from 'mercadopago'
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,10 +14,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Você precisa estar logado para se inscrever.' }, { status: 401 })
     }
 
-    const adminClient = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const adminClient = createAdminClient()
 
     const { data: cohort, error: cohortError } = await adminClient
       .from('mentorship_cohorts')

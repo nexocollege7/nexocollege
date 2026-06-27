@@ -57,18 +57,9 @@ export async function POST(request: NextRequest) {
 
     const adminClient = createAdminClient()
 
-    // Verificar se o email já está cadastrado (AJUSTE 3)
-    const { data: existingUsers } = await adminClient.auth.admin.listUsers({ perPage: 1000 })
-    const emailJaCadastrado = existingUsers?.users.some(
-      (u) => u.email?.toLowerCase() === email.toLowerCase()
-    )
-    if (emailJaCadastrado) {
-      return NextResponse.json(
-        { error: 'Este e-mail já está cadastrado. Faça login ou use outro e-mail.' },
-        { status: 400 }
-      )
-    }
-
+    // Criação do usuário — o Supabase retorna erro "already registered" se o email
+    // já existir, tratado logo abaixo. O pre-check via listUsers() foi removido pois
+    // era O(n) com limite de 1000 usuários e desnecessário dado o tratamento de erro.
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email,
       password,
