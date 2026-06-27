@@ -261,8 +261,29 @@ export async function enrollStudentByEmail(email: string, courseId: string) {
 
 export async function revokeEnrollment(enrollmentId: string) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
 
-  const { error } = await supabase
+  const adminClient = createAdminClient()
+
+  const { data: school } = await adminClient
+    .from('schools')
+    .select('id')
+    .eq('owner_id', user.id)
+    .single()
+
+  if (!school) return { error: 'Escola não encontrada' }
+
+  const { data: enrollment } = await adminClient
+    .from('enrollments')
+    .select('id, school_id')
+    .eq('id', enrollmentId)
+    .single()
+
+  if (!enrollment) return { error: 'Matrícula não encontrada' }
+  if (enrollment.school_id !== school.id) return { error: 'Acesso negado' }
+
+  const { error } = await adminClient
     .from('enrollments')
     .update({ status: 'canceled' })
     .eq('id', enrollmentId)
