@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { verificarPermissao } from '@/lib/plan-permissions'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import Groq from 'groq-sdk'
 
@@ -64,14 +63,6 @@ export async function POST(request: NextRequest) {
       .select('plan')
       .eq('id', schoolId)
       .single()
-
-    const permissao = await verificarPermissao({ plan: school?.plan ?? null }, 'ai_assistant')
-    if (!permissao.allowed) {
-      return NextResponse.json(
-        { error: 'Assistente IA disponível nos planos Pro, Scale e Enterprise.' },
-        { status: 403 }
-      )
-    }
 
     const apiKey = process.env.GROQ_API_KEY
     if (!apiKey) return NextResponse.json({ error: 'Configuração inválida.' }, { status: 500 })
