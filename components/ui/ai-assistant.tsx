@@ -77,7 +77,7 @@ export function AiAssistant({ profile, schoolName }: AiAssistantProps) {
       {/* Botão flutuante */}
       <button
         onClick={() => setOpen((v) => !v)}
-        aria-label={open ? 'Fechar assistente' : 'Abrir assistente IA'}
+        aria-label={open ? 'Fechar assistente' : 'Abrir Nexo Assistente'}
         style={{
           position: 'fixed',
           bottom: '24px',
@@ -141,7 +141,7 @@ export function AiAssistant({ profile, schoolName }: AiAssistantProps) {
             </div>
             <div>
               <p style={{ margin: 0, fontSize: '13px', fontWeight: '700', color: '#F0F0F0' }}>
-                Assistente IA
+                Nexo Assistente
               </p>
               <p style={{ margin: 0, fontSize: '11px', color: '#666' }}>
                 {profile === 'school' ? 'Criação de conteúdo' : 'Assistente de estudos'}

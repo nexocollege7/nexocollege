@@ -11,7 +11,6 @@ import { ProfessorOnlineBanner } from '@/components/ProfessorOnlineBanner'
 import { SplashScreen } from '@/components/SplashScreen'
 import { AiAssistant } from '@/components/ui/ai-assistant'
 
-const AI_PLANS = ['pro', 'scale', 'enterprise']
 
 interface AdminLayoutProps {
   children: React.ReactNode
@@ -144,7 +143,7 @@ export function AdminLayout({ children, user, title }: AdminLayoutProps) {
         </main>
       </div>
 
-      {!isMentorGuest && AI_PLANS.includes(user.school_plan ?? '') && (
+      {!isMentorGuest && (
         <AiAssistant
           profile={isAluno ? 'student' : 'school'}
           schoolName={user.school_name ?? 'sua escola'}
