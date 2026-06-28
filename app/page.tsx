@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { ComercialAssistant } from '@/components/ui/comercial-assistant'
 
 export default function LandingPage() {
   const [precos, setPrecos] = useState<Record<string, number>>({
@@ -630,6 +631,7 @@ export default function LandingPage() {
           <p className="foot-copy">© 2026 NexoCollege. Todos os direitos reservados.</p>
         </div>
       </footer>
+      <ComercialAssistant />
     </>
   )
 }
