@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { MercadoPagoConfig, Payment } from 'mercadopago'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createHmac } from 'crypto'
+import { createHmac, timingSafeEqual } from 'crypto'
 
 const PLANOS_VALIDOS = ['starter', 'creator', 'pro', 'scale', 'enterprise']
 
@@ -31,9 +31,18 @@ function validateMPSignature(
     return false
   }
 
+  const tsNum = parseInt(ts, 10)
+  if (isNaN(tsNum) || Date.now() / 1000 - tsNum > 300) {
+    console.warn('[webhook-upgrade] timestamp expirado ou inválido:', ts)
+    return false
+  }
+
   const manifest = `id:${paymentId};request-id:${xRequestId};ts:${ts};`
   const computed = createHmac('sha256', secret).update(manifest).digest('hex')
-  return computed === v1
+  const computedBuf = Buffer.from(computed, 'hex')
+  const v1Buf = Buffer.from(v1, 'hex')
+  if (computedBuf.length !== v1Buf.length) return false
+  return timingSafeEqual(computedBuf, v1Buf)
 }
 
 export async function POST(request: NextRequest) {

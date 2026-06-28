@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function getMeuscursos() {
   const supabase = await createClient()
@@ -77,6 +78,26 @@ export async function markLessonComplete(lessonId: string, courseId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autenticado' }
+
+  const adminClient = createAdminClient()
+
+  const { data: lesson } = await adminClient
+    .from('lessons')
+    .select('course_id')
+    .eq('id', lessonId)
+    .single()
+
+  if (!lesson || lesson.course_id !== courseId) return { error: 'Acesso negado' }
+
+  const { data: enrollment } = await adminClient
+    .from('enrollments')
+    .select('status')
+    .eq('student_id', user.id)
+    .eq('course_id', courseId)
+    .eq('status', 'active')
+    .maybeSingle()
+
+  if (!enrollment) return { error: 'Acesso negado' }
 
   const { error } = await supabase
     .from('lesson_progress')

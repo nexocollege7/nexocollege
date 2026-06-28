@@ -293,6 +293,23 @@ export async function replyToComment(commentId: string, replyContent: string) {
 
   const adminClient = createAdminClient()
 
+  const { data: comment } = await adminClient
+    .from('lesson_comments')
+    .select('school_id')
+    .eq('id', commentId)
+    .single()
+
+  if (!comment) return { error: 'Comentário não encontrado' }
+
+  const { data: ownedSchool } = await adminClient
+    .from('schools')
+    .select('id')
+    .eq('owner_id', user.id)
+    .eq('id', comment.school_id)
+    .maybeSingle()
+
+  if (!ownedSchool) return { error: 'Acesso negado' }
+
   const { error } = await adminClient
     .from('lesson_comments')
     .update({

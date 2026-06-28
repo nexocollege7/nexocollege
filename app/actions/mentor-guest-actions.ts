@@ -62,6 +62,14 @@ export async function updateClassMaterialsAsGuest(classId: string, materialsUrl:
 
   if (!classRow) return { error: 'Aula não encontrada' }
 
+  const { data: mentorship } = await supabase
+    .from('mentorships')
+    .select('mentor_id')
+    .eq('id', classRow.mentorship_id)
+    .single()
+
+  if (!mentorship || mentorship.mentor_id !== user.id) return { error: 'Acesso negado' }
+
   const { data: cohorts } = await supabase
     .from('mentorship_cohorts')
     .select('status')
@@ -100,29 +108,29 @@ export async function updateCohortLiveAsGuest(cohortId: string, formData: {
   if (!cohort) return { error: 'Turma não encontrada' }
   if (cohort.status !== 'open') return { error: 'Esta turma está encerrada.' }
 
+  const { data: mentorship } = await supabase
+    .from('mentorships')
+    .select('mentor_id, school_id')
+    .eq('id', cohort.mentorship_id)
+    .single()
+
+  if (!mentorship || mentorship.mentor_id !== user.id) return { error: 'Acesso negado' }
+
   if (formData.liveActive && !formData.liveUrl.trim()) {
     return { error: 'Cole o link da transmissão antes de iniciar' }
   }
 
   if (formData.liveActive) {
-    const { data: mentorship } = await supabase
-      .from('mentorships')
-      .select('school_id')
-      .eq('id', cohort.mentorship_id)
+    const adminClient = createAdminClient()
+    const { data: school } = await adminClient
+      .from('schools')
+      .select('plan')
+      .eq('id', mentorship.school_id)
       .single()
 
-    if (mentorship) {
-      const adminClient = createAdminClient()
-      const { data: school } = await adminClient
-        .from('schools')
-        .select('plan')
-        .eq('id', mentorship.school_id)
-        .single()
-
-      const permissao = await verificarPermissao({ plan: school?.plan ?? null }, 'live_events')
-      if (!permissao.allowed) {
-        return { error: 'Eventos ao vivo não disponíveis no plano desta escola.' }
-      }
+    const permissao = await verificarPermissao({ plan: school?.plan ?? null }, 'live_events')
+    if (!permissao.allowed) {
+      return { error: 'Eventos ao vivo não disponíveis no plano desta escola.' }
     }
   }
 

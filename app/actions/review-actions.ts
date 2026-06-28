@@ -161,7 +161,36 @@ export async function deleteReview(reviewId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autenticado' }
 
-  const { error } = await supabase
+  const adminClient = createAdminClient()
+
+  const { data: review } = await adminClient
+    .from('course_reviews')
+    .select('school_id, student_id')
+    .eq('id', reviewId)
+    .single()
+
+  if (!review) return { error: 'Depoimento não encontrado' }
+
+  const isOwnReview = review.student_id === user.id
+
+  if (!isOwnReview) {
+    const { data: ownedSchool } = await adminClient
+      .from('schools')
+      .select('id')
+      .eq('owner_id', user.id)
+      .eq('id', review.school_id)
+      .maybeSingle()
+
+    const { data: profile } = ownedSchool
+      ? { data: null }
+      : await adminClient.from('users').select('school_id').eq('id', user.id).single()
+
+    if (!ownedSchool && profile?.school_id !== review.school_id) {
+      return { error: 'Acesso negado' }
+    }
+  }
+
+  const { error } = await adminClient
     .from('course_reviews')
     .delete()
     .eq('id', reviewId)

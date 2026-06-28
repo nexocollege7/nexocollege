@@ -110,11 +110,31 @@ export async function deletarAula(aulaId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autenticado' }
 
-  const { data: aula } = await supabase
+  const adminClient = createAdminClient()
+
+  const { data: aula } = await adminClient
     .from('lessons')
     .select('course_id')
     .eq('id', aulaId)
     .single()
+
+  if (!aula?.course_id) return { error: 'Aula não encontrada' }
+
+  const { data: course } = await adminClient
+    .from('courses')
+    .select('school_id')
+    .eq('id', aula.course_id)
+    .single()
+
+  if (!course?.school_id) return { error: 'Curso não encontrado' }
+
+  const { data: school } = await supabase
+    .from('schools')
+    .select('id')
+    .eq('owner_id', user.id)
+    .single()
+
+  if (!school || course.school_id !== school.id) return { error: 'Acesso negado' }
 
   const { error } = await supabase
     .from('lessons')
@@ -122,9 +142,7 @@ export async function deletarAula(aulaId: string) {
     .eq('id', aulaId)
   if (error) return { error: error.message }
 
-  if (aula?.course_id) {
-    await atualizarTotalAulas(supabase, aula.course_id)
-  }
+  await atualizarTotalAulas(supabase, aula.course_id)
 
   return { success: true }
 }
