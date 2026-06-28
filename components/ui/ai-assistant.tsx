@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { MessageCircle, X, Send, Loader2 } from 'lucide-react'
+import { X, Send, Loader2 } from 'lucide-react'
 
 type Profile = 'school' | 'student'
 
@@ -94,13 +94,15 @@ export function AiAssistant({ profile, schoolName }: AiAssistantProps) {
           justifyContent: 'center',
           boxShadow: '0 4px 20px rgba(174,234,0,0.35)',
           transition: 'transform 0.15s ease',
+          overflow: 'hidden',
+          padding: 0,
         }}
         onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.08)')}
         onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
       >
         {open
           ? <X size={22} color="#0D0D0D" />
-          : <MessageCircle size={22} color="#0D0D0D" />
+          : <img src="/images/joao.png" alt="João" style={{ width: '52px', height: '52px', objectFit: 'cover', borderRadius: '50%' }} />
         }
       </button>
 
@@ -131,17 +133,10 @@ export function AiAssistant({ profile, schoolName }: AiAssistantProps) {
             alignItems: 'center',
             gap: '10px',
           }}>
-            <div style={{
-              width: '32px', height: '32px', borderRadius: '50%',
-              background: '#AEEA00',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <MessageCircle size={16} color="#0D0D0D" />
-            </div>
+            <img src="/images/joao.png" alt="João" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
             <div>
               <p style={{ margin: 0, fontSize: '13px', fontWeight: '700', color: '#F0F0F0' }}>
-                Nexo Assistente
+                João · Nexo Assistente
               </p>
               <p style={{ margin: 0, fontSize: '11px', color: '#666' }}>
                 {profile === 'school' ? 'Criação de conteúdo' : 'Assistente de estudos'}
