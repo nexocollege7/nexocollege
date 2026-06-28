@@ -58,8 +58,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Nome, email e senha são obrigatórios.' }, { status: 400 })
   }
 
-  if (password.length < 6) {
-    return NextResponse.json({ error: 'A senha precisa ter pelo menos 6 caracteres.' }, { status: 400 })
+  if (password.length < 8) {
+    return NextResponse.json({ error: 'A senha precisa ter pelo menos 8 caracteres.' }, { status: 400 })
   }
 
   // Buscar escola do dono

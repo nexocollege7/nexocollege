@@ -477,6 +477,21 @@ export async function enrollFreeMentorship(cohortId: string) {
     return { error: error.message }
   }
 
+  // Re-verificar após insert para capturar race condition entre requisições concorrentes
+  const { count: countPosInsert } = await supabase
+    .from('mentorship_enrollments')
+    .select('*', { count: 'exact', head: true })
+    .eq('cohort_id', cohortId)
+
+  if ((countPosInsert ?? 0) > cohort.max_students) {
+    await supabase
+      .from('mentorship_enrollments')
+      .delete()
+      .eq('cohort_id', cohortId)
+      .eq('student_id', user.id)
+    return { error: 'Vagas esgotadas para esta turma.' }
+  }
+
   revalidatePath('/dashboard/minhas-mentorias')
   return { success: true }
 }

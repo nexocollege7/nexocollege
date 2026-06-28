@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: result.init_point })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : JSON.stringify(error)
-    console.error("MP Error FULL:", JSON.stringify(error, null, 2))
+    console.error("MP Error:", error instanceof Error ? { name: error.name, message: error.message } : String(error))
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

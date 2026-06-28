@@ -96,9 +96,9 @@ export async function POST(request: NextRequest) {
     const rawMessages = Array.isArray(body.messages) ? body.messages : []
     const history: ChatMessage[] = rawMessages
       .filter((m): m is Record<string, unknown> => m !== null && typeof m === 'object')
-      .filter((m) => (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
+      .filter((m) => m.role === 'user' && typeof m.content === 'string')
       .slice(-20)
-      .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content as string }))
+      .map((m) => ({ role: 'user' as const, content: (m.content as string).slice(0, 500) }))
 
     const apiKey = process.env.GROQ_API_KEY
     if (!apiKey) return NextResponse.json({ error: 'Configuração inválida.' }, { status: 500 })

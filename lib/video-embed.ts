@@ -30,5 +30,5 @@ export function getEmbedUrl(url: string, opts: EmbedOptions = {}): string {
   }
 
   if (url.includes('pandavideo')) return url
-  return url
+  return ''
 }

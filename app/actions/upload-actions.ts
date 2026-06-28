@@ -31,7 +31,22 @@ export async function uploadThumbnail(courseId: string, formData: FormData) {
 
   if (!file || file.size === 0) return { error: 'Nenhum arquivo selecionado' }
 
-  const ext = file.name.split('.').pop()
+  const ALLOWED_MIME_TYPES: Record<string, string> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+  }
+  const MAX_FILE_SIZE = 5 * 1024 * 1024
+
+  if (!ALLOWED_MIME_TYPES[file.type]) {
+    return { error: 'Tipo de arquivo não permitido. Use JPEG, PNG ou WEBP.' }
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    return { error: 'Arquivo muito grande. Máximo de 5MB.' }
+  }
+
+  const ext = ALLOWED_MIME_TYPES[file.type]
   const fileName = `${courseId}-${Date.now()}.${ext}`
 
   const { error: uploadError } = await adminClient.storage

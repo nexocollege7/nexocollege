@@ -28,11 +28,17 @@ const nextConfig: NextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
           {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+          {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              // Next.js precisa de unsafe-inline para hidratação e estilos injetados
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              // unsafe-inline é ignorado por browsers que suportam strict-dynamic;
+              // mantido apenas como fallback para browsers legados sem suporte a strict-dynamic.
+              // unsafe-eval foi removido — Next.js App Router não o exige em produção.
+              "script-src 'self' 'unsafe-inline' 'strict-dynamic'",
               "style-src 'self' 'unsafe-inline'",
               // Imagens: self, data URIs (base64 splash), Supabase Storage
               "img-src 'self' data: blob: https://abplqkfthrytgqfwpnqx.supabase.co",

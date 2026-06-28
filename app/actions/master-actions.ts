@@ -52,23 +52,26 @@ export async function getEscolas() {
 
   const adminClient = createAdminClient()
 
-  const [{ data: schools, error }, { data: enrollmentRows }] = await Promise.all([
+  const [{ data: schools, error }, { data: enrollmentRows }, { data: schoolsComToken }] = await Promise.all([
     adminClient
       .from('schools')
       .select(`
         id, name, slug, plan, is_active, created_at, owner_name, owner_phone,
-        description, primary_color, custom_domain, mp_access_token,
+        description, primary_color, custom_domain,
         courses!school_id(count)
       `)
       .order('created_at', { ascending: false })
       .limit(200),
     adminClient.from('enrollments').select('school_id'),
+    adminClient.from('schools').select('id').not('mp_access_token', 'is', null),
   ])
 
   if (error) {
     console.error('getEscolas error:', error)
     return []
   }
+
+  const tokenSet = new Set((schoolsComToken || []).map((s) => s.id))
 
   const enrollmentCountBySchool: Record<string, number> = {}
   for (const row of enrollmentRows || []) {
@@ -77,14 +80,11 @@ export async function getEscolas() {
     }
   }
 
-  return (schools || []).map((school) => {
-    const { mp_access_token, ...rest } = school
-    return {
-      ...rest,
-      has_mp_token: !!mp_access_token,
-      enrollments: [{ count: enrollmentCountBySchool[school.id] || 0 }],
-    }
-  })
+  return (schools || []).map((school) => ({
+    ...school,
+    has_mp_token: tokenSet.has(school.id),
+    enrollments: [{ count: enrollmentCountBySchool[school.id] || 0 }],
+  }))
 }
 
 export async function criarEscola(formData: {
