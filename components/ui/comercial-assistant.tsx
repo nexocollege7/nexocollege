@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { X, Send } from 'lucide-react'
 
 type Message = { role: 'user' | 'assistant'; content: string }
@@ -16,6 +16,43 @@ export function ComercialAssistant() {
   const [loading, setLoading] = useState(false)
   const [hasOpened, setHasOpened] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const timeoutFired = useRef(false)
+  const exitFired = useRef(false)
+  const hasOpenedRef = useRef(false)
+
+  // Mantém hasOpenedRef sincronizado com o estado para uso seguro em callbacks assíncronos
+  useEffect(() => {
+    hasOpenedRef.current = hasOpened
+  }, [hasOpened])
+
+  // Gatilho 1 — tempo: abre após 15s se o visitante ainda não interagiu
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!timeoutFired.current && !exitFired.current && !hasOpenedRef.current) {
+        timeoutFired.current = true
+        exitFired.current = true
+        setOpen(true)
+        setHasOpened(true)
+      }
+    }, 15000)
+    return () => clearTimeout(timer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Gatilho 2 — exit intent: abre quando o mouse sai pelo topo da janela
+  useEffect(() => {
+    function handleMouseLeave(e: MouseEvent) {
+      if (e.clientY < 20 && !timeoutFired.current && !exitFired.current && !hasOpenedRef.current) {
+        exitFired.current = true
+        timeoutFired.current = true
+        setOpen(true)
+        setHasOpened(true)
+      }
+    }
+    document.addEventListener('mouseleave', handleMouseLeave)
+    return () => document.removeEventListener('mouseleave', handleMouseLeave)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function toggle() {
     setOpen((v) => {
