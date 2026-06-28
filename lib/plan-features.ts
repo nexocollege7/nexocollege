@@ -1,4 +1,4 @@
-export type PlanFeature = 'coupons' | 'reviews' | 'live_events' | 'custom_domain' | 'collaborators'
+export type PlanFeature = 'coupons' | 'reviews' | 'live_events' | 'custom_domain' | 'collaborators' | 'ai_assistant'
 
 export type PermissaoPlano = {
   allowed: boolean

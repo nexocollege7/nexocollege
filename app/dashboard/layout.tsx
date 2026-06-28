@@ -19,19 +19,21 @@ const getLayoutData = (userId: string) =>
       let schoolName: string | null = null
       let schoolLogoUrl: string | null = null
       let schoolSlug: string | null = null
+      let schoolPlan: string | null = null
 
       if (profile?.school_id) {
         const { data: school } = await adminClient
           .from('schools')
-          .select('name, logo_url, slug')
+          .select('name, logo_url, slug, plan')
           .eq('id', profile.school_id)
           .single()
         schoolName = school?.name ?? null
         schoolLogoUrl = school?.logo_url ?? null
         schoolSlug = school?.slug ?? null
+        schoolPlan = school?.plan ?? null
       }
 
-      return { profile, schoolName, schoolLogoUrl, schoolSlug }
+      return { profile, schoolName, schoolLogoUrl, schoolSlug, schoolPlan }
     },
     [`layout-data-${userId}`],
     { revalidate: 300, tags: [`user-${userId}`] }
@@ -55,7 +57,7 @@ export default async function DashboardLayout({
     redirect('/master')
   }
 
-  const { profile, schoolName, schoolLogoUrl, schoolSlug } = await getLayoutData(user.id)
+  const { profile, schoolName, schoolLogoUrl, schoolSlug, schoolPlan } = await getLayoutData(user.id)
 
   // Usuário sem profile = foi deletado (escola excluída) — encerrar sessão
   if (!profile) redirect('/auth/signout?msg=escola-excluida')
@@ -82,6 +84,7 @@ export default async function DashboardLayout({
         school_name: schoolName,
         school_logo_url: schoolLogoUrl,
         school_slug: schoolSlug,
+        school_plan: schoolPlan,
       }}
     >
       {children}

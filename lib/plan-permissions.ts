@@ -44,6 +44,8 @@ function planPermiteFeature(plan: PlanRow, feature: PlanFeature): boolean {
       return plan.has_custom_domain
     case 'collaborators':
       return plan.max_collaborators > 0
+    case 'ai_assistant':
+      return ['pro', 'scale', 'enterprise'].includes(plan.slug)
   }
 }
 

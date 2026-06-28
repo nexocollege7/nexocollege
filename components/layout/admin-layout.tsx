@@ -9,6 +9,9 @@ import { Header } from './header'
 import { SessionProvider } from '@/components/auth/session-provider'
 import { ProfessorOnlineBanner } from '@/components/ProfessorOnlineBanner'
 import { SplashScreen } from '@/components/SplashScreen'
+import { AiAssistant } from '@/components/ui/ai-assistant'
+
+const AI_PLANS = ['pro', 'scale', 'enterprise']
 
 interface AdminLayoutProps {
   children: React.ReactNode
@@ -20,6 +23,7 @@ interface AdminLayoutProps {
     school_name?: string | null
     school_logo_url?: string | null
     school_slug?: string | null
+    school_plan?: string | null
   }
   title?: string
 }
@@ -139,6 +143,13 @@ export function AdminLayout({ children, user, title }: AdminLayoutProps) {
           {children}
         </main>
       </div>
+
+      {!isMentorGuest && AI_PLANS.includes(user.school_plan ?? '') && (
+        <AiAssistant
+          profile={isAluno ? 'student' : 'school'}
+          schoolName={user.school_name ?? 'sua escola'}
+        />
+      )}
 
       <style>{`
         @media (max-width: 768px) {
