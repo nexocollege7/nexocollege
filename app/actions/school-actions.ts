@@ -6,13 +6,21 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { verificarPermissao, type PlanFeature, type PermissaoPlano } from '@/lib/plan-permissions'
 
-// Busca escola pelo school_id do perfil do usuário
-export async function getMySchool() {
+export async function getMySchool(schoolId?: string) {
+  const adminClient = createAdminClient()
+
+  if (schoolId) {
+    const { data } = await adminClient
+      .from('schools')
+      .select('*')
+      .eq('id', schoolId)
+      .single()
+    return data
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
-
-  const adminClient = createAdminClient()
 
   const { data: profile } = await adminClient
     .from('users')
@@ -31,8 +39,8 @@ export async function getMySchool() {
   return data
 }
 
-export async function verificarPermissaoFeature(feature: PlanFeature): Promise<PermissaoPlano> {
-  const school = await getMySchool()
+export async function verificarPermissaoFeature(feature: PlanFeature, schoolId?: string): Promise<PermissaoPlano> {
+  const school = await getMySchool(schoolId)
   if (!school) return { allowed: false }
   return verificarPermissao(school, feature)
 }
@@ -248,12 +256,24 @@ export async function saveMpToken(token: string, publicKey?: string) {
   return { success: true }
 }
 
-export async function getMpTokenStatus() {
+export async function getMpTokenStatus(schoolId?: string) {
+  const adminClient = createAdminClient()
+
+  if (schoolId) {
+    const { data } = await adminClient
+      .from('schools')
+      .select('mp_access_token, mp_public_key')
+      .eq('id', schoolId)
+      .single()
+    return {
+      hasToken: !!(data?.mp_access_token),
+      hasPublicKey: !!(data?.mp_public_key),
+    }
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { hasToken: false, hasPublicKey: false }
-
-  const adminClient = createAdminClient()
 
   const { data: profile } = await adminClient
     .from('users')
@@ -269,9 +289,9 @@ export async function getMpTokenStatus() {
     .eq('id', profile.school_id)
     .single()
 
-  return { 
+  return {
     hasToken: !!(data?.mp_access_token),
-    hasPublicKey: !!(data?.mp_public_key)
+    hasPublicKey: !!(data?.mp_public_key),
   }
 }
 

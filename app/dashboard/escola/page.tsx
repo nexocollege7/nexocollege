@@ -84,11 +84,11 @@ export default function EscolaPage() {
     if (!profileData?.school_id) { setLoading(false); return }
     setNomeCompleto(profileData.full_name || '')
 
-    // Buscar dados independentes em paralelo
+    // Buscar dados independentes em paralelo — school_id já resolvido acima
     const [schoolData, status, colabAllowed, colabsResult] = await Promise.all([
-      getMySchool(),
-      getMpTokenStatus(),
-      verificarPermissaoFeature('collaborators'),
+      getMySchool(profileData.school_id),
+      getMpTokenStatus(profileData.school_id),
+      verificarPermissaoFeature('collaborators', profileData.school_id),
       supabase
         .from('users')
         .select('id, full_name, name')
