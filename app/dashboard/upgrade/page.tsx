@@ -55,6 +55,7 @@ export default function UpgradePage() {
       if (planosDB) {
         const recursosMap: Record<string, string[]> = {
           creator: [
+            'Nexo Assistente IA',
             'Até 5 cursos',
             'Até 300 alunos',
             'Vitrine personalizada',
@@ -65,6 +66,7 @@ export default function UpgradePage() {
             '1 colaborador',
           ],
           pro: [
+            'Nexo Assistente IA',
             'Até 20 cursos',
             'Até 1.000 alunos',
             'Vitrine personalizada',
@@ -76,6 +78,7 @@ export default function UpgradePage() {
             'Suporte prioritário',
           ],
           scale: [
+            'Nexo Assistente IA',
             'Até 50 cursos',
             'Até 3.000 alunos',
             'Vitrine personalizada',
@@ -252,7 +255,7 @@ export default function UpgradePage() {
           <div style={{ fontSize: '15px', color: '#666' }}>Cursos e alunos ilimitados. Suporte dedicado. Proposta sob medida.</div>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px 32px', flex: 1, minWidth: '240px' }}>
-          {['Cursos ilimitados', 'Alunos ilimitados', 'Domínio próprio', 'Gerente dedicado', 'SLA garantido', 'Onboarding personalizado'].map(r => (
+          {['Nexo Assistente IA', 'Cursos ilimitados', 'Alunos ilimitados', 'Domínio próprio', 'Gerente dedicado', 'SLA garantido', 'Onboarding personalizado'].map(r => (
             <div key={r} style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '14px', color: '#888' }}>
               <span style={{ color: '#AEEA00', fontWeight: '900' }}>✓</span> {r}
             </div>

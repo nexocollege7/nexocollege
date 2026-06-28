@@ -442,6 +442,7 @@ export default function LandingPage() {
               {title:'Chat assíncrono',desc:'Comunicação direta entre professor e aluno dentro da plataforma.',icon:<><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></>},
               {title:'Receba pelo Mercado Pago',desc:'Conecte sua conta e receba direto. PIX, cartão e boleto. Sem intermediários.',icon:<><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></>},
               {title:'Analytics & relatórios',desc:'Acompanhe matrículas, receita e progresso dos alunos.',icon:<><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></>},
+              {title:'Nexo Assistente',desc:'Assistente de IA integrado: escolas criam cursos com ajuda da IA e alunos tiram dúvidas na hora. Disponível para todos os planos.',icon:<><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></>},
             ].map(c=>(
               <div className="acard reveal" key={c.title}>
                 <div className="ai"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{c.icon}</svg></div>
@@ -517,6 +518,7 @@ export default function LandingPage() {
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Vitrine personalizada</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Certificados automáticos</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Gateway MP próprio</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Nexo Assistente IA</span></li>
               </ul>
               <Link href="/cadastro?plano=starter" className="btn btn-ghost">Começar grátis</Link>
             </div>
@@ -531,6 +533,7 @@ export default function LandingPage() {
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Depoimentos automáticos</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab"><b>{limites.creator.max_collaborators}</b> colaborador</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Gateway MP próprio</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Nexo Assistente IA</span></li>
               </ul>
               <Link href="/cadastro?plano=creator" className="btn btn-ghost">Assinar Creator</Link>
             </div>
@@ -547,6 +550,7 @@ export default function LandingPage() {
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Gateway MP próprio</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab"><b>{limites.pro.max_collaborators}</b> colaboradores</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Suporte prioritário</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Nexo Assistente IA</span></li>
               </ul>
               <Link href="/cadastro?plano=pro" className="btn btn-primary">Assinar Pro</Link>
             </div>
@@ -563,6 +567,7 @@ export default function LandingPage() {
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Domínio próprio</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab"><b>{limites.scale.max_collaborators}</b> colaboradores</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Suporte dedicado</span></li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline className="yes" points="20 6 9 17 4 12"/></svg><span className="lab">Nexo Assistente IA</span></li>
               </ul>
               <Link href="/cadastro?plano=scale" className="btn btn-ghost">Assinar Scale</Link>
             </div>
@@ -571,7 +576,7 @@ export default function LandingPage() {
             <div style={{flex:1,minWidth:280}}>
               <div style={{fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'.14em',color:'var(--neon)',marginBottom:12}}>Enterprise</div>
               <div style={{fontSize:32,fontWeight:900,fontFamily:'var(--font-sora),Sora,sans-serif',marginBottom:8}}>Para grandes operações</div>
-              <div style={{fontSize:16,color:'var(--muted)'}}>Volume ilimitado. Suporte dedicado. Proposta sob medida.</div>
+              <div style={{fontSize:16,color:'var(--muted)'}}>Volume ilimitado. Suporte dedicado. Proposta sob medida. Nexo Assistente IA incluído.</div>
             </div>
             <div style={{textAlign:'center',minWidth:200}}>
               <div style={{fontSize:13,color:'#555',marginBottom:16}}>Preço sob consulta</div>
