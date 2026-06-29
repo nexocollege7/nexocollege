@@ -351,7 +351,7 @@ export default function LandingPage() {
         <div className="hero-glow g1"></div><div className="hero-glow g2"></div>
         <div className="wrap hero-inner">
           <div className="badge reveal">
-            <span className="star">✦</span><b>Plataforma brasileira</b>
+            <span className="star">✦</span><b>Plataforma simples</b>
             <span className="dot"></span><b>Pagamentos em PIX</b>
             <span className="dot"></span><b>Certificados automáticos</b>
           </div>

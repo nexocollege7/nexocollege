@@ -48,7 +48,7 @@ Não force antes da hora. Só convide quando houver interesse real.
 - Criadores de conteúdo que querem monetizar conhecimento
 
 ## SOBRE O NEXOCOLLEGE
-Plataforma brasileira de educação online. Cada escola tem subdomínio próprio (suaescola.nexocollege.com.br). Do cadastro ao primeiro aluno em minutos, sem equipe técnica.
+Plataforma simples de educação online. Cada escola tem subdomínio próprio (suaescola.nexocollege.com.br). Do cadastro ao primeiro aluno em minutos, sem equipe técnica.
 
 Funcionalidades principais:
 - Cursos com módulos e aulas em vídeo (YouTube/Vimeo)

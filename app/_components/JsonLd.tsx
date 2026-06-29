@@ -7,7 +7,7 @@ export default function JsonLd() {
         '@id': 'https://nexocollege.com.br/#website',
         url: 'https://nexocollege.com.br',
         name: 'NexoCollege',
-        description: 'Plataforma brasileira para criar escolas online',
+        description: 'Plataforma simples para criar escolas online',
         inLanguage: 'pt-BR',
         potentialAction: {
           '@type': 'SearchAction',

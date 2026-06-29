@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     default: 'NexoCollege — Crie sua escola online gratuitamente',
     template: '%s | NexoCollege',
   },
-  description: 'Plataforma brasileira para criar escolas online. Crie cursos, gerencie alunos, emita certificados e receba pagamentos via Mercado Pago. Comece gratuitamente.',
+  description: 'Plataforma simples para criar escolas online. Crie cursos, gerencie alunos, emita certificados e receba pagamentos via Mercado Pago. Comece gratuitamente.',
   keywords: ['plataforma de cursos online', 'criar escola online', 'EAD brasileiro', 'vender cursos online', 'plataforma EAD', 'certificado online', 'Mercado Pago cursos', 'escola virtual'],
   authors: [{ name: 'NexoCollege', url: 'https://nexocollege.com.br' }],
   creator: 'NexoCollege',
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
     url: 'https://nexocollege.com.br',
     siteName: 'NexoCollege',
     title: 'NexoCollege — Crie sua escola online gratuitamente',
-    description: 'Plataforma brasileira para criar escolas online. Cursos, certificados e pagamentos via Mercado Pago. Comece grátis.',
+    description: 'Plataforma simples para criar escolas online. Cursos, certificados e pagamentos via Mercado Pago. Comece grátis.',
     images: [
       {
         url: '/og-image.png',
@@ -80,7 +80,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'NexoCollege — Crie sua escola online gratuitamente',
-    description: 'Plataforma brasileira para criar escolas online. Comece grátis.',
+    description: 'Plataforma simples para criar escolas online. Comece grátis.',
     images: ['/og-image.png'],
     creator: '@nexocollege',
   },
