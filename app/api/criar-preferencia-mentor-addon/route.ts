@@ -60,6 +60,7 @@ export async function POST(_request: NextRequest) {
           }
         ],
         external_reference: `mentor-addon|${school.id}|${user.id}`,
+        statement_descriptor: "NEXOTECNOLOGIA",
         back_urls: {
           success: `${baseUrl}/pagamento/mentor-sucesso`,
           failure: `${baseUrl}/dashboard/mentor-module?erro=pagamento`,

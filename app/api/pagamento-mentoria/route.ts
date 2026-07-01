@@ -105,6 +105,7 @@ export async function POST(request: NextRequest) {
           }
         ],
         external_reference: `mentoria|${cohortId}|${user.id}`,
+        statement_descriptor: "NEXOTECNOLOGIA",
         notification_url: `${baseUrl}/api/pagamento/webhook?school_id=${mentorship.school_id}`,
         back_urls: {
           success: `${baseUrl}/dashboard/minhas-mentorias`,

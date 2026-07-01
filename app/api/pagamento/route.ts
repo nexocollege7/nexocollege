@@ -85,6 +85,7 @@ export async function POST(request: NextRequest) {
           }
         ],
         external_reference: `${courseId}|${user.id}|${appliedCoupon}|${appliedDiscount}`,
+        statement_descriptor: "NEXOTECNOLOGIA",
         notification_url: `${baseUrl}/api/pagamento/webhook`,
       }
     })

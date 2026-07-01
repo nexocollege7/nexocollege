@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
           }
         ],
         external_reference: `upgrade|${profile.school_id}|${plano}|${user.id}`,
+        statement_descriptor: "NEXOTECNOLOGIA",
         back_urls: {
           success: `${baseUrl}/pagamento/upgrade-sucesso?plano=${plano}`,
           failure: `${baseUrl}/dashboard/upgrade?erro=pagamento`,
