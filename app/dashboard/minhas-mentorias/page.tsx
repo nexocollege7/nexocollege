@@ -5,11 +5,13 @@ import { useEffect, useState } from 'react'
 import { getMyMentorshipEnrollments } from '@/app/actions/mentor-actions'
 import { GraduationCap, Calendar, Radio } from 'lucide-react'
 import { AulaComentarios } from '@/components/AulaComentarios'
+import VideoRoom from '@/components/ui/VideoRoom'
 
 function MentoriaCard({ insc }: { insc: any }) {
   const cohort = insc.mentorship_cohorts
   const mentoria = cohort?.mentorships
   if (!mentoria) return null
+  const [videoRoomUrl, setVideoRoomUrl] = useState<string | null>(null)
   const aulas = (mentoria.mentorship_classes || []).slice().sort((a: any, b: any) => a.position - b.position)
 
   return (
@@ -31,14 +33,26 @@ function MentoriaCard({ insc }: { insc: any }) {
       </div>
 
       {cohort.live_active && cohort.live_url && (
-        <a href={cohort.live_url} target="_blank" rel="noreferrer" style={{
-          display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px',
-          backgroundColor: 'rgba(255,68,68,0.1)', border: '1px solid #FF4444',
-          borderRadius: '8px', marginBottom: '16px', textDecoration: 'none',
-        }}>
+        <button
+          onClick={() => setVideoRoomUrl(cohort.live_url as string)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px',
+            backgroundColor: 'rgba(255,68,68,0.1)', border: '1px solid #FF4444',
+            borderRadius: '8px', marginBottom: '16px', cursor: 'pointer', width: '100%',
+          }}
+        >
           <Radio size={16} color="#FF4444" />
-          <span style={{ color: '#FF4444', fontWeight: '700', fontSize: '13px' }}>🔴 Transmissão ao vivo agora — entrar →</span>
-        </a>
+          <span style={{ color: '#FF4444', fontWeight: '700', fontSize: '13px' }}>
+            🔴 Sessão ao vivo agora — entrar
+          </span>
+        </button>
+      )}
+      {videoRoomUrl && (
+        <VideoRoom
+          url={videoRoomUrl}
+          isMentor={false}
+          onLeave={() => setVideoRoomUrl(null)}
+        />
       )}
 
       {aulas.length > 0 && (

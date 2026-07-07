@@ -21,6 +21,7 @@ import { verificarPermissaoFeature } from '@/app/actions/school-actions'
 import { PlanLock } from '@/components/PlanLock'
 import { AulaComentarios } from '@/components/AulaComentarios'
 import type { PermissaoPlano } from '@/lib/plan-permissions'
+import VideoRoom from '@/components/ui/VideoRoom'
 
 export default function EditarMentoriaPage() {
   const params = useParams()
@@ -46,6 +47,9 @@ export default function EditarMentoriaPage() {
   const [mentorAtual, setMentorAtual] = useState<{ full_name: string; isGuest: boolean } | null>(null)
   const [guestForm, setGuestForm] = useState({ name: '', email: '', password: '' })
   const [criandoGuest, setCriandoGuest] = useState(false)
+
+  const [videoRoomUrl, setVideoRoomUrl] = useState<string | null>(null)
+  const [videoRoomCohortId, setVideoRoomCohortId] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -168,14 +172,35 @@ export default function EditarMentoriaPage() {
     setCohorts(cohorts.map((c) => c.id === cohortId ? { ...c, status: 'archived', live_active: false } : c))
   }
 
-  async function handleAlternarLiveTurma(cohort: any) {
-    const novoStatus = !cohort.live_active
-    const liveUrl = liveEdits[cohort.id] ?? cohort.live_url ?? ''
+  async function handleAlternarLiveTurma(cohort: { id: string; live_active: boolean; live_url: string | null }) {
     setSavingLiveId(cohort.id)
-    const result = await updateCohortLive(cohort.id, id, { liveUrl, liveActive: novoStatus })
-    setSavingLiveId(null)
-    if (result?.error) { showMsg('Erro: ' + result.error); return }
-    setCohorts(cohorts.map((c) => c.id === cohort.id ? { ...c, live_url: liveUrl, live_active: novoStatus } : c))
+    try {
+      if (!cohort.live_active) {
+        const res = await fetch('/api/mentoria/create-room', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cohortId: cohort.id }),
+        })
+        const data = (await res.json()) as { url?: string; error?: string }
+        if (!res.ok || !data.url) { showMsg('Erro: ' + (data.error ?? 'Falha ao criar sala')); return }
+        setCohorts(cohorts.map((c) => c.id === cohort.id ? { ...c, live_url: data.url ?? null, live_active: true } : c))
+        setVideoRoomUrl(data.url)
+        setVideoRoomCohortId(cohort.id)
+      } else {
+        const res = await fetch('/api/mentoria/delete-room', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cohortId: cohort.id }),
+        })
+        const data = (await res.json()) as { success?: boolean; error?: string }
+        if (!res.ok) { showMsg('Erro: ' + (data.error ?? 'Falha ao encerrar sala')); return }
+        setCohorts(cohorts.map((c) => c.id === cohort.id ? { ...c, live_url: null, live_active: false } : c))
+        setVideoRoomUrl(null)
+        setVideoRoomCohortId(null)
+      }
+    } finally {
+      setSavingLiveId(null)
+    }
   }
 
   if (loading) return (
@@ -489,25 +514,29 @@ export default function EditarMentoriaPage() {
                     <PlanLock upgradeRequired={permissaoLive.upgradeRequired} mensagem="Eventos ao vivo disponíveis a partir do plano Pro" />
                   ) : (
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                      <input
-                        placeholder="Link da transmissão ao vivo desta turma"
-                        style={{ ...input, flex: 1, minWidth: '200px' }}
-                        value={liveEdits[c.id] ?? c.live_url ?? ''}
-                        onChange={(e) => setLiveEdits({ ...liveEdits, [c.id]: e.target.value })}
-                        disabled={c.live_active}
-                      />
                       <button
-                        onClick={() => handleAlternarLiveTurma(c)}
-                        disabled={savingLiveId === c.id || (!c.live_active && !(liveEdits[c.id] ?? c.live_url ?? '').trim())}
-                        style={{
-                          ...btnPrimary,
-                          backgroundColor: c.live_active ? '#FF4444' : '#7C4DFF',
-                          whiteSpace: 'nowrap',
-                          opacity: savingLiveId === c.id ? 0.6 : 1,
+                        onClick={() => {
+                          if (c.live_active && c.live_url) {
+                            setVideoRoomUrl(c.live_url)
+                            setVideoRoomCohortId(c.id)
+                          } else {
+                            void handleAlternarLiveTurma(c)
+                          }
                         }}
+                        disabled={savingLiveId === c.id}
+                        style={{ backgroundColor: c.live_active ? '#7C4DFF' : '#22c55e', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}
                       >
-                        {savingLiveId === c.id ? 'Aguarde...' : c.live_active ? 'Encerrar transmissão' : 'Iniciar transmissão'}
+                        {savingLiveId === c.id ? 'Aguarde...' : c.live_active ? 'Entrar na sessão' : 'Iniciar sessão Daily'}
                       </button>
+                      {c.live_active && (
+                        <button
+                          onClick={() => void handleAlternarLiveTurma(c)}
+                          disabled={savingLiveId === c.id}
+                          style={{ backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}
+                        >
+                          Encerrar sessão
+                        </button>
+                      )}
                     </div>
                   )
                 )}
@@ -541,6 +570,26 @@ export default function EditarMentoriaPage() {
           </button>
         </div>
       </div>
+
+      {videoRoomUrl && (
+        <VideoRoom
+          url={videoRoomUrl}
+          isMentor={true}
+          onLeave={() => setVideoRoomUrl(null)}
+          onEnd={async () => {
+            if (videoRoomCohortId) {
+              await fetch('/api/mentoria/delete-room', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cohortId: videoRoomCohortId }),
+              })
+              setCohorts(cohorts.map((c) => c.id === videoRoomCohortId ? { ...c, live_url: null, live_active: false } : c))
+            }
+            setVideoRoomUrl(null)
+            setVideoRoomCohortId(null)
+          }}
+        />
+      )}
     </div>
   )
 }

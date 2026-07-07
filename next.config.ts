@@ -26,7 +26,7 @@ const nextConfig: NextConfig = {
           { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          { key: 'Permissions-Policy', value: 'camera=*, microphone=*, geolocation=()' },
           {
             key: 'Strict-Transport-Security',
             value: 'max-age=63072000; includeSubDomains; preload',
@@ -43,7 +43,7 @@ const nextConfig: NextConfig = {
               // API e WebSocket do Supabase + Mercado Pago API
               "connect-src 'self' https://abplqkfthrytgqfwpnqx.supabase.co wss://abplqkfthrytgqfwpnqx.supabase.co https://api.mercadopago.com",
               // Iframes: YouTube, Vimeo, Panda Video
-              "frame-src 'self' https://www.youtube.com https://player.vimeo.com https://*.pandavideo.com.br",
+              "frame-src 'self' https://www.youtube.com https://player.vimeo.com https://*.pandavideo.com.br https://*.daily.co",
               // Fontes e workers
               "font-src 'self' data:",
               "worker-src 'self' blob:",
