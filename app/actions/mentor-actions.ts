@@ -693,3 +693,124 @@ export async function updateClassScheduledAt(classId: string, mentorshipId: stri
   revalidatePath(`/dashboard/mentorias/${mentorshipId}`)
   return { success: true }
 }
+
+export async function getMentoresEscola() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const schoolId = await getSchoolId(user.id)
+  if (!schoolId) return []
+
+  const { data: mentorias } = await supabase
+    .from('mentorships')
+    .select('id, title, mentor_id')
+    .eq('school_id', schoolId)
+    .not('mentor_id', 'is', null)
+
+  if (!mentorias || mentorias.length === 0) return []
+
+  const mentorIds = [...new Set(mentorias.map((m) => m.mentor_id as string))]
+
+  const adminClient = createAdminClient()
+  const { data: profiles } = await adminClient
+    .from('users')
+    .select('id, full_name, role')
+    .in('id', mentorIds)
+
+  const { data: authData } = await adminClient.auth.admin.listUsers({ perPage: 1000 })
+  const emailMap: Record<string, string> = {}
+  for (const u of authData?.users ?? []) {
+    emailMap[u.id] = u.email ?? ''
+  }
+
+  return mentorias.map((m) => {
+    const profile = profiles?.find((p) => p.id === m.mentor_id)
+    return {
+      mentorshipId: m.id,
+      mentorshipTitle: m.title,
+      mentorId: m.mentor_id as string,
+      fullName: profile?.full_name ?? '',
+      role: (profile?.role ?? 'mentor_guest') as string,
+      email: emailMap[m.mentor_id as string] ?? '',
+    }
+  })
+}
+
+export async function inabilitarMentor(mentorId: string, schoolId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const callerSchoolId = await getSchoolId(user.id)
+  if (!callerSchoolId || callerSchoolId !== schoolId) return { error: 'Acesso negado' }
+
+  const { data: mentorship } = await supabase
+    .from('mentorships')
+    .select('id')
+    .eq('school_id', schoolId)
+    .eq('mentor_id', mentorId)
+    .maybeSingle()
+
+  if (!mentorship) return { error: 'Mentor não vinculado a esta escola' }
+
+  const adminClient = createAdminClient()
+  const { error } = await adminClient
+    .from('users')
+    .update({ role: 'mentor_guest_inactive' })
+    .eq('id', mentorId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/dashboard/mentores')
+  return { success: true }
+}
+
+export async function reabilitarMentor(mentorId: string, schoolId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const callerSchoolId = await getSchoolId(user.id)
+  if (!callerSchoolId || callerSchoolId !== schoolId) return { error: 'Acesso negado' }
+
+  const { data: mentorship } = await supabase
+    .from('mentorships')
+    .select('id')
+    .eq('school_id', schoolId)
+    .eq('mentor_id', mentorId)
+    .maybeSingle()
+
+  if (!mentorship) return { error: 'Mentor não vinculado a esta escola' }
+
+  const adminClient = createAdminClient()
+  const { error } = await adminClient
+    .from('users')
+    .update({ role: 'mentor_guest' })
+    .eq('id', mentorId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/dashboard/mentores')
+  return { success: true }
+}
+
+export async function removerMentor(mentorshipId: string, schoolId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const callerSchoolId = await getSchoolId(user.id)
+  if (!callerSchoolId || callerSchoolId !== schoolId) return { error: 'Acesso negado' }
+
+  const { error } = await supabase
+    .from('mentorships')
+    .update({ mentor_id: null })
+    .eq('id', mentorshipId)
+    .eq('school_id', schoolId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/dashboard/mentores')
+  return { success: true }
+}

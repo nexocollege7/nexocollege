@@ -101,7 +101,8 @@ export async function middleware(request: NextRequest) {
     url.pathname === '/robots.txt' ||
     url.pathname.startsWith('/esqueci-senha') ||
     url.pathname.startsWith('/redefinir-senha') ||
-    url.pathname === '/suspensa'
+    url.pathname === '/suspensa' ||
+    url.pathname === '/acesso-bloqueado'
 
   const isMasterRoute = url.pathname.startsWith('/master')
   const isDashboardRoute = url.pathname.startsWith('/dashboard')
@@ -166,6 +167,13 @@ export async function middleware(request: NextRequest) {
     if (role === 'student' && !alunoTemAcesso(url.pathname)) {
       const redirect = url.clone()
       redirect.pathname = '/dashboard/meus-cursos'
+      return NextResponse.redirect(redirect)
+    }
+
+    // Mentor inabilitado → página de acesso bloqueado
+    if (role === 'mentor_guest_inactive') {
+      const redirect = url.clone()
+      redirect.pathname = '/acesso-bloqueado'
       return NextResponse.redirect(redirect)
     }
 

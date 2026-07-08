@@ -144,7 +144,7 @@ export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, o
         {[
           ...menuItems.slice(0, 3),
           ...(['creator', 'pro', 'scale', 'enterprise'].includes(planoEscola) ? [{ href: '/dashboard/depoimentos', label: 'Depoimentos', icon: '🌟' }] : []),
-          ...(mentorModule ? [{ href: '/dashboard/mentorias', label: 'Mentorias', icon: '🎓' }, { href: '/dashboard/mensagens', label: 'Mensagens', icon: '💬' }] : []),
+          ...(mentorModule ? [{ href: '/dashboard/mentorias', label: 'Mentorias', icon: '🎓' }, { href: '/dashboard/mentores', label: 'Mentores', icon: '👨‍🏫' }, { href: '/dashboard/mensagens', label: 'Mensagens', icon: '💬' }] : []),
           ...(['pro', 'scale', 'enterprise'].includes(planoEscola) ? [{ href: '/dashboard/comunicados', label: 'Comunicados', icon: '📣' }, { href: '/dashboard/chamados', label: 'Suporte ao Aluno', icon: '🎫' }, { href: '/dashboard/ao-vivo', label: 'Ao Vivo', icon: '📡' }] : []),
           ...menuItems.slice(3),
         ].map((item) => {
