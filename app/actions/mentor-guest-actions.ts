@@ -49,6 +49,54 @@ export async function getMyMentorshipAsGuest() {
   }
 }
 
+export async function getMyMentorshipsAsGuest() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data: mentorships } = await supabase
+    .from('mentorships')
+    .select('*')
+    .eq('mentor_id', user.id)
+    .order('created_at', { ascending: false })
+
+  if (!mentorships || mentorships.length === 0) return []
+
+  const adminClient = createAdminClient()
+
+  return Promise.all(
+    mentorships.map(async (mentorship) => {
+      const [{ data: classes }, { data: cohorts }, { data: school }] = await Promise.all([
+        supabase
+          .from('mentorship_classes')
+          .select('*')
+          .eq('mentorship_id', mentorship.id)
+          .order('position', { ascending: true }),
+        supabase
+          .from('mentorship_cohorts')
+          .select('*')
+          .eq('mentorship_id', mentorship.id)
+          .order('created_at', { ascending: false }),
+        adminClient
+          .from('schools')
+          .select('name, logo_url, primary_color')
+          .eq('id', mentorship.school_id)
+          .single(),
+      ])
+
+      const hasOpenCohort = (cohorts || []).some((c) => c.status === 'open')
+
+      return {
+        ...mentorship,
+        school,
+        classes: classes || [],
+        cohorts: cohorts || [],
+        hasOpenCohort,
+      }
+    })
+  )
+}
+
 export async function updateClassMaterialsAsGuest(classId: string, materialsUrl: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

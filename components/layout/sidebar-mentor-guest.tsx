@@ -86,7 +86,7 @@ export function SidebarMentorGuest() {
           <span style={{ fontSize: '16px' }}>🎓</span>
           {!collapsed && 'Minha Mentoria'}
         </div>
-        <Link href="/dashboard/minha-mentoria/ministrar" style={{ textDecoration: 'none' }}>
+        <Link href="/dashboard/minha-mentoria" style={{ textDecoration: 'none' }}>
           <div style={{
             display: 'flex', alignItems: 'center', gap: '10px',
             padding: collapsed ? '10px' : '10px 12px',
