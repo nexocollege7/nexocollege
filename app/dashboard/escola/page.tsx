@@ -91,10 +91,9 @@ export default function EscolaPage() {
       getMpTokenStatus(profileData.school_id),
       verificarPermissaoFeature('collaborators', profileData.school_id),
       supabase
-        .from('users')
-        .select('id, full_name, name, email, created_at')
-        .eq('school_id', profileData.school_id)
-        .eq('role', 'collaborator'),
+        .from('school_collaborators')
+        .select('id, user_id, name, email, created_at')
+        .eq('school_id', profileData.school_id),
     ])
 
     if (schoolData) {
@@ -530,7 +529,7 @@ export default function EscolaPage() {
                     <button
                       onClick={async () => {
                         if (!confirm(`Remover ${c.full_name || c.name} da equipe?`)) return
-                        const res = await fetch(`/api/collaborators/${c.id}`, { method: 'DELETE' })
+                        const res = await fetch(`/api/collaborators/${c.user_id}`, { method: 'DELETE' })
                         if (res.ok) setColaboradores(prev => prev.filter(x => x.id !== c.id))
                         else alert('Erro ao remover colaborador')
                       }}
