@@ -9,6 +9,15 @@ export async function POST(request: NextRequest) {
   const ip = getClientIp(request.headers)
   const { success } = await rateLimit(`${ip}:register-student`, RATE_LIMITS.default.limit, RATE_LIMITS.default.window)
   if (!success) return NextResponse.json({ error: 'Muitas requisições. Tente novamente em alguns instantes.' }, { status: 429 })
+  const { success: canRegister } = await rateLimit(
+    `${ip}:register-account`,
+    3,
+    86400
+  )
+  if (!canRegister) return NextResponse.json(
+    { error: 'Limite de criação de contas atingido para este IP. Tente novamente em 24 horas.' },
+    { status: 429 }
+  )
 
   try {
     // Verificar sessão do usuário
