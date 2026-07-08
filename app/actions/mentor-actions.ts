@@ -682,3 +682,14 @@ export async function createGuestMentor(mentorshipId: string, formData: {
   revalidatePath(`/dashboard/mentorias/${mentorshipId}`)
   return { success: true }
 }
+
+export async function updateClassScheduledAt(classId: string, mentorshipId: string, scheduledAt: string | null) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('mentorship_classes')
+    .update({ scheduled_at: scheduledAt })
+    .eq('id', classId)
+  if (error) return { error: error.message }
+  revalidatePath(`/dashboard/mentorias/${mentorshipId}`)
+  return { success: true }
+}

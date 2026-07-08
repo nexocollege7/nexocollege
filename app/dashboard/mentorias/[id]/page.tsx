@@ -50,6 +50,7 @@ export default function EditarMentoriaPage() {
 
   const [videoRoomUrl, setVideoRoomUrl] = useState<string | null>(null)
   const [videoRoomCohortId, setVideoRoomCohortId] = useState<string | null>(null)
+  const [activeClassId, setActiveClassId] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -201,6 +202,13 @@ export default function EditarMentoriaPage() {
     } finally {
       setSavingLiveId(null)
     }
+  }
+
+  async function handleIniciarSessaoAula(classId: string) {
+    const turmaBerta = cohorts.find((c: { id: string; status: string }) => c.status === 'open')
+    if (!turmaBerta) { showMsg('Nenhuma turma aberta para iniciar sessão'); return }
+    setActiveClassId(classId)
+    await handleAlternarLiveTurma(turmaBerta)
   }
 
   if (loading) return (

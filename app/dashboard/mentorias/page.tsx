@@ -77,6 +77,7 @@ export default function MentoriasPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
           {mentorias.map((m) => {
             const status = STATUS_LABEL[m.status] ?? STATUS_LABEL.draft
+            console.log('mentoria status:', m.id, m.status)
             return (
               <div key={m.id} style={{
                 backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px',
@@ -108,6 +109,15 @@ export default function MentoriasPage() {
                   }}>
                     Excluir
                   </button>
+                  {m.status === 'published' && (
+                    <Link href={`/dashboard/mentorias/${m.id}/ministrar`} style={{
+                      padding: '8px 14px', borderRadius: '8px',
+                      backgroundColor: '#7C4DFF', color: '#fff', fontSize: '13px',
+                      textDecoration: 'none', fontWeight: '600', whiteSpace: 'nowrap',
+                    }}>
+                      Ministrar
+                    </Link>
+                  )}
                 </div>
               </div>
             )
