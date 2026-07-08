@@ -158,7 +158,7 @@ export default async function DashboardPage() {
               🎓 Novo: Módulo Mentor
             </p>
             <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>
-              Venda mentorias com turmas, vagas e cronograma — +R$ 1.597/ano
+              Venda mentorias com turmas, vagas e cronograma — +R$ 1.897/ano
             </p>
           </div>
           <Link href="/dashboard/mentor-module" style={{

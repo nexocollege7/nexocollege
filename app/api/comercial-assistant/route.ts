@@ -64,8 +64,8 @@ Funcionalidades principais:
 Planos:
 - Starter: grátis — 1 curso, 30 alunos (perfeito pra começar)
 - Creator: R$ 897/ano — 5 cursos, 300 alunos, cupons
-- Pro: R$ 1.597/ano — 20 cursos, 1.000 alunos, eventos ao vivo
-- Scale: R$ 3.597/ano — 50 cursos, 3.000 alunos, domínio próprio
+- Pro: R$ 1.897/ano — 20 cursos, 1.000 alunos, eventos ao vivo
+- Scale: R$ 3.897/ano — 50 cursos, 3.000 alunos, domínio próprio
 - Enterprise: sob consulta — ilimitado
 
 ## PROBLEMAS TÉCNICOS

@@ -60,7 +60,7 @@ export default function JsonLd() {
           {
             '@type': 'Offer',
             name: 'Pro',
-            price: '1597',
+            price: '1897',
             priceCurrency: 'BRL',
             description: 'Plano Pro com 20 cursos e até 1000 alunos',
           },

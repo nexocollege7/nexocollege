@@ -8,7 +8,7 @@ import { ComercialAssistant } from '@/components/ui/comercial-assistant'
 
 export default function LandingPage() {
   const [precos, setPrecos] = useState<Record<string, number>>({
-    starter: 0, creator: 897, pro: 1597, scale: 3597,
+    starter: 0, creator: 897, pro: 1897, scale: 3897,
   })
   const [limites, setLimites] = useState<Record<string, { max_students: number, max_courses: number, max_collaborators: number }>>({
     starter: { max_students: 30, max_courses: 1, max_collaborators: 0 },
