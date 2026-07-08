@@ -40,7 +40,7 @@ export async function DELETE(
   const { error } = await adminClient
     .from('school_collaborators')
     .delete()
-    .eq('id', id)
+    .eq('user_id', id)
     .eq('school_id', school.id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

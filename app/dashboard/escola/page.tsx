@@ -515,14 +515,29 @@ export default function EscolaPage() {
                 <p style={{ margin: 0 }}>Nenhum membro adicionado ainda</p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
                 {colaboradores.map(c => (
-                  <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: '#1a1a1a', borderRadius: '8px' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#7C4DFF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '700', fontSize: '14px' }}>
+                  <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', background: '#1a1a1a', borderRadius: '10px', border: '1px solid #2A2A2A' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#7C4DFF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '700', fontSize: '16px', flexShrink: 0 }}>
                       {(c.full_name || c.name || '?').charAt(0).toUpperCase()}
                     </div>
-                    <span style={{ color: '#fff', fontSize: '14px' }}>{c.full_name || c.name}</span>
-                    <span style={{ marginLeft: 'auto', fontSize: '12px', color: '#666' }}>Colaborador</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, color: '#F0F0F0', fontSize: '14px', fontWeight: '600' }}>{c.full_name || c.name}</p>
+                      <p style={{ margin: '2px 0 0', color: '#888', fontSize: '12px' }}>{c.email}</p>
+                      {c.created_at && <p style={{ margin: '2px 0 0', color: '#555', fontSize: '11px' }}>Desde {new Date(c.created_at).toLocaleDateString('pt-BR')}</p>}
+                    </div>
+                    <span style={{ fontSize: '11px', fontWeight: '600', color: '#7C4DFF', backgroundColor: '#1A0A3A', padding: '3px 10px', borderRadius: '12px', whiteSpace: 'nowrap' }}>Colaborador</span>
+                    <button
+                      onClick={async () => {
+                        if (!confirm(`Remover ${c.full_name || c.name} da equipe?`)) return
+                        const res = await fetch(`/api/collaborators/${c.id}`, { method: 'DELETE' })
+                        if (res.ok) setColaboradores(prev => prev.filter(x => x.id !== c.id))
+                        else alert('Erro ao remover colaborador')
+                      }}
+                      style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #3A1A1A', backgroundColor: 'transparent', color: '#FF5555', fontSize: '12px', cursor: 'pointer', flexShrink: 0 }}
+                    >
+                      Remover
+                    </button>
                   </div>
                 ))}
               </div>
