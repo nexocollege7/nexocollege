@@ -120,7 +120,9 @@ export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, o
       overflow: 'hidden',
     }}>
       <div style={{
-        padding: '20px 12px',
+        height: '64px',
+        boxSizing: 'border-box' as const,
+        padding: '0 12px',
         borderBottom: '1px solid #2A2A2A',
         display: 'flex',
         alignItems: 'center',
