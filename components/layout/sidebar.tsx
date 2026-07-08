@@ -20,7 +20,7 @@ const menuItems = [
   { href: '/dashboard/suporte', label: 'Suporte', icon: '🆘' },
 ]
 
-export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, onClose?: () => void } = {}) {
+export function Sidebar({ schoolSlug, onClose, role }: { schoolSlug?: string | null, onClose?: () => void, role?: string } = {}) {
   const pathname = usePathname()
   const supabase = createClient()
   const [collapsed, setCollapsed] = useState(false)
@@ -149,7 +149,11 @@ export function Sidebar({ schoolSlug, onClose }: { schoolSlug?: string | null, o
           ...(mentorModule ? [{ href: '/dashboard/mentorias', label: 'Mentorias', icon: '🎓' }, { href: '/dashboard/mentores', label: 'Mentores', icon: '👨‍🏫' }, { href: '/dashboard/mensagens', label: 'Mensagens', icon: '💬' }] : []),
           ...(['pro', 'scale', 'enterprise'].includes(planoEscola) ? [{ href: '/dashboard/comunicados', label: 'Comunicados', icon: '📣' }, { href: '/dashboard/chamados', label: 'Suporte ao Aluno', icon: '🎫' }, { href: '/dashboard/ao-vivo', label: 'Ao Vivo', icon: '📡' }] : []),
           ...menuItems.slice(3),
-        ].map((item) => {
+        ].filter(item => role !== 'collaborator' || ![
+          '/dashboard/escola', '/dashboard/ao-vivo',
+          '/dashboard/upgrade', '/dashboard/suporte',
+        ].includes(item.href))
+        .map((item) => {
           const isActive = pathname === item.href
           const isMensagens = item.href === '/dashboard/mensagens'
           const isComentarios = item.href === '/dashboard/comentarios'

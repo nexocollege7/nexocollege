@@ -69,13 +69,13 @@ export function AdminLayout({ children, user, title }: AdminLayoutProps) {
           ? <SidebarMentorGuest />
           : isAluno
           ? <SidebarAluno onClose={() => setMobileOpen(false)} />
-          : <Sidebar schoolSlug={user.school_slug ?? null} onClose={() => setMobileOpen(false)} />
+          : <Sidebar schoolSlug={user.school_slug ?? null} onClose={() => setMobileOpen(false)} role={user.role} />
         }
       </div>
 
       {/* SIDEBAR DESKTOP — sempre visível acima de 768px */}
       <div className="desktop-sidebar">
-        {isMentorGuest ? <SidebarMentorGuest /> : isAluno ? <SidebarAluno /> : <Sidebar schoolSlug={user.school_slug ?? null} />}
+        {isMentorGuest ? <SidebarMentorGuest /> : isAluno ? <SidebarAluno /> : <Sidebar schoolSlug={user.school_slug ?? null} role={user.role} />}
       </div>
 
       {/* CONTEÚDO PRINCIPAL */}
