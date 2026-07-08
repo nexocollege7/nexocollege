@@ -8,6 +8,7 @@ import {
   updateAnnouncement,
   deleteAnnouncement,
 } from '@/app/actions/announcement-actions'
+import { SkeletonGrid, SkeletonCard } from '@/components/ui/skeleton'
 
 interface Announcement {
   id: string
@@ -112,13 +113,7 @@ export default function ComunicadosPage() {
     fontFamily: 'inherit',
   }
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '256px' }}>
-        <p style={{ color: '#888888' }}>Carregando comunicados...</p>
-      </div>
-    )
-  }
+  if (loading) return <SkeletonCard lines={3} />
 
   return (
     <div style={{ maxWidth: '720px' }}>

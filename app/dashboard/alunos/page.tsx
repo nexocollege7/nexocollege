@@ -14,6 +14,7 @@ import { getStudentLgpdData } from '@/app/actions/legal-actions'
 import { corDiasRestantes } from '@/lib/enrollment'
 import type { CursoEscola, CursoBasico, LinhaAluno } from '@/app/actions/matricula-actions'
 import type { EnrollmentComCurso, AcceitacaoComDoc } from '@/app/actions/legal-actions'
+import { SkeletonGrid, SkeletonCard } from '@/components/ui/skeleton'
 
 type StudentDetails = {
   id: string
@@ -432,13 +433,7 @@ export default function AlunosPage() {
     return true
   })
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-        <p style={{ color: '#555555' }}>Carregando alunos...</p>
-      </div>
-    )
-  }
+  if (loading) return <SkeletonGrid cards={4} />
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>

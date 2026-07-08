@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { SkeletonGrid, SkeletonCard } from '@/components/ui/skeleton'
 
 type Plano = {
   id: string
@@ -131,13 +132,7 @@ export default function UpgradePage() {
     }
   }
 
-  if (loadingPrecos) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '400px' }}>
-        <p style={{ color: '#888' }}>Carregando planos...</p>
-      </div>
-    )
-  }
+  if (loadingPrecos) return <SkeletonGrid cards={3} />
 
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 24px' }}>

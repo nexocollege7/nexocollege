@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { getMyCourses, deleteCourse } from '@/app/actions/course-actions'
 import { getMySchool, verificarLimiteCurso } from '@/app/actions/school-actions'
 import { BookOpen, Plus, Pencil, Trash2, Lock } from 'lucide-react'
+import { SkeletonGrid, SkeletonCard } from '@/components/ui/skeleton'
 
 type Course = {
   id: string
@@ -47,13 +48,7 @@ export default function CursosPage() {
     load()
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-gray-400">Carregando cursos...</p>
-      </div>
-    )
-  }
+  if (loading) return <SkeletonGrid cards={3} />
 
   const podeCriar = planoInfo?.permitido ?? true
   const labelPlano = planoInfo
