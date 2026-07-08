@@ -59,6 +59,9 @@ export default function EscolaPage() {
   const [emailColaborador, setEmailColaborador] = useState('')
   const [senhaColaborador, setSenhaColaborador] = useState('')
   const [adicionandoColab, setAdicionandoColab] = useState(false)
+  const [editandoId, setEditandoId] = useState<string | null>(null)
+  const [editNome, setEditNome] = useState('')
+  const [editSenha, setEditSenha] = useState('')
 
   // Permissões por plano
   const [permissaoColaboradores, setPermissaoColaboradores] = useState<PermissaoPlano | null>(null)
@@ -516,27 +519,80 @@ export default function EscolaPage() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
                 {colaboradores.map(c => (
-                  <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', background: '#1a1a1a', borderRadius: '10px', border: '1px solid #2A2A2A' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#7C4DFF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '700', fontSize: '16px', flexShrink: 0 }}>
-                      {(c.full_name || c.name || '?').charAt(0).toUpperCase()}
+                  <div key={c.id} style={{ background: '#1a1a1a', borderRadius: '10px', border: '1px solid #2A2A2A', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#7C4DFF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '700', fontSize: '16px', flexShrink: 0 }}>
+                        {(c.full_name || c.name || '?').charAt(0).toUpperCase()}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: 0, color: '#F0F0F0', fontSize: '14px', fontWeight: '600' }}>{c.full_name || c.name}</p>
+                        <p style={{ margin: '2px 0 0', color: '#888', fontSize: '12px' }}>{c.email}</p>
+                        {c.created_at && <p style={{ margin: '2px 0 0', color: '#555', fontSize: '11px' }}>Desde {new Date(c.created_at).toLocaleDateString('pt-BR')}</p>}
+                      </div>
+                      <span style={{ fontSize: '11px', fontWeight: '600', color: '#7C4DFF', backgroundColor: '#1A0A3A', padding: '3px 10px', borderRadius: '12px', whiteSpace: 'nowrap' }}>Colaborador</span>
+                      <button
+                        onClick={() => { setEditandoId(editandoId === c.id ? null : c.id); setEditNome(c.name || ''); setEditSenha('') }}
+                        style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #2A1A4A', backgroundColor: 'transparent', color: '#7C4DFF', fontSize: '12px', cursor: 'pointer', flexShrink: 0 }}
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (!confirm(`Remover ${c.full_name || c.name} da equipe?`)) return
+                          const res = await fetch(`/api/collaborators/${c.user_id}`, { method: 'DELETE' })
+                          if (res.ok) setColaboradores(prev => prev.filter(x => x.id !== c.id))
+                          else alert('Erro ao remover colaborador')
+                        }}
+                        style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #3A1A1A', backgroundColor: 'transparent', color: '#FF5555', fontSize: '12px', cursor: 'pointer', flexShrink: 0 }}
+                      >
+                        Remover
+                      </button>
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: 0, color: '#F0F0F0', fontSize: '14px', fontWeight: '600' }}>{c.full_name || c.name}</p>
-                      <p style={{ margin: '2px 0 0', color: '#888', fontSize: '12px' }}>{c.email}</p>
-                      {c.created_at && <p style={{ margin: '2px 0 0', color: '#555', fontSize: '11px' }}>Desde {new Date(c.created_at).toLocaleDateString('pt-BR')}</p>}
-                    </div>
-                    <span style={{ fontSize: '11px', fontWeight: '600', color: '#7C4DFF', backgroundColor: '#1A0A3A', padding: '3px 10px', borderRadius: '12px', whiteSpace: 'nowrap' }}>Colaborador</span>
-                    <button
-                      onClick={async () => {
-                        if (!confirm(`Remover ${c.full_name || c.name} da equipe?`)) return
-                        const res = await fetch(`/api/collaborators/${c.user_id}`, { method: 'DELETE' })
-                        if (res.ok) setColaboradores(prev => prev.filter(x => x.id !== c.id))
-                        else alert('Erro ao remover colaborador')
-                      }}
-                      style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #3A1A1A', backgroundColor: 'transparent', color: '#FF5555', fontSize: '12px', cursor: 'pointer', flexShrink: 0 }}
-                    >
-                      Remover
-                    </button>
+                    {editandoId === c.id && (
+                      <div style={{ padding: '0 16px 14px', borderTop: '1px solid #2A2A2A', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <input
+                          value={editNome}
+                          onChange={e => setEditNome(e.target.value)}
+                          placeholder="Nome completo"
+                          style={{ background: '#111', border: '1px solid #333', borderRadius: '6px', padding: '8px 12px', color: '#F0F0F0', fontSize: '13px', marginTop: '12px' }}
+                        />
+                        <input
+                          value={editSenha}
+                          onChange={e => setEditSenha(e.target.value)}
+                          type="password"
+                          placeholder="Nova senha (mín. 6 caracteres)"
+                          style={{ background: '#111', border: '1px solid #333', borderRadius: '6px', padding: '8px 12px', color: '#F0F0F0', fontSize: '13px' }}
+                        />
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            onClick={async () => {
+                              const res = await fetch(`/api/collaborators/${c.user_id}`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ name: editNome.trim() || undefined, password: editSenha.trim() || undefined }),
+                              })
+                              if (res.ok) {
+                                setColaboradores(prev => prev.map(x => x.id === c.id ? { ...x, name: editNome.trim() || x.name } : x))
+                                setEditandoId(null)
+                                setEditNome('')
+                                setEditSenha('')
+                              } else {
+                                alert('Erro ao salvar alterações')
+                              }
+                            }}
+                            style={{ padding: '7px 16px', borderRadius: '6px', border: 'none', backgroundColor: '#7C4DFF', color: '#fff', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }}
+                          >
+                            Salvar
+                          </button>
+                          <button
+                            onClick={() => { setEditandoId(null); setEditNome(''); setEditSenha('') }}
+                            style={{ padding: '7px 16px', borderRadius: '6px', border: '1px solid #333', backgroundColor: 'transparent', color: '#888', fontSize: '13px', cursor: 'pointer' }}
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

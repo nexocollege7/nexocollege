@@ -28,7 +28,6 @@ export async function DELETE(
 
   const { id } = await params
 
-  // Verificar que o colaborador pertence à escola do usuário logado
   const { data: school } = await adminClient
     .from('schools')
     .select('id')
@@ -44,6 +43,59 @@ export async function DELETE(
     .eq('school_id', school.id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  return NextResponse.json({ success: true })
+}
+
+// PATCH — editar nome e/ou senha do colaborador
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const adminClient = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  const user = await getSessionUser()
+  if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+
+  const { id } = await params
+  const body = await req.json() as { name?: string; password?: string }
+
+  const { data: school } = await adminClient
+    .from('schools')
+    .select('id')
+    .eq('owner_id', user.id)
+    .single()
+
+  if (!school) return NextResponse.json({ error: 'Escola não encontrada' }, { status: 404 })
+
+  const { data: colab } = await adminClient
+    .from('school_collaborators')
+    .select('id')
+    .eq('user_id', id)
+    .eq('school_id', school.id)
+    .single()
+
+  if (!colab) return NextResponse.json({ error: 'Colaborador não encontrado' }, { status: 404 })
+
+  if (body.name) {
+    await adminClient
+      .from('school_collaborators')
+      .update({ name: body.name })
+      .eq('user_id', id)
+      .eq('school_id', school.id)
+
+    await adminClient
+      .from('users')
+      .update({ full_name: body.name })
+      .eq('id', id)
+  }
+
+  if (body.password) {
+    const { error } = await adminClient.auth.admin.updateUserById(id, { password: body.password })
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 
   return NextResponse.json({ success: true })
 }
