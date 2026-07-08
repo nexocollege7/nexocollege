@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
+import { rateLimit, RATE_LIMITS, getClientIp } from '@/lib/rate-limit'
 import Groq from 'groq-sdk'
 
 type Profile = 'school' | 'student'
@@ -139,10 +139,8 @@ export async function POST(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 })
 
     const ip = getClientIp(request.headers)
-    const rateLimitKey = `ai-assistant:${user.id}:${ip}`
-    if (!checkRateLimit(rateLimitKey, 20, 60_000)) {
-      return NextResponse.json({ error: 'Muitas requisições. Aguarde um momento.' }, { status: 429 })
-    }
+    const { success } = await rateLimit(`${ip}:ai-assistant`, RATE_LIMITS.ai.limit, RATE_LIMITS.ai.window)
+    if (!success) return NextResponse.json({ error: 'Muitas requisições. Tente novamente em alguns instantes.' }, { status: 429 })
 
     const body = await request.json() as { message?: unknown; profile?: unknown; schoolName?: unknown }
     const message = typeof body.message === 'string' ? body.message.trim() : ''

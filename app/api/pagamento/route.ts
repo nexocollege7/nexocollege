@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { MercadoPagoConfig, Preference } from 'mercadopago'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { rateLimit, RATE_LIMITS, getClientIp } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,6 +16,9 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: 'Você precisa estar logado para comprar um curso.' }, { status: 401 })
     }
+
+    const { success } = await rateLimit(`${getClientIp(request.headers)}:pagamento`, RATE_LIMITS.payment.limit, RATE_LIMITS.payment.window)
+    if (!success) return NextResponse.json({ error: 'Muitas requisições. Tente novamente em alguns instantes.' }, { status: 429 })
 
     // Busca preço e school_id diretamente do banco — nunca usa preço do cliente
     const adminClient = createAdminClient()

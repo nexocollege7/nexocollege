@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
+import { rateLimit, RATE_LIMITS, getClientIp } from '@/lib/rate-limit'
 import Groq from 'groq-sdk'
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string }
@@ -82,9 +82,8 @@ Se relatarem erro ou problema técnico: "Me manda um e-mail em suporte@nexocolle
 export async function POST(request: NextRequest) {
   try {
     const ip = getClientIp(request.headers)
-    if (!checkRateLimit(`comercial-assistant:${ip}`, 30, 60 * 60_000)) {
-      return NextResponse.json({ error: 'Muitas requisições. Tente novamente em instantes.' }, { status: 429 })
-    }
+    const { success } = await rateLimit(`${ip}:comercial-assistant`, RATE_LIMITS.default.limit, RATE_LIMITS.default.window)
+    if (!success) return NextResponse.json({ error: 'Muitas requisições. Tente novamente em alguns instantes.' }, { status: 429 })
 
     const body = await request.json() as { messages?: unknown; userMessage?: unknown }
     const userMessage = typeof body.userMessage === 'string' ? body.userMessage.trim() : ''

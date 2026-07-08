@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
+import { rateLimit, RATE_LIMITS, getClientIp } from '@/lib/rate-limit'
 
 function gerarSlug(nome: string): string {
   const palavras = nome
@@ -21,9 +21,8 @@ function gerarSlug(nome: string): string {
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request.headers)
-  if (!checkRateLimit(`verificar-slug:${ip}`, 20, 60 * 1000)) {
-    return NextResponse.json({ error: 'Muitas tentativas.' }, { status: 429 })
-  }
+  const { success } = await rateLimit(`${ip}:verificar-slug`, RATE_LIMITS.default.limit, RATE_LIMITS.default.window)
+  if (!success) return NextResponse.json({ error: 'Muitas requisições. Tente novamente em alguns instantes.' }, { status: 429 })
 
   const { nomeEscola } = await request.json()
   if (!nomeEscola?.trim()) {

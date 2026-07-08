@@ -1,41 +1,42 @@
-// LIMITAÇÃO CONHECIDA: este store é um Map em memória, isolado por processo.
-// Em ambiente serverless (múltiplas instâncias/cold starts), cada instância tem
-// seu próprio contador — o limite NÃO é global e pode ser contornado distribuindo
-// requisições entre instâncias. Para um rate limit real e global, seria necessário
-// um store compartilhado (ex: Redis/Upstash). Mantido assim por simplicidade até
-// que o volume de abuso justifique a complexidade adicional.
-type Entry = { count: number; resetAt: number }
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
 
-const store = new Map<string, Entry>()
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+})
 
-// Limpa entradas expiradas periodicamente para evitar vazamento de memória
-setInterval(() => {
-  const now = Date.now()
-  for (const [key, entry] of store) {
-    if (now > entry.resetAt) store.delete(key)
+// Cache de instâncias por configuração para evitar recriar a cada request
+const instanceCache = new Map<string, Ratelimit>()
+
+function getInstance(limit: number, windowSeconds: number): Ratelimit {
+  const key = `${limit}:${windowSeconds}`
+  if (!instanceCache.has(key)) {
+    instanceCache.set(
+      key,
+      new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(limit, `${windowSeconds} s`),
+      })
+    )
   }
-}, 5 * 60 * 1000)
-
-/**
- * Retorna true se a requisição for permitida, false se exceder o limite.
- * @param key    Identificador (ex: IP + rota)
- * @param max    Máximo de tentativas permitidas
- * @param windowMs  Janela de tempo em ms
- */
-export function checkRateLimit(key: string, max: number, windowMs: number): boolean {
-  const now = Date.now()
-  const entry = store.get(key)
-
-  if (!entry || now > entry.resetAt) {
-    store.set(key, { count: 1, resetAt: now + windowMs })
-    return true
-  }
-
-  if (entry.count >= max) return false
-
-  entry.count++
-  return true
+  return instanceCache.get(key)!
 }
+
+export async function rateLimit(
+  identifier: string,
+  limit: number,
+  window: number
+): Promise<{ success: boolean; limit: number; remaining: number; reset: number }> {
+  return getInstance(limit, window).limit(identifier)
+}
+
+export const RATE_LIMITS = {
+  ai:      { limit: 10, window: 60 },
+  payment: { limit: 5,  window: 60 },
+  daily:   { limit: 5,  window: 60 },
+  default: { limit: 30, window: 60 },
+} as const
 
 export function getClientIp(headers: Headers): string {
   return (

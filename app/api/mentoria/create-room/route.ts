@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { rateLimit, RATE_LIMITS, getClientIp } from '@/lib/rate-limit'
 
 interface DailyRoom {
   id: string
@@ -31,6 +32,9 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+
+    const { success } = await rateLimit(`${getClientIp(request.headers)}:create-room`, RATE_LIMITS.daily.limit, RATE_LIMITS.daily.window)
+    if (!success) return NextResponse.json({ error: 'Muitas requisições. Tente novamente em alguns instantes.' }, { status: 429 })
 
     const adminClient = createAdminClient()
 
