@@ -9,6 +9,7 @@ import {
   removerMentor,
 } from '@/app/actions/mentor-actions'
 import { getMySchool } from '@/app/actions/school-actions'
+import { MentorModuleLock } from '@/components/MentorModuleLock'
 
 type MentorRow = {
   mentorshipId: string
@@ -21,6 +22,7 @@ type MentorRow = {
 
 export default function MentoresPage() {
   const [mentores, setMentores] = useState<MentorRow[]>([])
+  const [school, setSchool] = useState<any>(null)
   const [schoolId, setSchoolId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState('')
@@ -30,6 +32,7 @@ export default function MentoresPage() {
     async function load() {
       const [data, escola] = await Promise.all([getMentoresEscola(), getMySchool()])
       setMentores(data)
+      setSchool(escola)
       setSchoolId(escola?.id ?? null)
       setLoading(false)
     }
@@ -77,6 +80,8 @@ export default function MentoresPage() {
       <p style={{ color: '#888' }}>Carregando...</p>
     </div>
   )
+
+  if (!school?.mentor_module) return <MentorModuleLock />
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '900px' }}>
