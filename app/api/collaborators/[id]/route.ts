@@ -60,7 +60,7 @@ export async function PATCH(
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
   const { id } = await params
-  const body = await req.json() as { name?: string; password?: string }
+  const body = await req.json() as { name?: string; password?: string; avatar_url?: string }
 
   const { data: school } = await adminClient
     .from('schools')
@@ -89,6 +89,13 @@ export async function PATCH(
     await adminClient
       .from('users')
       .update({ full_name: body.name })
+      .eq('id', id)
+  }
+
+  if (body.avatar_url) {
+    await adminClient
+      .from('users')
+      .update({ avatar_url: body.avatar_url })
       .eq('id', id)
   }
 

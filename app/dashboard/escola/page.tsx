@@ -62,6 +62,8 @@ export default function EscolaPage() {
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [editNome, setEditNome] = useState('')
   const [editSenha, setEditSenha] = useState('')
+  const [editFoto, setEditFoto] = useState<File | null>(null)
+  const [editFotoPreview, setEditFotoPreview] = useState<string>('')
 
   // Permissões por plano
   const [permissaoColaboradores, setPermissaoColaboradores] = useState<PermissaoPlano | null>(null)
@@ -521,9 +523,13 @@ export default function EscolaPage() {
                 {colaboradores.map(c => (
                   <div key={c.id} style={{ background: '#1a1a1a', borderRadius: '10px', border: '1px solid #2A2A2A', overflow: 'hidden' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px' }}>
-                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#7C4DFF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '700', fontSize: '16px', flexShrink: 0 }}>
-                        {(c.full_name || c.name || '?').charAt(0).toUpperCase()}
-                      </div>
+                      {c.avatar_url ? (
+                        <img src={c.avatar_url} alt={c.name} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                      ) : (
+                        <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#7C4DFF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '700', fontSize: '16px', flexShrink: 0 }}>
+                          {(c.full_name || c.name || '?').charAt(0).toUpperCase()}
+                        </div>
+                      )}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ margin: 0, color: '#F0F0F0', fontSize: '14px', fontWeight: '600' }}>{c.full_name || c.name}</p>
                         <p style={{ margin: '2px 0 0', color: '#888', fontSize: '12px' }}>{c.email}</p>
@@ -531,7 +537,7 @@ export default function EscolaPage() {
                       </div>
                       <span style={{ fontSize: '11px', fontWeight: '600', color: '#7C4DFF', backgroundColor: '#1A0A3A', padding: '3px 10px', borderRadius: '12px', whiteSpace: 'nowrap' }}>Colaborador</span>
                       <button
-                        onClick={() => { setEditandoId(editandoId === c.id ? null : c.id); setEditNome(c.name || ''); setEditSenha('') }}
+                        onClick={() => { setEditandoId(editandoId === c.id ? null : c.id); setEditNome(c.name || ''); setEditSenha(''); setEditFoto(null); setEditFotoPreview('') }}
                         style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #2A1A4A', backgroundColor: 'transparent', color: '#7C4DFF', fontSize: '12px', cursor: 'pointer', flexShrink: 0 }}
                       >
                         Editar
@@ -550,11 +556,27 @@ export default function EscolaPage() {
                     </div>
                     {editandoId === c.id && (
                       <div style={{ padding: '0 16px 14px', borderTop: '1px solid #2A2A2A', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px', marginBottom: '4px' }}>
+                          <div style={{ position: 'relative', cursor: 'pointer', flexShrink: 0 }} onClick={() => (document.getElementById('foto-colab-' + c.id) as HTMLInputElement)?.click()}>
+                            {editFotoPreview ? (
+                              <img src={editFotoPreview} style={{ width: '52px', height: '52px', borderRadius: '50%', objectFit: 'cover' }} />
+                            ) : c.avatar_url ? (
+                              <img src={c.avatar_url} style={{ width: '52px', height: '52px', borderRadius: '50%', objectFit: 'cover' }} />
+                            ) : (
+                              <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: '#7C4DFF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '700', fontSize: '20px' }}>
+                                {(c.name || '?').charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <div style={{ position: 'absolute', bottom: 0, right: 0, width: '18px', height: '18px', borderRadius: '50%', background: '#AEEA00', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}>📷</div>
+                          </div>
+                          <input id={'foto-colab-' + c.id} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; if (f) { setEditFoto(f); setEditFotoPreview(URL.createObjectURL(f)) } }} />
+                          <span style={{ color: '#888', fontSize: '12px' }}>Clique na foto para alterar</span>
+                        </div>
                         <input
                           value={editNome}
                           onChange={e => setEditNome(e.target.value)}
                           placeholder="Nome completo"
-                          style={{ background: '#111', border: '1px solid #333', borderRadius: '6px', padding: '8px 12px', color: '#F0F0F0', fontSize: '13px', marginTop: '12px' }}
+                          style={{ background: '#111', border: '1px solid #333', borderRadius: '6px', padding: '8px 12px', color: '#F0F0F0', fontSize: '13px' }}
                         />
                         <input
                           value={editSenha}
@@ -569,13 +591,28 @@ export default function EscolaPage() {
                               const res = await fetch(`/api/collaborators/${c.user_id}`, {
                                 method: 'PATCH',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ name: editNome.trim() || undefined, password: editSenha.trim() || undefined }),
+                                body: JSON.stringify(await (async () => {
+                                  const base: Record<string, string | undefined> = {
+                                    name: editNome.trim() || undefined,
+                                    password: editSenha.trim() || undefined,
+                                  }
+                                  if (editFoto) {
+                                    const ext = editFoto.name.split('.').pop()
+                                    const storagePath = `${c.user_id}/avatar.${ext}`
+                                    await supabase.storage.from('avatars').upload(storagePath, editFoto, { upsert: true })
+                                    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(storagePath)
+                                    base.avatar_url = publicUrl + '?t=' + Date.now()
+                                  }
+                                  return base
+                                })()),
                               })
                               if (res.ok) {
-                                setColaboradores(prev => prev.map(x => x.id === c.id ? { ...x, name: editNome.trim() || x.name } : x))
+                                setColaboradores(prev => prev.map(x => x.id === c.id ? { ...x, name: editNome.trim() || x.name, ...(editFotoPreview ? { avatar_url: editFotoPreview } : {}) } : x))
                                 setEditandoId(null)
                                 setEditNome('')
                                 setEditSenha('')
+                                setEditFoto(null)
+                                setEditFotoPreview('')
                               } else {
                                 alert('Erro ao salvar alterações')
                               }
