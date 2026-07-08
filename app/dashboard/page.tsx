@@ -30,16 +30,17 @@ export default async function DashboardPage() {
         .eq('id', profile?.school_id)
         .single()
 
-      const { data: planoLimites } = await adminClient
-        .from('plans')
-        .select('max_students, max_courses')
-        .eq('slug', escola?.plan ?? 'starter')
-        .single()
-
-      const { count: totalCursos } = await adminClient
-        .from('courses')
-        .select('*', { count: 'exact', head: true })
-        .eq('school_id', escola?.id)
+      const [{ data: planoLimites }, { count: totalCursos }] = await Promise.all([
+        adminClient
+          .from('plans')
+          .select('max_students, max_courses')
+          .eq('slug', escola?.plan ?? 'starter')
+          .single(),
+        adminClient
+          .from('courses')
+          .select('*', { count: 'exact', head: true })
+          .eq('school_id', escola?.id),
+      ])
 
       return { profile, escola, planoLimites, totalCursos }
     },

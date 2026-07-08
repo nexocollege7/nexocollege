@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { diasRestantes } from '@/lib/enrollment'
+import { unstable_cache } from 'next/cache'
 
 export type Pagamento = {
   amount: number
@@ -21,73 +22,78 @@ export async function getDashboardStats() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  let schoolId: string | null = null
+  return unstable_cache(
+    async () => {
+      const adminClient = createAdminClient()
 
-  // Buscar perfil para verificar role
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role, school_id')
-    .eq('id', user.id)
-    .single()
+      let schoolId: string | null = null
 
-  if (profile?.role === 'collaborator') {
-    // Colaborador usa o school_id do perfil
-    schoolId = profile.school_id
-  } else {
-    // Dono da escola busca pelo owner_id
-    const { data: school } = await supabase
-      .from('schools')
-      .select('id')
-      .eq('owner_id', user.id)
-      .single()
-    schoolId = school?.id || null
-  }
+      const { data: profile } = await adminClient
+        .from('users')
+        .select('role, school_id')
+        .eq('id', user.id)
+        .single()
 
-  if (!schoolId) return null
+      if (profile?.role === 'collaborator') {
+        schoolId = profile.school_id
+      } else {
+        const { data: school } = await adminClient
+          .from('schools')
+          .select('id')
+          .eq('owner_id', user.id)
+          .single()
+        schoolId = school?.id || null
+      }
 
-  const [
-    { data: alunosAtivosRows },
-    { count: totalCursos },
-    { count: totalCertificados },
-    { data: pagamentos },
-    { data: matriculasRecentes },
-  ] = await Promise.all([
-    supabase
-      .from('enrollments')
-      .select('student_id, users!enrollments_student_id_fkey!inner(role)')
-      .eq('school_id', schoolId)
-      .eq('status', 'active')
-      .eq('users.role', 'student')
-      .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`),
-    supabase.from('courses').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
-    supabase.from('certificates').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
-    supabase.from('payments').select('amount, paid_at, status').eq('school_id', schoolId).eq('status', 'approved').order('paid_at', { ascending: false }).limit(5),
-    supabase.from('enrollments').select(`
-      enrolled_at,
-      users!enrollments_student_id_fkey ( full_name, role ),
-      courses ( title )
-    `).eq('school_id', schoolId).order('enrolled_at', { ascending: false }).limit(20),
-  ])
+      if (!schoolId) return null
 
-  const totalAlunos = new Set((alunosAtivosRows ?? []).map((e) => e.student_id)).size
+      const [
+        { data: alunosAtivosRows },
+        { count: totalCursos },
+        { count: totalCertificados },
+        { data: pagamentos },
+        { data: matriculasRecentes },
+      ] = await Promise.all([
+        adminClient
+          .from('enrollments')
+          .select('student_id, users!enrollments_student_id_fkey!inner(role)')
+          .eq('school_id', schoolId)
+          .eq('status', 'active')
+          .eq('users.role', 'student')
+          .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`),
+        adminClient.from('courses').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
+        adminClient.from('certificates').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
+        adminClient.from('payments').select('amount, paid_at, status').eq('school_id', schoolId).eq('status', 'approved').order('paid_at', { ascending: false }).limit(5),
+        adminClient.from('enrollments').select(`
+          enrolled_at,
+          users!enrollments_student_id_fkey ( full_name, role ),
+          courses ( title )
+        `).eq('school_id', schoolId).order('enrolled_at', { ascending: false }).limit(20),
+      ])
 
-  const pagamentosTipados = (pagamentos ?? []) as Pagamento[]
-  const matriculasTipadas = (matriculasRecentes ?? []) as unknown as MatriculaRecente[]
+      const totalAlunos = new Set((alunosAtivosRows ?? []).map((e) => e.student_id)).size
 
-  const receita = pagamentosTipados.reduce((acc, p) => acc + Number(p.amount), 0)
+      const pagamentosTipados = (pagamentos ?? []) as Pagamento[]
+      const matriculasTipadas = (matriculasRecentes ?? []) as unknown as MatriculaRecente[]
 
-  const matriculasFiltradas = matriculasTipadas
-    .filter((e) => e.users !== null && e.users?.role === 'student')
-    .slice(0, 5)
+      const receita = pagamentosTipados.reduce((acc, p) => acc + Number(p.amount), 0)
 
-  return {
-    totalAlunos: totalAlunos || 0,
-    totalCursos: totalCursos || 0,
-    totalCertificados: totalCertificados || 0,
-    receita,
-    pagamentos: pagamentosTipados,
-    matriculasRecentes: matriculasFiltradas,
-  }
+      const matriculasFiltradas = matriculasTipadas
+        .filter((e) => e.users !== null && e.users?.role === 'student')
+        .slice(0, 5)
+
+      return {
+        totalAlunos: totalAlunos || 0,
+        totalCursos: totalCursos || 0,
+        totalCertificados: totalCertificados || 0,
+        receita,
+        pagamentos: pagamentosTipados,
+        matriculasRecentes: matriculasFiltradas,
+      }
+    },
+    [`dashboard-stats-${user.id}`],
+    { revalidate: 60, tags: [`user-${user.id}`] }
+  )()
 }
 
 export async function getAnalyticsCompleto(periodoDias: 30 | 60 | 90 = 30) {
