@@ -63,7 +63,10 @@ export default function MinistrarMentoriaPage() {
   }
 
   async function handleEncerrarSessao() {
-    if (!videoRoomCohortId) return
+    if (!videoRoomCohortId) {
+      console.error('handleEncerrarSessao: videoRoomCohortId é nulo')
+      return
+    }
     await fetch('/api/mentoria/delete-room', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
