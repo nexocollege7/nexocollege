@@ -92,7 +92,7 @@ export default function EscolaPage() {
       verificarPermissaoFeature('collaborators', profileData.school_id),
       supabase
         .from('users')
-        .select('id, full_name, name')
+        .select('id, full_name, name, email, created_at')
         .eq('school_id', profileData.school_id)
         .eq('role', 'collaborator'),
     ])
