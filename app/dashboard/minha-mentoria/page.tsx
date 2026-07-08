@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getMyMentorshipAsGuest, updateClassMaterialsAsGuest, updateCohortLiveAsGuest } from '@/app/actions/mentor-guest-actions'
+import { getMyMentorshipAsGuest, updateClassMaterialsAsGuest } from '@/app/actions/mentor-guest-actions'
 import { AulaComentarios } from '@/components/AulaComentarios'
 import { GraduationCap, Calendar, Users } from 'lucide-react'
 
@@ -11,8 +11,7 @@ export default function MinhaMentoriaPage() {
   const [msg, setMsg] = useState('')
   const [materiaisEdit, setMateriaisEdit] = useState<Record<string, string>>({})
   const [salvandoMaterial, setSalvandoMaterial] = useState<string | null>(null)
-  const [liveEdits, setLiveEdits] = useState<Record<string, string>>({})
-  const [savingLiveId, setSavingLiveId] = useState<string | null>(null)
+
 
   useEffect(() => {
     async function load() {
@@ -41,18 +40,6 @@ export default function MinhaMentoriaPage() {
     showMsg('✅ Link de materiais salvo!')
   }
 
-  async function handleAlternarLive(cohort: any) {
-    const novoStatus = !cohort.live_active
-    const liveUrl = liveEdits[cohort.id] ?? cohort.live_url ?? ''
-    setSavingLiveId(cohort.id)
-    const result = await updateCohortLiveAsGuest(cohort.id, { liveUrl, liveActive: novoStatus })
-    setSavingLiveId(null)
-    if (result?.error) { showMsg('Erro: ' + result.error); return }
-    setMentoria({
-      ...mentoria,
-      cohorts: mentoria.cohorts.map((c: any) => c.id === cohort.id ? { ...c, live_url: liveUrl, live_active: novoStatus } : c),
-    })
-  }
 
   if (loading) {
     return (
@@ -172,24 +159,6 @@ export default function MinhaMentoriaPage() {
                   </span>
                 </div>
 
-                {aberta && (
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <input
-                      placeholder="Link da transmissão ao vivo"
-                      style={{ ...input, flex: 1, minWidth: '200px' }}
-                      value={liveEdits[c.id] ?? c.live_url ?? ''}
-                      onChange={(e) => setLiveEdits({ ...liveEdits, [c.id]: e.target.value })}
-                      disabled={c.live_active}
-                    />
-                    <button
-                      onClick={() => handleAlternarLive(c)}
-                      disabled={savingLiveId === c.id || (!c.live_active && !(liveEdits[c.id] ?? c.live_url ?? '').trim())}
-                      style={{ ...btnPrimary, backgroundColor: c.live_active ? '#FF4444' : '#7C4DFF', whiteSpace: 'nowrap', opacity: savingLiveId === c.id ? 0.6 : 1 }}
-                    >
-                      {savingLiveId === c.id ? 'Aguarde...' : c.live_active ? 'Encerrar transmissão' : 'Iniciar transmissão'}
-                    </button>
-                  </div>
-                )}
               </div>
             )
           })}

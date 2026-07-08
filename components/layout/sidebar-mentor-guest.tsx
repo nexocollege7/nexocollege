@@ -1,7 +1,9 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { Play } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getMyMentorshipAsGuest } from '@/app/actions/mentor-guest-actions'
 
@@ -72,7 +74,7 @@ export function SidebarMentorGuest() {
         </button>
       </div>
 
-      <nav style={{ padding: '12px 8px', flex: 1 }}>
+      <nav style={{ padding: '12px 8px', flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
         <div style={{
           display: 'flex', alignItems: 'center', gap: '10px',
           padding: collapsed ? '10px' : '10px 12px',
@@ -84,6 +86,19 @@ export function SidebarMentorGuest() {
           <span style={{ fontSize: '16px' }}>🎓</span>
           {!collapsed && 'Minha Mentoria'}
         </div>
+        <Link href="/dashboard/minha-mentoria/ministrar" style={{ textDecoration: 'none' }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '10px',
+            padding: collapsed ? '10px' : '10px 12px',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            borderRadius: '8px',
+            color: '#AAAAAA', fontWeight: '600', fontSize: '14px',
+            borderLeft: '3px solid transparent',
+          }}>
+            <Play size={16} />
+            {!collapsed && 'Ministrar'}
+          </div>
+        </Link>
       </nav>
 
       <div style={{
