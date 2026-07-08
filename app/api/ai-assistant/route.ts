@@ -37,7 +37,7 @@ Plataforma para professores, líderes e criadores de conteúdo que querem montar
 
 ## PLANOS E PREÇOS
 - Starter: GRÁTIS — 1 curso, até 30 alunos, sem colaboradores
-- Creator: R$ 697/ano — 5 cursos, até 300 alunos, 1 colaborador, cupons, depoimentos
+- Creator: R$ 897/ano — 5 cursos, até 300 alunos, 1 colaborador, cupons, depoimentos
 - Pro: R$ 1.597/ano — 20 cursos, até 1.000 alunos, 3 colaboradores, eventos ao vivo, suporte prioritário
 - Scale: R$ 3.597/ano — 50 cursos, até 3.000 alunos, 10 colaboradores, domínio próprio, suporte dedicado
 - Enterprise: sob consulta — cursos e alunos ilimitados, gerente dedicado, onboarding personalizado

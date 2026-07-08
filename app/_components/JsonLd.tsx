@@ -53,7 +53,7 @@ export default function JsonLd() {
           {
             '@type': 'Offer',
             name: 'Creator',
-            price: '697',
+            price: '897',
             priceCurrency: 'BRL',
             description: 'Plano Creator com 5 cursos e até 300 alunos',
           },
