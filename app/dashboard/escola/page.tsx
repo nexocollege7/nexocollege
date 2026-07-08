@@ -410,6 +410,33 @@ export default function EscolaPage() {
             </div>
           </div>
 
+          {/* Guia */}
+          <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '24px' }}>
+            <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 8px' }}>📋 Como encontrar suas credenciais</h2>
+            <p style={{ color: '#666', fontSize: '13px', margin: '0 0 16px' }}>Siga o passo a passo abaixo para configurar sua conta do Mercado Pago:</p>
+            {[
+              { n: '1', titulo: 'Acesse o Mercado Pago', desc: 'Entre em mercadopago.com.br e faça login com sua conta.' },
+              { n: '2', titulo: 'Vá em "Seu negócio"', desc: 'No menu superior, clique em "Seu negócio" e depois em "Configurações".' },
+              { n: '3', titulo: 'Clique em "Credenciais"', desc: 'No menu lateral, procure a opção "Credenciais" e clique nela.' },
+              { n: '4', titulo: 'Escolha "Produção"', desc: 'Selecione a aba "Produção" para usar credenciais reais (não de teste).' },
+              { n: '5', titulo: 'Copie o Access Token', desc: 'Copie o campo "Access token" que começa com APP_USR- e cole acima.' },
+              { n: '6', titulo: 'Copie a Public Key', desc: 'Copie o campo "Public key" que também começa com APP_USR- e cole acima.' },
+            ].map(step => (
+              <div key={step.n} style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'flex-start' }}>
+                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#AEEA00', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '13px', flexShrink: 0 }}>
+                  {step.n}
+                </div>
+                <div>
+                  <p style={{ margin: 0, color: '#fff', fontSize: '14px', fontWeight: '600' }}>{step.titulo}</p>
+                  <p style={{ margin: '2px 0 0', color: '#666', fontSize: '13px' }}>{step.desc}</p>
+                </div>
+              </div>
+            ))}
+            <div style={{ background: 'rgba(124,77,255,0.1)', border: '1px solid #7C4DFF', borderRadius: '8px', padding: '12px 16px', marginTop: '8px' }}>
+              <p style={{ margin: 0, color: '#7C4DFF', fontSize: '13px' }}>💡 <strong>Dica:</strong> Se tiver dúvidas, abra um chamado de suporte — nossa equipe te ajuda a configurar!</p>
+            </div>
+          </div>
+
           {/* PIX Manual */}
           <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '24px' }}>
             <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 8px' }}>PIX Manual</h2>
@@ -436,33 +463,6 @@ export default function EscolaPage() {
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <button onClick={salvarPix} disabled={saving} style={btnStyle}>Salvar PIX</button>
               </div>
-            </div>
-          </div>
-
-          {/* Guia */}
-          <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '24px' }}>
-            <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 8px' }}>📋 Como encontrar suas credenciais</h2>
-            <p style={{ color: '#666', fontSize: '13px', margin: '0 0 16px' }}>Siga o passo a passo abaixo para configurar sua conta do Mercado Pago:</p>
-            {[
-              { n: '1', titulo: 'Acesse o Mercado Pago', desc: 'Entre em mercadopago.com.br e faça login com sua conta.' },
-              { n: '2', titulo: 'Vá em "Seu negócio"', desc: 'No menu superior, clique em "Seu negócio" e depois em "Configurações".' },
-              { n: '3', titulo: 'Clique em "Credenciais"', desc: 'No menu lateral, procure a opção "Credenciais" e clique nela.' },
-              { n: '4', titulo: 'Escolha "Produção"', desc: 'Selecione a aba "Produção" para usar credenciais reais (não de teste).' },
-              { n: '5', titulo: 'Copie o Access Token', desc: 'Copie o campo "Access token" que começa com APP_USR- e cole acima.' },
-              { n: '6', titulo: 'Copie a Public Key', desc: 'Copie o campo "Public key" que também começa com APP_USR- e cole acima.' },
-            ].map(step => (
-              <div key={step.n} style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'flex-start' }}>
-                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#AEEA00', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '13px', flexShrink: 0 }}>
-                  {step.n}
-                </div>
-                <div>
-                  <p style={{ margin: 0, color: '#fff', fontSize: '14px', fontWeight: '600' }}>{step.titulo}</p>
-                  <p style={{ margin: '2px 0 0', color: '#666', fontSize: '13px' }}>{step.desc}</p>
-                </div>
-              </div>
-            ))}
-            <div style={{ background: 'rgba(124,77,255,0.1)', border: '1px solid #7C4DFF', borderRadius: '8px', padding: '12px 16px', marginTop: '8px' }}>
-              <p style={{ margin: 0, color: '#7C4DFF', fontSize: '13px' }}>💡 <strong>Dica:</strong> Se tiver dúvidas, abra um chamado de suporte — nossa equipe te ajuda a configurar!</p>
             </div>
           </div>
         </div>
