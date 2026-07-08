@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { getMySchool } from '@/app/actions/school-actions'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { SkeletonGrid, SkeletonCard } from '@/components/ui/skeleton'
 
 export default function VitrinePage() {
   const [school, setSchool] = useState<any>(null)
@@ -51,11 +52,7 @@ export default function VitrinePage() {
     setSaving(false)
   }
 
-  if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '256px' }}>
-      <p style={{ color: '#888888' }}>Carregando...</p>
-    </div>
-  )
+  if (loading) return <SkeletonGrid cards={3} />
 
   const linkVitrine = school ? 'https://' + school.slug + '.nexocollege.com.br' : ''
 

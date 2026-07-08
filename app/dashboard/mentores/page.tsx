@@ -10,6 +10,7 @@ import {
 } from '@/app/actions/mentor-actions'
 import { getMySchool } from '@/app/actions/school-actions'
 import { MentorModuleLock } from '@/components/MentorModuleLock'
+import { SkeletonGrid, SkeletonCard } from '@/components/ui/skeleton'
 
 type MentorRow = {
   mentorshipId: string
@@ -75,11 +76,7 @@ export default function MentoresPage() {
     showMsg('✅ Mentor removido da mentoria.')
   }
 
-  if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '256px' }}>
-      <p style={{ color: '#888' }}>Carregando...</p>
-    </div>
-  )
+  if (loading) return <SkeletonCard lines={4} />
 
   if (!school?.mentor_module) return <MentorModuleLock />
 

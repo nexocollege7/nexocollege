@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getMySchool, updateLiveStatus, verificarPermissaoFeature } from '@/app/actions/school-actions'
 import { PlanLock } from '@/components/PlanLock'
 import type { PermissaoPlano } from '@/lib/plan-permissions'
+import { SkeletonGrid, SkeletonCard } from '@/components/ui/skeleton'
 
 export default function AoVivoPage() {
   const supabase = createClient()
@@ -61,11 +62,7 @@ export default function AoVivoPage() {
     padding: '10px 24px', fontWeight: '700', fontSize: '14px', cursor: 'pointer',
   }
 
-  if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: '#888' }}>
-      Carregando...
-    </div>
-  )
+  if (loading) return <SkeletonCard lines={2} />
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px 24px' }}>

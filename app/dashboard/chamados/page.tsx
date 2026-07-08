@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { MessageCircle, Send, X, Clock, CheckCircle, AlertCircle } from 'lucide-react'
+import { SkeletonGrid, SkeletonCard } from '@/components/ui/skeleton'
 
 const CATEGORIES = {
   duvida_conteudo: { label: 'Dúvida sobre Conteúdo', icon: '📚' },
@@ -120,7 +121,7 @@ export default function ChamadosPage() {
 
   const ticketsByStatus = (status: string) => tickets.filter(t => t.status === status)
 
-  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: '#888' }}>Carregando...</div>
+  if (loading) return <SkeletonGrid cards={2} />
 
   return (
     <div style={{ padding: '32px', maxWidth: '1400px', margin: '0 auto' }}>

@@ -8,6 +8,7 @@ import { School, CreditCard, User, Users, Settings, Globe } from 'lucide-react'
 import { PlanLock } from '@/components/PlanLock'
 import type { PermissaoPlano } from '@/lib/plan-permissions'
 import { elegivelParaMentorModule } from '@/lib/mentor-module'
+import { SkeletonGrid, SkeletonCard } from '@/components/ui/skeleton'
 
 type ResultadoAcao = { error?: string; success?: true }
 
@@ -251,11 +252,7 @@ export default function EscolaPage() {
     padding: '10px 24px', fontWeight: '600', fontSize: '14px', cursor: 'pointer',
   }
 
-  if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: '#888' }}>
-      Carregando...
-    </div>
-  )
+  if (loading) return <SkeletonCard lines={5} />
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px 24px' }}>

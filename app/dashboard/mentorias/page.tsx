@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { getMyMentorships, deleteMentorship } from '@/app/actions/mentor-actions'
 import { getMySchool } from '@/app/actions/school-actions'
 import { MentorModuleLock } from '@/components/MentorModuleLock'
+import { SkeletonGrid, SkeletonCard } from '@/components/ui/skeleton'
 
 const STATUS_LABEL: Record<string, { label: string; color: string; bg: string }> = {
   draft: { label: 'Rascunho', color: '#FACC15', bg: '#2E2100' },
@@ -35,13 +36,7 @@ export default function MentoriasPage() {
     load()
   }
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '256px' }}>
-        <p style={{ color: '#888888' }}>Carregando...</p>
-      </div>
-    )
-  }
+  if (loading) return <SkeletonGrid cards={3} />
 
   if (!school?.mentor_module) {
     return <MentorModuleLock />

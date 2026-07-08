@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, MessageCircle, ChevronRight, Send, X } from 'lucide-react'
+import { SkeletonGrid, SkeletonCard } from '@/components/ui/skeleton'
 
 const CATEGORIES = {
   problema_tecnico: { label: 'Problema Técnico', icon: '🔧' },
@@ -109,7 +110,7 @@ export default function SuportePage() {
     return Math.floor(diff/1440) + 'd atrás'
   }
 
-  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: '#888' }}>Carregando...</div>
+  if (loading) return <SkeletonCard lines={2} />
 
   return (
     <div style={{ padding: '32px', maxWidth: '1100px', margin: '0 auto' }}>

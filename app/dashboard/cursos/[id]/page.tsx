@@ -9,6 +9,7 @@ import { criarAula, deletarAula, atualizarAula } from '@/app/actions/aula-action
 import { verificarPermissaoFeature } from '@/app/actions/school-actions'
 import { PlanLock } from '@/components/PlanLock'
 import type { PermissaoPlano } from '@/lib/plan-permissions'
+import { SkeletonGrid, SkeletonCard } from '@/components/ui/skeleton'
 
 export default function EditarCursoPage() {
   const params = useParams()
@@ -146,11 +147,7 @@ export default function EditarCursoPage() {
     setSalvandoAula(false)
   }
 
-  if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '256px' }}>
-      <p style={{ color: '#888888' }}>Carregando...</p>
-    </div>
-  )
+  if (loading) return <SkeletonCard lines={4} />
 
   const input: React.CSSProperties = {
     width: '100%', padding: '10px 14px', borderRadius: '8px',

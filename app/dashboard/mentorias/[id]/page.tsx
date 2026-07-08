@@ -22,6 +22,7 @@ import { PlanLock } from '@/components/PlanLock'
 import { AulaComentarios } from '@/components/AulaComentarios'
 import type { PermissaoPlano } from '@/lib/plan-permissions'
 import VideoRoom from '@/components/ui/VideoRoom'
+import { SkeletonGrid, SkeletonCard } from '@/components/ui/skeleton'
 
 export default function EditarMentoriaPage() {
   const params = useParams()
@@ -211,11 +212,7 @@ export default function EditarMentoriaPage() {
     await handleAlternarLiveTurma(turmaBerta)
   }
 
-  if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '256px' }}>
-      <p style={{ color: '#888888' }}>Carregando...</p>
-    </div>
-  )
+  if (loading) return <SkeletonCard lines={4} />
 
   if (!mentoria) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '256px' }}>

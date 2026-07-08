@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { GraduationCap, Play, Users } from 'lucide-react'
 import { getMyMentorshipsAsGuest } from '@/app/actions/mentor-guest-actions'
+import { SkeletonGrid, SkeletonCard } from '@/components/ui/skeleton'
 
 export default function MinhaMentoriaPage() {
   const [mentorias, setMentorias] = useState<any[]>([])
@@ -18,11 +19,7 @@ export default function MinhaMentoriaPage() {
     load()
   }, [])
 
-  if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '256px' }}>
-      <p style={{ color: '#888' }}>Carregando...</p>
-    </div>
-  )
+  if (loading) return <SkeletonGrid cards={2} />
 
   if (mentorias.length === 0) return (
     <div style={{ maxWidth: '480px', margin: '60px auto', textAlign: 'center' }}>

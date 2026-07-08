@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { getMyMentorshipAsGuest } from '@/app/actions/mentor-guest-actions'
 import { updateClassScheduledAt } from '@/app/actions/mentor-actions'
 import VideoRoom from '@/components/ui/VideoRoom'
+import { SkeletonGrid, SkeletonCard } from '@/components/ui/skeleton'
 
 export default function MinistrarMinhaMentoriaPage() {
   const [mentoria, setMentoria] = useState<any>(null)
@@ -74,11 +75,7 @@ export default function MinistrarMinhaMentoriaPage() {
     setActiveClassId(null)
   }
 
-  if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '256px' }}>
-      <p style={{ color: '#888' }}>Carregando...</p>
-    </div>
-  )
+  if (loading) return <SkeletonCard lines={3} />
 
   if (!mentoria) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '256px' }}>
