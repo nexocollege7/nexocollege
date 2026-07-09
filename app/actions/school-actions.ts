@@ -402,6 +402,27 @@ export async function saveCustomDomain(domain: string) {
 
   if (error) return { error: error.message }
 
+  // Registrar domínio no Vercel automaticamente
+  if (cleanDomain) {
+    try {
+      const vercelToken = process.env.VERCEL_API_TOKEN
+      const vercelProjectId = process.env.VERCEL_PROJECT_ID
+      if (vercelToken && vercelProjectId) {
+        await fetch(`https://api.vercel.com/v10/projects/${vercelProjectId}/domains`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${vercelToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ name: cleanDomain }),
+        })
+      }
+    } catch (e) {
+      console.error('[saveCustomDomain] Vercel API error:', e)
+      // Não bloqueia o fluxo — domínio foi salvo no banco
+    }
+  }
+
   revalidatePath('/dashboard/escola')
   return { success: true, domain: cleanDomain }
 }
