@@ -42,7 +42,7 @@ export async function DELETE(
     .eq('user_id', id)
     .eq('school_id', school.id)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: 'Erro interno.' }, { status: 500 })
 
   return NextResponse.json({ success: true })
 }
@@ -101,7 +101,7 @@ export async function PATCH(
 
   if (body.password) {
     const { error } = await adminClient.auth.admin.updateUserById(id, { password: body.password })
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) return NextResponse.json({ error: 'Erro interno.' }, { status: 500 })
   }
 
   return NextResponse.json({ success: true })

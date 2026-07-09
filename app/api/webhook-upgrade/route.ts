@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
 
       if (error) {
         console.error('Erro ao atualizar plano:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+        return NextResponse.json({ error: 'Erro interno.' }, { status: 500 })
       }
 
       await adminClient.from('payments').insert({
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
 
       if (error) {
         console.error('Erro ao ativar Módulo Mentor:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+        return NextResponse.json({ error: 'Erro interno.' }, { status: 500 })
       }
 
       await adminClient.from('payments').insert({

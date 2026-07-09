@@ -38,7 +38,7 @@ export async function GET() {
     .eq('school_id', school.id)
     .order('created_at', { ascending: true })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: 'Erro interno.' }, { status: 500 })
 
   return NextResponse.json(data)
 }
@@ -152,7 +152,7 @@ export async function POST(req: NextRequest) {
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: 'Erro interno.' }, { status: 500 })
 
   return NextResponse.json(data)
 }

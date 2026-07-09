@@ -45,7 +45,7 @@ export async function PUT(request: NextRequest) {
       .eq('id', plano.id)
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Erro interno.' }, { status: 500 })
     }
 
     revalidateTag('plans', { expire: 0 })
