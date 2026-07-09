@@ -55,6 +55,19 @@ export async function middleware(request: NextRequest) {
   const isNexoCollegeMain = host === 'nexocollege.com.br' || host === 'www.nexocollege.com.br'
   if (!isNexoCollegeDomain && !isNexoCollegeMain) {
     if (url.pathname.startsWith('/api/')) { return NextResponse.next() }
+
+    // VULN-02: Sanitizar Host header
+    const hostRegex = /^[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?)*$/i
+    if (!hostRegex.test(host)) {
+      return NextResponse.next()
+    }
+
+    // VULN-01: Rate limit para evitar DoS via custom domain lookup
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+    const { rateLimit } = await import('@/lib/rate-limit')
+    const { success } = await rateLimit(`${ip}:custom-domain`, 30, 60)
+    if (!success) return new Response('Too many requests', { status: 429 })
+
     const { createClient: createAdminClient } = await import('@supabase/supabase-js')
     const adminClient = createAdminClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
