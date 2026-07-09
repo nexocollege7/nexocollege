@@ -54,6 +54,14 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
+    // VULN-03: Verificar magic bytes — não confiar apenas no MIME type declarado
+    const isJpeg = buffer[0] === 0xFF && buffer[1] === 0xD8
+    const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47
+    const isWebp = buffer.length > 11 && buffer.slice(8, 12).toString('ascii') === 'WEBP'
+    if (!isJpeg && !isPng && !isWebp) {
+      return NextResponse.json({ error: 'Arquivo inválido. Use JPEG, PNG ou WEBP.' }, { status: 400 })
+    }
+
     const { error: uploadError } = await adminClient.storage
       .from('course-thumbnails')
       .upload(fileName, buffer, {
