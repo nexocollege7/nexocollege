@@ -77,7 +77,9 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true, url: data.publicUrl })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Erro interno' }, { status: 500 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Erro interno'
+    console.error('[upload-mentorship-cover]', err instanceof Error ? err.message : err)
+    return NextResponse.json({ error: 'Erro ao fazer upload.' }, { status: 500 })
   }
 }
