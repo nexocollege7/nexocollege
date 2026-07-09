@@ -14,6 +14,7 @@ import {
   createCohort,
   closeCohort,
   reopenCohort,
+  updateCohortDates,
   updateCohortLive,
   getMentorAtual,
   createGuestMentor,
@@ -44,6 +45,9 @@ export default function EditarMentoriaPage() {
   const [novaTurma, setNovaTurma] = useState({ maxStudents: '20', enrollmentStart: '', enrollmentEnd: '' })
   const [abrindoTurma, setAbrindoTurma] = useState(false)
   const [liveEdits, setLiveEdits] = useState<Record<string, string>>({})
+  const [editandoTurmaId, setEditandoTurmaId] = useState<string | null>(null)
+  const [editTurmaForm, setEditTurmaForm] = useState({ enrollmentStart: '', enrollmentEnd: '', maxStudents: '20' })
+  const [salvandoTurma, setSalvandoTurma] = useState(false)
   const [savingLiveId, setSavingLiveId] = useState<string | null>(null)
 
   const [mentorAtual, setMentorAtual] = useState<{ full_name: string; isGuest: boolean } | null>(null)
@@ -166,6 +170,30 @@ export default function EditarMentoriaPage() {
     } else if (result.error) {
       showMsg('Erro: ' + result.error)
     }
+  }
+
+  async function handleEditarTurma(c: { id: string; enrollment_start: string | null; enrollment_end: string | null; max_students: number }) {
+    setEditandoTurmaId(c.id)
+    setEditTurmaForm({
+      enrollmentStart: c.enrollment_start ? new Date(c.enrollment_start).toISOString().slice(0, 10) : '',
+      enrollmentEnd: c.enrollment_end ? new Date(c.enrollment_end).toISOString().slice(0, 10) : '',
+      maxStudents: String(c.max_students),
+    })
+  }
+
+  async function handleSalvarTurma(cohortId: string) {
+    setSalvandoTurma(true)
+    const result = await updateCohortDates(cohortId, id, {
+      enrollmentStart: editTurmaForm.enrollmentStart,
+      enrollmentEnd: editTurmaForm.enrollmentEnd,
+      maxStudents: Number(editTurmaForm.maxStudents) || 20,
+    })
+    setSalvandoTurma(false)
+    if (result?.error) { showMsg('Erro: ' + result.error); return }
+    const updated = await getCohorts(id)
+    setCohorts(updated)
+    setEditandoTurmaId(null)
+    showMsg('✅ Turma atualizada!')
   }
 
   async function handleReabrirTurma(cohortId: string) {
@@ -518,10 +546,35 @@ export default function EditarMentoriaPage() {
                       </span>
                     )}
                   </div>
-                  {c.status === 'open' ? (
-                    <button onClick={() => handleEncerrarTurma(c.id)} style={btnPerigo}>Encerrar inscrições</button>
-                  ) : (
-                    <button onClick={() => handleReabrirTurma(c.id)} style={{ ...btnPerigo, backgroundColor: '#1a1a1a', color: '#AEEA00', border: '1px solid #AEEA00' }}>Reabrir inscrições</button>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <button onClick={() => handleEditarTurma(c)} style={{ fontSize: '12px', padding: '6px 12px', borderRadius: '6px', border: '1px solid #333', backgroundColor: '#1a1a1a', color: '#aaa', cursor: 'pointer' }}>✏️ Editar</button>
+                    {c.status === 'open' ? (
+                      <button onClick={() => handleEncerrarTurma(c.id)} style={btnPerigo}>Encerrar inscrições</button>
+                    ) : (
+                      <button onClick={() => handleReabrirTurma(c.id)} style={{ ...btnPerigo, backgroundColor: '#1a1a1a', color: '#AEEA00', border: '1px solid #AEEA00' }}>Reabrir inscrições</button>
+                    )}
+                  </div>
+                  {editandoTurmaId === c.id && (
+                    <div style={{ marginTop: '12px', padding: '16px', backgroundColor: '#111', borderRadius: '8px', border: '1px solid #333', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                        <div>
+                          <label style={{ color: '#888', fontSize: '11px', display: 'block', marginBottom: '4px' }}>Vagas</label>
+                          <input type="number" value={editTurmaForm.maxStudents} onChange={e => setEditTurmaForm(f => ({ ...f, maxStudents: e.target.value }))} style={{ width: '100%', background: '#1a1a1a', border: '1px solid #333', borderRadius: '6px', padding: '8px', color: '#fff', fontSize: '13px' }} />
+                        </div>
+                        <div>
+                          <label style={{ color: '#888', fontSize: '11px', display: 'block', marginBottom: '4px' }}>Início das inscrições</label>
+                          <input type="date" value={editTurmaForm.enrollmentStart} onChange={e => setEditTurmaForm(f => ({ ...f, enrollmentStart: e.target.value }))} style={{ width: '100%', background: '#1a1a1a', border: '1px solid #333', borderRadius: '6px', padding: '8px', color: '#fff', fontSize: '13px' }} />
+                        </div>
+                        <div>
+                          <label style={{ color: '#888', fontSize: '11px', display: 'block', marginBottom: '4px' }}>Fim das inscrições</label>
+                          <input type="date" value={editTurmaForm.enrollmentEnd} onChange={e => setEditTurmaForm(f => ({ ...f, enrollmentEnd: e.target.value }))} style={{ width: '100%', background: '#1a1a1a', border: '1px solid #333', borderRadius: '6px', padding: '8px', color: '#fff', fontSize: '13px' }} />
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                        <button onClick={() => setEditandoTurmaId(null)} style={{ fontSize: '12px', padding: '6px 14px', borderRadius: '6px', border: '1px solid #333', backgroundColor: 'transparent', color: '#888', cursor: 'pointer' }}>Cancelar</button>
+                        <button onClick={() => handleSalvarTurma(c.id)} disabled={salvandoTurma} style={{ fontSize: '12px', padding: '6px 14px', borderRadius: '6px', border: 'none', backgroundColor: '#7C4DFF', color: '#fff', cursor: 'pointer', fontWeight: '600' }}>{salvandoTurma ? 'Salvando...' : 'Salvar'}</button>
+                      </div>
+                    </div>
                   )}
                 </div>
 

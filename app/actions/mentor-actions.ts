@@ -403,6 +403,44 @@ export async function reopenCohort(cohortId: string, mentorshipId: string) {
   return { success: true }
 }
 
+export async function updateCohortDates(cohortId: string, mentorshipId: string, formData: {
+  enrollmentStart: string
+  enrollmentEnd: string
+  maxStudents: number
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const schoolId = await getSchoolId(user.id)
+  if (!schoolId) return { error: 'Escola não encontrada' }
+
+  const { data: mentorship } = await supabase
+    .from('mentorships')
+    .select('school_id')
+    .eq('id', mentorshipId)
+    .single()
+
+  if (!mentorship || mentorship.school_id !== schoolId) {
+    return { error: 'Acesso negado' }
+  }
+
+  const { error } = await supabase
+    .from('mentorship_cohorts')
+    .update({
+      enrollment_start: formData.enrollmentStart || null,
+      enrollment_end: formData.enrollmentEnd || null,
+      max_students: formData.maxStudents,
+    })
+    .eq('id', cohortId)
+    .eq('mentorship_id', mentorshipId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/dashboard/mentorias/${mentorshipId}`)
+  return { success: true }
+}
+
 export async function updateCohortLive(cohortId: string, mentorshipId: string, formData: {
   liveUrl: string
   liveActive: boolean
