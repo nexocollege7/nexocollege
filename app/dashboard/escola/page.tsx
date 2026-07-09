@@ -710,15 +710,63 @@ export default function EscolaPage() {
           {!['pro', 'scale', 'enterprise'].includes(school?.plan ?? '') ? (
             <PlanLock upgradeRequired="pro" mensagem="Domínio próprio disponível a partir do plano Pro" />
           ) : (
-            <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '24px' }}>
-              <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 8px' }}>🌐 Domínio próprio</h2>
-              <p style={{ color: '#666', fontSize: '13px', margin: '0 0 16px' }}>
-                Configure um domínio personalizado para sua escola (ex: cursos.suaigreja.com.br)
-              </p>
-              <div style={{ background: 'rgba(124,77,255,0.1)', border: '1px solid #7C4DFF', borderRadius: '8px', padding: '12px 16px' }}>
-                <p style={{ margin: 0, color: '#7C4DFF', fontSize: '13px' }}>
-                  Em breve — esta funcionalidade está em desenvolvimento. Entre em contato com o suporte.
-                </p>
+            <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div>
+                <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 4px' }}>🌐 Domínio próprio</h2>
+                <p style={{ color: '#666', fontSize: '13px', margin: 0 }}>Aponte seu domínio personalizado para sua escola (ex: cursos.suaigreja.com.br)</p>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={{ color: '#aaa', fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Seu domínio</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="text"
+                    placeholder="cursos.suaigreja.com.br"
+                    value={school?.custom_domain ?? ''}
+                    onChange={e => setSchool((prev: typeof school) => ({ ...prev, custom_domain: e.target.value }))}
+                    style={{ flex: 1, background: '#1a1a1a', border: '1px solid #333', borderRadius: '8px', padding: '10px 14px', color: '#fff', fontSize: '14px', outline: 'none' }}
+                  />
+                  <button
+                    onClick={async () => {
+                      setSaving(true)
+                      setMsg('')
+                      const { saveCustomDomain } = await import('@/app/actions/school-actions')
+                      const res = await saveCustomDomain(school?.custom_domain ?? '')
+                      setSaving(false)
+                      setMsg(res.error ? 'Erro: ' + res.error : 'Domínio salvo com sucesso!')
+                    }}
+                    disabled={saving}
+                    style={{ background: '#AEEA00', color: '#000', border: 'none', borderRadius: '8px', padding: '10px 20px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                  >
+                    {saving ? 'Salvando...' : 'Salvar'}
+                  </button>
+                </div>
+                {msg && <p style={{ margin: 0, fontSize: '13px', color: msg.startsWith('Erro') ? '#ff4444' : '#AEEA00' }}>{msg}</p>}
+              </div>
+              <div style={{ background: '#0d0d0d', border: '1px solid #222', borderRadius: '10px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <p style={{ margin: 0, color: '#fff', fontSize: '13px', fontWeight: '600' }}>📋 Como configurar o apontamento DNS</p>
+                <p style={{ margin: 0, color: '#666', fontSize: '12px' }}>Acesse o painel DNS do seu provedor (ex: Registro.br, GoDaddy, Cloudflare) e adicione:</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '80px 80px 1fr', gap: '8px', padding: '8px 12px', background: '#1a1a1a', borderRadius: '6px', fontSize: '12px' }}>
+                    <span style={{ color: '#7C4DFF', fontWeight: '700' }}>Tipo</span>
+                    <span style={{ color: '#7C4DFF', fontWeight: '700' }}>Nome</span>
+                    <span style={{ color: '#7C4DFF', fontWeight: '700' }}>Valor</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '80px 80px 1fr', gap: '8px', padding: '8px 12px', background: '#1a1a1a', borderRadius: '6px', fontSize: '12px' }}>
+                    <span style={{ color: '#fff', fontFamily: 'monospace' }}>CNAME</span>
+                    <span style={{ color: '#fff', fontFamily: 'monospace' }}>cursos</span>
+                    <span style={{ color: '#AEEA00', fontFamily: 'monospace' }}>cname.vercel-dns.com</span>
+                  </div>
+                </div>
+                <p style={{ margin: 0, color: '#555', fontSize: '11px' }}>⚠️ Para domínio raiz (ex: suaigreja.com.br sem prefixo), entre em contato com o suporte.</p>
+                <div style={{ background: 'rgba(174,234,0,0.08)', border: '1px solid rgba(174,234,0,0.2)', borderRadius: '8px', padding: '12px' }}>
+                  <p style={{ margin: '0 0 6px', color: '#AEEA00', fontSize: '12px', fontWeight: '600' }}>✅ Após configurar o DNS:</p>
+                  <ol style={{ margin: 0, paddingLeft: '16px', color: '#888', fontSize: '12px', lineHeight: '1.8' }}>
+                    <li>Digite seu domínio acima e clique em Salvar</li>
+                    <li>Acesse o painel do Vercel e adicione o domínio em Settings › Domains</li>
+                    <li>Aguarde a propagação DNS (até 48h)</li>
+                    <li>Sua escola estará acessível pelo novo domínio automaticamente</li>
+                  </ol>
+                </div>
               </div>
             </div>
           )}

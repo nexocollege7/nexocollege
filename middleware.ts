@@ -50,6 +50,29 @@ export async function middleware(request: NextRequest) {
     return NextResponse.rewrite(rewriteUrl)
   }
 
+
+  // Dominio customizado (ex: cursos.suaigreja.com.br)
+  const isNexoCollegeMain = host === 'nexocollege.com.br' || host === 'www.nexocollege.com.br'
+  if (!isNexoCollegeDomain && !isNexoCollegeMain) {
+    if (url.pathname.startsWith('/api/')) { return NextResponse.next() }
+    const { createClient: createAdminClient } = await import('@supabase/supabase-js')
+    const adminClient = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data: school } = await adminClient
+      .from('schools')
+      .select('slug')
+      .eq('custom_domain', host)
+      .single()
+    if (school?.slug) {
+      const rewriteUrl = url.clone()
+      if (!url.pathname.startsWith('/vitrine/' + school.slug)) {
+        rewriteUrl.pathname = '/vitrine/' + school.slug + (url.pathname === '/' ? '' : url.pathname)
+      }
+      return NextResponse.rewrite(rewriteUrl)
+    }
+  }
   // Rotas /api/ são excluídas das verificações de auth do middleware.
   // CADA rota é responsável por verificar autenticação e ownership individualmente.
   // Rotas intencionalmente públicas (sem auth própria):
