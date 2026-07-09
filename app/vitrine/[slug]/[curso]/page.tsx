@@ -83,12 +83,23 @@ export default async function CursoDetalhePage({
 
           <div className="lg:col-span-1">
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 sticky top-6">
-              <div
-                className="w-full h-32 rounded-lg mb-4 flex items-center justify-center"
-                style={{ backgroundColor: school.primary_color || '#22c55e' }}
-              >
-                <BookOpen className="w-12 h-12 text-white opacity-80" />
-              </div>
+              {course.thumbnail_url ? (
+                <div
+                  className="w-full h-32 rounded-lg mb-4"
+                  style={{
+                    backgroundImage: `url(${course.thumbnail_url})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }}
+                />
+              ) : (
+                <div
+                  className="w-full h-32 rounded-lg mb-4 flex items-center justify-center"
+                  style={{ backgroundColor: school.primary_color || '#22c55e' }}
+                >
+                  <BookOpen className="w-12 h-12 text-white opacity-80" />
+                </div>
+              )}
 
               <div className="mb-4">
                 {course.is_free ? (
