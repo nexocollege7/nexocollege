@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
   let collaboratorUserId: string
 
   if (existingUser) {
-    // Usuário já existe — usar o id existente
+    // Usuário já existe — usar o id existente (não revelar ao cliente)
     collaboratorUserId = existingUser.id
   } else {
     // Criar novo usuário
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
       password,
       email_confirm: true,
     })
-    if (createError) return NextResponse.json({ error: createError.message }, { status: 500 })
+    if (createError) return NextResponse.json({ error: 'Erro ao criar colaborador.' }, { status: 500 })
     collaboratorUserId = newUser.user.id
 
     // Criar perfil em public.users
