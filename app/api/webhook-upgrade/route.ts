@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { MercadoPagoConfig, Payment } from 'mercadopago'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createHmac, timingSafeEqual } from 'crypto'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 const PLANOS_VALIDOS = ['starter', 'creator', 'pro', 'scale', 'enterprise']
 
@@ -49,6 +50,10 @@ export async function POST(request: NextRequest) {
   const adminClient = createAdminClient()
 
   try {
+    const ip = getClientIp(request.headers)
+    const { success: rateLimitOk } = await rateLimit(`${ip}:webhook-upgrade`, 60, 60)
+    if (!rateLimitOk) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+
     const body = await request.json()
 
     if (body.type !== 'payment') {
