@@ -13,6 +13,7 @@ import {
   getCohorts,
   createCohort,
   closeCohort,
+  reopenCohort,
   updateCohortLive,
   getMentorAtual,
   createGuestMentor,
@@ -167,8 +168,16 @@ export default function EditarMentoriaPage() {
     }
   }
 
+  async function handleReabrirTurma(cohortId: string) {
+    const result = await reopenCohort(cohortId, id)
+    if (result?.error) { showMsg('Erro: ' + result.error); return }
+    const updated = await getCohorts(id)
+    setCohorts(updated)
+    showMsg('✅ Inscrições reabertas!')
+  }
+
   async function handleEncerrarTurma(cohortId: string) {
-    if (!confirm('Encerrar esta turma? Não será possível reabri-la.')) return
+    if (!confirm('Encerrar as inscrições desta turma? Você poderá reabri-la depois.')) return
     const result = await closeCohort(cohortId, id)
     if (result?.error) { showMsg('Erro: ' + result.error); return }
     setCohorts(cohorts.map((c) => c.id === cohortId ? { ...c, status: 'archived', live_active: false } : c))
@@ -509,8 +518,10 @@ export default function EditarMentoriaPage() {
                       </span>
                     )}
                   </div>
-                  {aberta && (
-                    <button onClick={() => handleEncerrarTurma(c.id)} style={btnPerigo}>Encerrar turma</button>
+                  {c.status === 'open' ? (
+                    <button onClick={() => handleEncerrarTurma(c.id)} style={btnPerigo}>Encerrar inscrições</button>
+                  ) : (
+                    <button onClick={() => handleReabrirTurma(c.id)} style={{ ...btnPerigo, backgroundColor: '#1a1a1a', color: '#AEEA00', border: '1px solid #AEEA00' }}>Reabrir inscrições</button>
                   )}
                 </div>
 
