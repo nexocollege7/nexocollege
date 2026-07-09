@@ -120,8 +120,12 @@ export default async function MentoriaDetalhePage({
                     const esgotada = vagasRestantes === 0
                     return (
                       <div key={c.id} style={{ borderTop: '1px solid #1A1A1A', paddingTop: '14px' }}>
-                        <p style={{ color: '#CCCCCC', fontSize: '13px', margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <Users size={13} /> {esgotada ? 'Vagas esgotadas' : `${vagasRestantes} vaga${vagasRestantes !== 1 ? 's' : ''} restante${vagasRestantes !== 1 ? 's' : ''}`}
+                        <p style={{
+                          color: esgotada ? '#ff4444' : vagasRestantes <= 5 ? '#AEEA00' : '#CCCCCC',
+                          fontSize: '13px', margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '6px',
+                          fontWeight: vagasRestantes <= 5 && !esgotada ? '700' : '400',
+                        }}>
+                          <Users size={13} /> {esgotada ? '❌ Vagas esgotadas' : vagasRestantes <= 5 ? `⚠️ Apenas ${vagasRestantes} vaga${vagasRestantes !== 1 ? 's' : ''} restante${vagasRestantes !== 1 ? 's' : ''}!` : `${vagasRestantes} vagas restantes`}
                         </p>
                         {(c.enrollment_start || c.enrollment_end) && (
                           <p style={{ color: '#555555', fontSize: '12px', margin: '0 0 10px' }}>
