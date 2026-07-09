@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { Space_Grotesk, Inter, Sora } from "next/font/google";
 import "./globals.css";
 import JsonLd from './_components/JsonLd'
-import { headers } from "next/headers"
-import { createClient } from "@supabase/supabase-js"
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -26,92 +24,73 @@ const sora = Sora({
   display: "swap",
 });
 
-async function getSchoolLogoUrl(): Promise<string | null> {
-  const headersList = await headers()
-  const host = headersList.get("host") || ""
-  const isSubdomain = host.endsWith(".nexocollege.com.br") && !host.startsWith("www.")
-  if (!isSubdomain) return null
-  const slug = host.replace(".nexocollege.com.br", "")
-  const adminClient = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-  const { data } = await adminClient
-    .from("schools")
-    .select("logo_url")
-    .eq("slug", slug)
-    .single()
-  return data?.logo_url ?? null
-}
+export const metadata: Metadata = {
+  manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'NexoCollege',
+  },
 
-export async function generateMetadata(): Promise<Metadata> {
-  const logoUrl = await getSchoolLogoUrl()
-  return {
-    manifest: '/manifest.json',
-    icons: logoUrl
-      ? {
-          icon: [{ url: logoUrl, type: 'image/png' }],
-          shortcut: logoUrl,
-          apple: logoUrl,
-        }
-      : {
-          icon: [
-            { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-            { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-          ],
-          shortcut: '/favicon.ico',
-          apple: '/apple-touch-icon.png',
-        },
-    appleWebApp: {
-      capable: true,
-      statusBarStyle: 'black-translucent',
-      title: 'NexoCollege',
-    },
-    metadataBase: new URL('https://nexocollege.com.br'),
-    title: {
-      default: 'NexoCollege — Crie sua escola online gratuitamente',
-      template: '%s | NexoCollege',
-    },
-    description: 'Plataforma simples para criar escolas online. Crie cursos, gerencie alunos, emita certificados e receba pagamentos via Mercado Pago. Comece gratuitamente.',
-    keywords: ['plataforma de cursos online', 'criar escola online', 'EAD brasileiro', 'vender cursos online', 'plataforma EAD', 'certificado online', 'Mercado Pago cursos', 'escola virtual'],
-    authors: [{ name: 'NexoCollege', url: 'https://nexocollege.com.br' }],
-    creator: 'NexoCollege',
-    publisher: 'NexoCollege',
-    robots: {
+  metadataBase: new URL('https://nexocollege.com.br'),
+  title: {
+    default: 'NexoCollege — Crie sua escola online gratuitamente',
+    template: '%s | NexoCollege',
+  },
+  description: 'Plataforma simples para criar escolas online. Crie cursos, gerencie alunos, emita certificados e receba pagamentos via Mercado Pago. Comece gratuitamente.',
+  keywords: ['plataforma de cursos online', 'criar escola online', 'EAD brasileiro', 'vender cursos online', 'plataforma EAD', 'certificado online', 'Mercado Pago cursos', 'escola virtual'],
+  authors: [{ name: 'NexoCollege', url: 'https://nexocollege.com.br' }],
+  creator: 'NexoCollege',
+  publisher: 'NexoCollege',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
       index: true,
       follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        'max-video-preview': -1,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'pt_BR',
+    url: 'https://nexocollege.com.br',
+    siteName: 'NexoCollege',
+    title: 'NexoCollege — Crie sua escola online gratuitamente',
+    description: 'Plataforma simples para criar escolas online. Cursos, certificados e pagamentos via Mercado Pago. Comece grátis.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'NexoCollege — Plataforma de ensino online brasileira',
       },
-    },
-    openGraph: {
-      type: 'website',
-      locale: 'pt_BR',
-      url: 'https://nexocollege.com.br',
-      siteName: 'NexoCollege',
-      title: 'NexoCollege — Crie sua escola online gratuitamente',
-      description: 'Plataforma simples para criar escolas online. Cursos, certificados e pagamentos via Mercado Pago. Comece grátis.',
-      images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'NexoCollege — Plataforma de ensino online brasileira' }],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: 'NexoCollege — Crie sua escola online gratuitamente',
-      description: 'Plataforma simples para criar escolas online. Comece grátis.',
-      images: ['/og-image.png'],
-      creator: '@nexocollege',
-    },
-    alternates: {
-      canonical: 'https://nexocollege.com.br',
-    },
-    verification: {
-      google: 'ewYJdD2wU4lX6zroQtpke3I_q4-hQxF2L3ouCBjKveQ',
-    },
-  }
-}
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'NexoCollege — Crie sua escola online gratuitamente',
+    description: 'Plataforma simples para criar escolas online. Comece grátis.',
+    images: ['/og-image.png'],
+    creator: '@nexocollege',
+  },
+  alternates: {
+    canonical: 'https://nexocollege.com.br',
+  },
+  verification: {
+    google: 'ewYJdD2wU4lX6zroQtpke3I_q4-hQxF2L3ouCBjKveQ',
+  },
+};
 
 export default function RootLayout({
   children,
