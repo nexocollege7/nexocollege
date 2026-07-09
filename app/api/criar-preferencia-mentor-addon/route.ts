@@ -71,7 +71,7 @@ export async function POST(_request: NextRequest) {
 
     return NextResponse.json({ url: result.init_point })
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : JSON.stringify(error)
+    const message = error instanceof Error ? error.message : 'Erro interno'
     console.error('Mentor addon MP Error:', message)
     return NextResponse.json({ error: message }, { status: 500 })
   }

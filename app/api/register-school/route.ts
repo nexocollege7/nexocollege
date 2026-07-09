@@ -42,6 +42,10 @@ export async function POST(request: NextRequest) {
   )
 
   try {
+    const contentLength = request.headers.get('content-length')
+    if (contentLength && parseInt(contentLength) > 20480) {
+      return NextResponse.json({ error: 'Payload muito grande.' }, { status: 413 })
+    }
     const { nome, email, password, nomeEscola, termosAceitos, slug: slugDesejado } = await request.json()
 
     if (!nome || !email || !password || !nomeEscola) {
