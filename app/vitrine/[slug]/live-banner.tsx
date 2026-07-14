@@ -31,6 +31,7 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [dailyRoomUrl, setDailyRoomUrl] = useState<string | null>(null)
   const [dailyRoomName, setDailyRoomName] = useState<string | null>(null)
+  const [initialized, setInitialized] = useState(false)
   const [comments, setComments] = useState<Comment[]>([])
   const [commentMsg, setCommentMsg] = useState('')
   const [sendingComment, setSendingComment] = useState(false)
@@ -40,6 +41,16 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user?.email) setUserName(user.email.split('@')[0])
+    })
+    // Carregar estado real da live ao montar
+    getLiveStatus(schoolId).then((status) => {
+      setLiveActive(status.liveActive)
+      setLiveUrl(status.liveUrl)
+      setLiveType(status.liveType)
+      setSessionId(status.sessionId)
+      setDailyRoomUrl(status.dailyRoomUrl)
+      setDailyRoomName(status.dailyRoomName ?? null)
+      setInitialized(true)
     })
   }, [])
 
@@ -63,10 +74,10 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
   }, [schoolId])
 
   useEffect(() => {
-    if (liveType === 'native' && dailyRoomUrl && dailyRoomName) {
+    if (initialized && liveType === 'native' && dailyRoomUrl && dailyRoomName) {
       initDailyViewer(dailyRoomUrl, dailyRoomName)
     }
-  }, [liveType, dailyRoomUrl, dailyRoomName])
+  }, [initialized, liveType, dailyRoomUrl, dailyRoomName])
 
   useEffect(() => {
     if (liveType === 'native' && sessionId) {
