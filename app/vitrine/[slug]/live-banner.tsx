@@ -106,20 +106,45 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
     // Modo headless — sem iframe, sem UI do Daily.co
     const callObject = Daily.createCallObject({ url: roomUrl, token })
 
-    // Quando um participante publicar vídeo, exibir no elemento <video>
-    callObject.on('track-started', (event: any) => {
-      if (!event || !event.track || event.track.kind !== 'video') return
-      const participant = event.participant
-      if (!participant || participant.local) return // ignorar o próprio aluno
+    function attachVideoTrack(track: MediaStreamTrack) {
       const videoEl = document.getElementById('live-viewer-video') as HTMLVideoElement | null
       if (videoEl) {
-        const stream = new MediaStream([event.track])
+        const stream = new MediaStream([track])
         videoEl.srcObject = stream
         videoEl.play().catch(() => {})
+      }
+    }
+
+    // Quando um participante publicar vídeo durante a live
+    callObject.on('track-started', (event: any) => {
+      if (!event?.track || event.track.kind !== 'video') return
+      if (event.participant?.local) return
+      attachVideoTrack(event.track)
+    })
+
+    // Quando um participante atualizar track
+    callObject.on('participant-updated', (event: any) => {
+      if (!event?.participant || event.participant.local) return
+      const videoTrack = event.participant.tracks?.video?.persistentTrack
+      if (videoTrack && videoTrack.readyState === 'live') {
+        attachVideoTrack(videoTrack)
       }
     })
 
     await callObject.join({ startVideoOff: true, startAudioOff: true })
+
+    // Verificar participants já presentes após o join
+    setTimeout(() => {
+      const participants = callObject.participants()
+      Object.values(participants).forEach((p: any) => {
+        if (p.local) return
+        const videoTrack = p.tracks?.video?.persistentTrack
+        if (videoTrack && videoTrack.readyState === 'live') {
+          attachVideoTrack(videoTrack)
+        }
+      })
+    }, 2000)
+
     ;(window as any).__dailyViewerObject = callObject
   }
 
