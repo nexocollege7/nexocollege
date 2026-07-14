@@ -32,6 +32,8 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
   const [dailyRoomUrl, setDailyRoomUrl] = useState<string | null>(null)
   const [dailyRoomName, setDailyRoomName] = useState<string | null>(null)
   const [initialized, setInitialized] = useState(false)
+  const [viewerReady, setViewerReady] = useState(false)
+  const [viewerStarted, setViewerStarted] = useState(false)
   const [comments, setComments] = useState<Comment[]>([])
   const [commentMsg, setCommentMsg] = useState('')
   const [sendingComment, setSendingComment] = useState(false)
@@ -146,6 +148,7 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
     }, 2000)
 
     ;(window as any).__dailyViewerObject = callObject
+    setViewerReady(true)
   }
 
   async function handleSendComment() {
