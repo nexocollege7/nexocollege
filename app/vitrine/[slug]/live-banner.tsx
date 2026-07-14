@@ -9,7 +9,6 @@ import BannerRotativo, { type Slide } from './banner-rotativo'
 
 type Course = Extract<Slide, { tipo: 'curso' }>
 type Mentoria = Omit<Extract<Slide, { tipo: 'mentoria' }>, 'tipo'>
-
 type Comment = { id: string; user_name: string; message: string; created_at: string }
 
 type Props = {
@@ -31,9 +30,7 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [dailyRoomUrl, setDailyRoomUrl] = useState<string | null>(null)
   const [dailyRoomName, setDailyRoomName] = useState<string | null>(null)
-  const [initialized, setInitialized] = useState(false)
-  const [viewerReady, setViewerReady] = useState(false)
-  const [viewerStarted, setViewerStarted] = useState(false)
+  const [iframeSrc, setIframeSrc] = useState<string | null>(null)
   const [comments, setComments] = useState<Comment[]>([])
   const [commentMsg, setCommentMsg] = useState('')
   const [sendingComment, setSendingComment] = useState(false)
@@ -44,7 +41,6 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user?.email) setUserName(user.email.split('@')[0])
     })
-    // Carregar estado real da live ao montar
     getLiveStatus(schoolId).then((status) => {
       setLiveActive(status.liveActive)
       setLiveUrl(status.liveUrl)
@@ -52,7 +48,9 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
       setSessionId(status.sessionId)
       setDailyRoomUrl(status.dailyRoomUrl)
       setDailyRoomName(status.dailyRoomName ?? null)
-      setInitialized(true)
+      if (status.liveType === 'native' && status.dailyRoomUrl && status.dailyRoomName) {
+        buildIframeSrc(status.dailyRoomUrl, status.dailyRoomName)
+      }
     })
   }, [])
 
@@ -76,18 +74,6 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
   }, [schoolId])
 
   useEffect(() => {
-    if (initialized && liveType === 'native' && dailyRoomUrl && dailyRoomName) {
-      initDailyViewer(dailyRoomUrl, dailyRoomName)
-    }
-  }, [initialized, liveType, dailyRoomUrl, dailyRoomName])
-
-  useEffect(() => {
-    const handler = () => setViewerReady(true)
-    window.addEventListener('nexolive-ready', handler)
-    return () => window.removeEventListener('nexolive-ready', handler)
-  }, [])
-
-  useEffect(() => {
     if (liveType === 'native' && sessionId) {
       const channel = supabase
         .channel('live-comments-vitrine-' + sessionId)
@@ -104,64 +90,17 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
     }
   }, [liveType, sessionId])
 
-  async function initDailyViewer(roomUrl: string, roomName: string) {
-    const Daily = (await import('@daily-co/daily-js')).default
-    const existing = (window as any).__dailyViewerObject
-    if (existing) { existing.destroy(); (window as any).__dailyViewerObject = null }
-
-    // Tentar gerar token — se falhar (visitante anônimo), entrar sem token
+  async function buildIframeSrc(roomUrl: string, roomName: string) {
     let token: string | undefined
     try {
       token = await generateViewerToken(roomName, userName)
     } catch {
       token = undefined
     }
-
-    // Modo headless — sem iframe, sem UI do Daily.co
-    const callObject = Daily.createCallObject(token ? { url: roomUrl, token } : { url: roomUrl })
-
-    function attachVideoTrack(track: MediaStreamTrack) {
-      const videoEl = document.getElementById('live-viewer-video') as HTMLVideoElement | null
-      if (videoEl) {
-        const stream = new MediaStream([track])
-        videoEl.srcObject = stream
-        videoEl.play().catch(() => {})
-      }
-    }
-
-    // Quando um participante publicar vídeo durante a live
-    callObject.on('track-started', (event: any) => {
-      if (!event?.track || event.track.kind !== 'video') return
-      if (event.participant?.local) return
-      attachVideoTrack(event.track)
-    })
-
-    // Quando um participante atualizar track
-    callObject.on('participant-updated', (event: any) => {
-      if (!event?.participant || event.participant.local) return
-      const videoTrack = event.participant.tracks?.video?.persistentTrack
-      if (videoTrack && videoTrack.readyState === 'live') {
-        attachVideoTrack(videoTrack)
-      }
-    })
-
-    await callObject.join({ startVideoOff: true, startAudioOff: true })
-
-    // Verificar participants já presentes após o join
-    setTimeout(() => {
-      const participants = callObject.participants()
-      Object.values(participants).forEach((p: any) => {
-        if (p.local) return
-        const videoTrack = p.tracks?.video?.persistentTrack
-        if (videoTrack && videoTrack.readyState === 'live') {
-          attachVideoTrack(videoTrack)
-        }
-      })
-    }, 2000)
-
-    ;(window as any).__dailyViewerObject = callObject
-    // Disparar evento para o React saber que está pronto
-    window.dispatchEvent(new CustomEvent('nexolive-ready'))
+    const src = token
+      ? `${roomUrl}?t=${token}&startVideoOff=true&startAudioOff=true&showLeaveButton=false&showFullscreenButton=false&showLocalVideo=false&showParticipantsBar=false`
+      : `${roomUrl}?startVideoOff=true&startAudioOff=true&showLeaveButton=false&showFullscreenButton=false&showLocalVideo=false&showParticipantsBar=false`
+    setIframeSrc(src)
   }
 
   async function handleSendComment() {
@@ -175,16 +114,14 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
   // Live nativa
   if (liveActive && liveType === 'native') {
     return (
-      <div style={{ position: 'relative', backgroundColor: '#000' }}>
+      <div style={{ backgroundColor: '#000' }}>
         <style>{`
-          @keyframes live-pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-          }
+          @keyframes live-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
           .live-badge-dot { animation: live-pulse 1.4s ease-in-out infinite; }
         `}</style>
 
-        <div style={{ position: 'relative' }}>
+        {/* Player iframe */}
+        <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', backgroundColor: '#000', overflow: 'hidden' }}>
           <div style={{
             position: 'absolute', top: '16px', left: '24px', zIndex: 10,
             display: 'flex', alignItems: 'center', gap: '8px',
@@ -194,15 +131,26 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
             <span className="live-badge-dot" style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#fff' }} />
             <span style={{ color: '#fff', fontWeight: '800', fontSize: '13px', letterSpacing: '0.04em' }}>🔴 AO VIVO</span>
           </div>
-
+          {iframeSrc ? (
+            <iframe
+              src={iframeSrc}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
+              allow="camera; microphone; autoplay; display-capture; picture-in-picture"
+              allowFullScreen
+            />
+          ) : (
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <p style={{ color: '#666', fontSize: '14px' }}>Conectando à transmissão...</p>
+            </div>
+          )}
         </div>
 
         {/* Chat */}
-        <div style={{ background: '#111', borderTop: '1px solid #1e1e1e', padding: '24px 48px' }}>
+        <div style={{ background: '#0D0D0D', borderTop: '1px solid #1e1e1e', padding: '32px 48px' }}>
           <h3 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 16px' }}>💬 Comentários ao vivo</h3>
-          <div style={{ height: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
+          <div style={{ maxHeight: '240px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
             {comments.length === 0 && (
-              <p style={{ color: '#444', fontSize: '13px', textAlign: 'center', marginTop: '70px' }}>Nenhum comentário ainda...</p>
+              <p style={{ color: '#444', fontSize: '13px', textAlign: 'center', padding: '32px 0' }}>Nenhum comentário ainda...</p>
             )}
             {comments.map((c) => (
               <div key={c.id} style={{ background: '#1a1a1a', borderRadius: '8px', padding: '10px 14px' }}>
@@ -218,14 +166,11 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
               onChange={e => setCommentMsg(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !sendingComment && handleSendComment()}
               placeholder="Digite um comentário..."
-              style={{ flex: 1, background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '8px', padding: '10px 14px', color: '#fff', fontSize: '14px', outline: 'none', fontFamily: 'inherit' }}
+              style={{ flex: 1, background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '8px', padding: '12px 16px', color: '#fff', fontSize: '14px', outline: 'none', fontFamily: 'inherit' }}
               maxLength={500}
             />
-            <button
-              onClick={handleSendComment}
-              disabled={sendingComment || !commentMsg.trim()}
-              style={{ background: cor, color: '#000', border: 'none', borderRadius: '8px', padding: '10px 20px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', opacity: sendingComment || !commentMsg.trim() ? 0.6 : 1 }}
-            >
+            <button onClick={handleSendComment} disabled={sendingComment || !commentMsg.trim()}
+              style={{ background: cor, color: '#000', border: 'none', borderRadius: '8px', padding: '12px 24px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', opacity: sendingComment || !commentMsg.trim() ? 0.6 : 1 }}>
               Enviar
             </button>
           </div>
@@ -239,10 +184,7 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
     return (
       <div style={{ position: 'relative', height: '85vh', minHeight: '500px', backgroundColor: '#000000' }}>
         <style>{`
-          @keyframes live-pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-          }
+          @keyframes live-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
           .live-badge-dot { animation: live-pulse 1.4s ease-in-out infinite; }
         `}</style>
         <iframe
@@ -273,10 +215,7 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
   }
 
   return (
-    <div style={{
-      height: '85vh', display: 'flex', alignItems: 'center',
-      justifyContent: 'center', flexDirection: 'column', gap: '16px',
-    }}>
+    <div style={{ height: '85vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '16px' }}>
       <p style={{ fontSize: '48px' }}>📚</p>
       <p style={{ color: '#888888', fontSize: '18px' }}>Nenhum curso disponível ainda</p>
     </div>
