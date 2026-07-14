@@ -77,7 +77,7 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
 
   useEffect(() => {
     if (initialized && liveType === 'native' && dailyRoomUrl && dailyRoomName) {
-      initViewer(dailyRoomUrl, dailyRoomName)
+      initViewer(dailyRoomUrl, dailyRoomName, userName)
     }
     return () => {
       const existing = (window as any).__dailyViewerObj
@@ -116,13 +116,13 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
     setHasVideo(true)
   }
 
-  async function initViewer(roomUrl: string, roomName: string) {
+  async function initViewer(roomUrl: string, roomName: string, viewerName: string) {
     const Daily = (await import('@daily-co/daily-js')).default
     const existing = (window as any).__dailyViewerObj
     if (existing) { try { existing.leave(); existing.destroy() } catch {} }
 
     let token: string | undefined
-    try { token = await generateViewerToken(roomName, userName) } catch { token = undefined }
+    try { token = await generateViewerToken(roomName, viewerName || 'Visitante') } catch { token = undefined }
 
     const call = Daily.createCallObject(token ? { url: roomUrl, token } : { url: roomUrl })
 
@@ -241,10 +241,10 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
           .live-badge-dot { animation: live-pulse 1.4s ease-in-out infinite; }
         `}</style>
         <iframe src={getEmbedUrl(liveUrl, { autoplay: true, mute: true })}
-          style={{ position: 'absolute', top: '90px', left: 0, right: 0, bottom: 0, width: '100%', height: 'calc(100% - 90px)', border: 'none' }}
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen />
-        <div style={{ position: 'absolute', top: '90px', left: '24px', zIndex: 10, display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '20px', backgroundColor: 'rgba(255,68,68,0.9)' }}>
+        <div style={{ position: 'absolute', top: '16px', left: '16px', zIndex: 10, display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px', borderRadius: '20px', backgroundColor: 'rgba(255,68,68,0.9)' }}>
           <span className="live-badge-dot" style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#fff' }} />
           <span style={{ color: '#fff', fontWeight: '800', fontSize: '13px', letterSpacing: '0.04em' }}>🔴 AO VIVO</span>
         </div>
