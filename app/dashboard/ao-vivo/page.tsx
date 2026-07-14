@@ -103,6 +103,8 @@ export default function AoVivoPage() {
       token,
       showLeaveButton: false,
       showFullscreenButton: true,
+      showLocalVideo: true,
+      showParticipantsBar: false,
       iframeStyle: { width: '100%', height: '480px', border: 'none', borderRadius: '8px' },
     })
     const iframe = dailyContainerRef.current.querySelector('iframe')

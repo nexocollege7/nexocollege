@@ -35,7 +35,6 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
   const [commentMsg, setCommentMsg] = useState('')
   const [sendingComment, setSendingComment] = useState(false)
   const [userName, setUserName] = useState('Aluno')
-  const dailyContainerRef = useRef<HTMLDivElement>(null)
   const commentsEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -64,7 +63,7 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
   }, [schoolId])
 
   useEffect(() => {
-    if (liveType === 'native' && dailyRoomUrl && dailyRoomName && dailyContainerRef.current) {
+    if (liveType === 'native' && dailyRoomUrl && dailyRoomName) {
       initDailyViewer(dailyRoomUrl, dailyRoomName)
     }
   }, [liveType, dailyRoomUrl, dailyRoomName])
@@ -143,7 +142,7 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
             <span className="live-badge-dot" style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#fff' }} />
             <span style={{ color: '#fff', fontWeight: '800', fontSize: '13px', letterSpacing: '0.04em' }}>🔴 AO VIVO</span>
           </div>
-          <div ref={dailyContainerRef} style={{ width: '100%', minHeight: '480px', backgroundColor: '#000' }} />
+
         </div>
 
         {/* Chat */}
