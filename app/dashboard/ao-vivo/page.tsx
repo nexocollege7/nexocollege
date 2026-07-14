@@ -104,7 +104,12 @@ export default function AoVivoPage() {
       showFullscreenButton: true,
       iframeStyle: { width: '100%', height: '480px', border: 'none', borderRadius: '8px' },
     })
-    await callObject.join()
+    // Adicionar permissões de câmera/microfone no iframe gerado pelo Daily.co
+    const iframe = dailyContainerRef.current.querySelector('iframe')
+    if (iframe) {
+      iframe.setAttribute('allow', 'camera; microphone; autoplay; display-capture; picture-in-picture')
+    }
+    await callObject.join({ startVideoOff: false, startAudioOff: false })
     ;(window as any).__dailyCallObject = callObject
   }
 
