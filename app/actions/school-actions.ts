@@ -530,7 +530,7 @@ export async function startNativeLive(payload: {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer \${process.env.DAILY_API_KEY}`,
+      Authorization: `Bearer ${process.env.DAILY_API_KEY}`,
     },
     body: JSON.stringify({
       privacy: 'private',
@@ -588,7 +588,7 @@ export async function startNativeLive(payload: {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer \${process.env.DAILY_API_KEY}`,
+      Authorization: `Bearer ${process.env.DAILY_API_KEY}`,
     },
     body: JSON.stringify({
       properties: {
@@ -691,7 +691,7 @@ export async function generateViewerToken(roomName: string, userName: string) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer \${process.env.DAILY_API_KEY}`,
+      Authorization: `Bearer ${process.env.DAILY_API_KEY}`,
     },
     body: JSON.stringify({
       properties: {
