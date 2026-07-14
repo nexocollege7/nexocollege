@@ -31,13 +31,15 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
   const [dailyRoomUrl, setDailyRoomUrl] = useState<string | null>(null)
   const [dailyRoomName, setDailyRoomName] = useState<string | null>(null)
   const [initialized, setInitialized] = useState(false)
+  const [hasVideo, setHasVideo] = useState(false)
+  const [viewerCount, setViewerCount] = useState(0)
   const [comments, setComments] = useState<Comment[]>([])
   const [commentMsg, setCommentMsg] = useState('')
   const [sendingComment, setSendingComment] = useState(false)
   const [userName, setUserName] = useState('Aluno')
-  const [viewerCount, setViewerCount] = useState(0)
-  const playerContainerRef = useRef<HTMLDivElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
   const commentsEndRef = useRef<HTMLDivElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -74,12 +76,12 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
   }, [schoolId])
 
   useEffect(() => {
-    if (initialized && liveType === 'native' && dailyRoomUrl && dailyRoomName && playerContainerRef.current) {
+    if (initialized && liveType === 'native' && dailyRoomUrl && dailyRoomName) {
       initViewer(dailyRoomUrl, dailyRoomName)
     }
     return () => {
-      const existing = (window as any).__dailyViewerFrame
-      if (existing) { existing.destroy(); (window as any).__dailyViewerFrame = null }
+      const existing = (window as any).__dailyViewerObj
+      if (existing) { try { existing.leave(); existing.destroy() } catch {} ; (window as any).__dailyViewerObj = null }
     }
   }, [initialized, liveType, dailyRoomUrl, dailyRoomName])
 
@@ -88,9 +90,7 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
       const channel = supabase
         .channel('live-comments-vitrine-' + sessionId)
         .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'live_comments',
+          event: 'INSERT', schema: 'public', table: 'live_comments',
           filter: 'live_session_id=eq.' + sessionId,
         }, (payload) => {
           setComments((prev) => [...prev, payload.new as Comment])
@@ -100,40 +100,64 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
     }
   }, [liveType, sessionId])
 
-  async function initViewer(roomUrl: string, roomName: string) {
-    if (!playerContainerRef.current) return
-    const DailyIframe = (await import('@daily-co/daily-js')).default
+  function attachTrack(videoTrack: MediaStreamTrack, audioTrack?: MediaStreamTrack | null) {
+    if (!videoRef.current) return
+    if (!streamRef.current) {
+      streamRef.current = new MediaStream()
+    }
+    // Remover tracks antigas do mesmo tipo
+    streamRef.current.getVideoTracks().forEach(t => streamRef.current!.removeTrack(t))
+    streamRef.current.addTrack(videoTrack)
+    if (audioTrack) {
+      streamRef.current.getAudioTracks().forEach(t => streamRef.current!.removeTrack(t))
+      streamRef.current.addTrack(audioTrack)
+    }
+    videoRef.current.srcObject = streamRef.current
+    setHasVideo(true)
+  }
 
-    const existing = (window as any).__dailyViewerFrame
-    if (existing) { existing.destroy(); (window as any).__dailyViewerFrame = null }
+  async function initViewer(roomUrl: string, roomName: string) {
+    const Daily = (await import('@daily-co/daily-js')).default
+    const existing = (window as any).__dailyViewerObj
+    if (existing) { try { existing.leave(); existing.destroy() } catch {} }
 
     let token: string | undefined
     try { token = await generateViewerToken(roomName, userName) } catch { token = undefined }
 
-    const frame = DailyIframe.createFrame(playerContainerRef.current, {
-      url: roomUrl,
-      token,
-      showLeaveButton: false,
-      showFullscreenButton: false,
-      showLocalVideo: false,
-      showParticipantsBar: false,
-      iframeStyle: {
-        width: '100%',
-        height: '100%',
-        border: 'none',
-        position: 'absolute',
-        inset: '0',
-      },
-    })
+    const call = Daily.createCallObject(token ? { url: roomUrl, token } : { url: roomUrl })
 
-    frame.on('participant-counts-updated', (e: any) => {
-      if (e?.participantCounts?.present) {
-        setViewerCount(Math.max(0, e.participantCounts.present - 1))
+    function processParticipant(p: any) {
+      if (p.local) return
+      const vState = p.tracks?.video?.state
+      const vTrack = p.tracks?.video?.persistentTrack
+      const aTrack = p.tracks?.audio?.persistentTrack
+      if (vTrack && (vState === 'playable' || vState === 'loading')) {
+        attachTrack(vTrack, aTrack)
       }
+    }
+
+    call.on('track-started', (e: any) => {
+      if (!e?.participant || e.participant.local) return
+      processParticipant(e.participant)
     })
 
-    await frame.join({ startVideoOff: true, startAudioOff: true })
-    ;(window as any).__dailyViewerFrame = frame
+    call.on('participant-updated', (e: any) => {
+      if (!e?.participant || e.participant.local) return
+      processParticipant(e.participant)
+    })
+
+    call.on('participant-counts-updated', (e: any) => {
+      setViewerCount(Math.max(0, (e?.participantCounts?.present ?? 1) - 1))
+    })
+
+    await call.join({ startVideoOff: true, startAudioOff: true })
+    ;(window as any).__dailyViewerObj = call
+
+    // Verificar participants já presentes
+    setTimeout(() => {
+      const participants = call.participants()
+      Object.values(participants).forEach((p: any) => processParticipant(p))
+    }, 1500)
   }
 
   async function handleSendComment() {
@@ -155,33 +179,24 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
 
         {/* Player */}
         <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', backgroundColor: '#000', overflow: 'hidden' }}>
-          {/* Badge AO VIVO */}
-          <div style={{
-            position: 'absolute', top: '16px', left: '16px', zIndex: 10,
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '6px 14px', borderRadius: '20px',
-            backgroundColor: 'rgba(255,68,68,0.9)',
-          }}>
-            <span className="live-badge-dot" style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#fff' }} />
-            <span style={{ color: '#fff', fontWeight: '800', fontSize: '13px', letterSpacing: '0.04em' }}>🔴 AO VIVO</span>
-          </div>
-          {/* Contador de espectadores */}
-          {viewerCount > 0 && (
-            <div style={{
-              position: 'absolute', top: '16px', right: '16px', zIndex: 10,
-              display: 'flex', alignItems: 'center', gap: '6px',
-              padding: '6px 14px', borderRadius: '20px',
-              backgroundColor: 'rgba(0,0,0,0.6)',
-            }}>
-              <span style={{ color: '#fff', fontSize: '13px' }}>👁 {viewerCount}</span>
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#000', display: hasVideo ? 'block' : 'none' }}
+          />
+          {!hasVideo && (
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <p style={{ color: '#555', fontSize: '14px' }}>Conectando à transmissão...</p>
             </div>
           )}
-          {/* Container do player Daily.co */}
-          <div ref={playerContainerRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
-          {/* Loading state */}
-          {!initialized && (
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <p style={{ color: '#666', fontSize: '14px' }}>Conectando...</p>
+          <div style={{ position: 'absolute', top: '16px', left: '16px', zIndex: 10, display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px', borderRadius: '20px', backgroundColor: 'rgba(255,68,68,0.9)' }}>
+            <span className="live-badge-dot" style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#fff' }} />
+            <span style={{ color: '#fff', fontWeight: '800', fontSize: '13px' }}>🔴 AO VIVO</span>
+          </div>
+          {viewerCount > 0 && (
+            <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10, padding: '6px 14px', borderRadius: '20px', backgroundColor: 'rgba(0,0,0,0.6)' }}>
+              <span style={{ color: '#fff', fontSize: '13px' }}>👁 {viewerCount}</span>
             </div>
           )}
         </div>
