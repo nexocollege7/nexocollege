@@ -44,6 +44,29 @@ export async function getCourseBySlug(courseSlug: string, schoolId: string) {
 
 export async function getLiveStatus(schoolId: string) {
   const adminClient = createAdminClient()
+
+  // Verificar live nativa ativa primeiro
+  const { data: nativeSession } = await adminClient
+    .from('live_sessions')
+    .select('id, daily_room_url, daily_room_name, visibility')
+    .eq('school_id', schoolId)
+    .eq('status', 'live')
+    .eq('live_type', 'native')
+    .single()
+
+  if (nativeSession) {
+    return {
+      liveActive: true,
+      liveUrl: null,
+      liveType: 'native' as const,
+      sessionId: nativeSession.id,
+      dailyRoomUrl: nativeSession.daily_room_url,
+      dailyRoomName: nativeSession.daily_room_name,
+      visibility: nativeSession.visibility,
+    }
+  }
+
+  // Fallback: live YouTube
   const { data } = await adminClient
     .from('schools')
     .select('live_url, live_active')
@@ -53,6 +76,11 @@ export async function getLiveStatus(schoolId: string) {
   return {
     liveActive: data?.live_active ?? false,
     liveUrl: data?.live_url ?? null,
+    liveType: 'youtube' as const,
+    sessionId: null,
+    dailyRoomUrl: null,
+    dailyRoomName: null,
+    visibility: 'public' as const,
   }
 }
 
