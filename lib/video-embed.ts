@@ -11,13 +11,13 @@ export function getEmbedUrl(url: string, opts: EmbedOptions = {}): string {
   if (yt) {
     const params = new URLSearchParams({
       autoplay: autoplay ? '1' : '0',
+      mute: mute ? '1' : '0',
       modestbranding: '1',
       rel: '0',
       fs: '1',
       iv_load_policy: '3',
       disablekb: '0',
     })
-    if (mute) params.set('mute', '1')
     return `https://www.youtube.com/embed/${yt[1]}?${params.toString()}`
   }
 
