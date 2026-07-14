@@ -11,6 +11,7 @@ type PlanRow = {
   can_use_coupons: boolean
   can_use_reviews: boolean
   can_use_live_events: boolean
+  can_use_live_native: boolean
   has_custom_domain: boolean
   max_collaborators: number
 }
@@ -24,7 +25,7 @@ const getPlanosCacheados = unstable_cache(
     const supabase = createAdminClient()
     const { data: plans } = await supabase
       .from('plans')
-      .select('slug, price_yearly, can_use_coupons, can_use_reviews, can_use_live_events, has_custom_domain, max_collaborators')
+      .select('slug, price_yearly, can_use_coupons, can_use_reviews, can_use_live_events, can_use_live_native, has_custom_domain, max_collaborators')
 
     return (plans ?? []) as PlanRow[]
   },
@@ -44,6 +45,8 @@ function planPermiteFeature(plan: PlanRow, feature: PlanFeature): boolean {
       return plan.has_custom_domain
     case 'collaborators':
       return plan.max_collaborators > 0
+    case 'live_native':
+      return plan.can_use_live_native
     case 'ai_assistant':
       return ['pro', 'scale', 'enterprise'].includes(plan.slug)
   }

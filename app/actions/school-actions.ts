@@ -493,3 +493,218 @@ export async function saveOwnerContact(ownerName: string, ownerPhone: string) {
   revalidatePath('/dashboard/escola')
   return { success: true }
 }
+
+// ─── LIVE NATIVA (Daily.co) ────────────────────────────────────────────────
+
+export async function startNativeLive(payload: {
+  visibility: 'public' | 'restricted'
+  courseIds: string[]
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const adminClient = createAdminClient()
+
+  const { data: profile } = await adminClient
+    .from('users')
+    .select('school_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.school_id) return { error: 'Escola não encontrada' }
+
+  const { data: school } = await adminClient
+    .from('schools')
+    .select('plan')
+    .eq('id', profile.school_id)
+    .single()
+
+  const permissao = await verificarPermissao({ plan: school?.plan ?? null }, 'live_native')
+  if (!permissao.allowed) {
+    return { error: 'Live nativa disponível apenas no plano Scale ou superior.' }
+  }
+
+  // Criar room no Daily.co
+  const dailyRes = await fetch('https://api.daily.co/v1/rooms', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer \${process.env.DAILY_API_KEY}`,
+    },
+    body: JSON.stringify({
+      privacy: 'private',
+      properties: {
+        enable_chat: false,
+        enable_screenshare: false,
+        start_video_off: false,
+        start_audio_off: false,
+        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8, // 8 horas
+      },
+    }),
+  })
+
+  if (!dailyRes.ok) {
+    return { error: 'Erro ao criar sala de transmissão. Tente novamente.' }
+  }
+
+  const dailyRoom = await dailyRes.json()
+
+  // Encerrar live anterior se existir
+  await adminClient
+    .from('live_sessions')
+    .update({ status: 'ended', ended_at: new Date().toISOString() })
+    .eq('school_id', profile.school_id)
+    .eq('status', 'live')
+
+  // Criar nova sessão
+  const { data: session, error: sessionError } = await adminClient
+    .from('live_sessions')
+    .insert({
+      school_id: profile.school_id,
+      daily_room_url: dailyRoom.url,
+      daily_room_name: dailyRoom.name,
+      status: 'live',
+      live_type: 'native',
+      visibility: payload.visibility,
+    })
+    .select()
+    .single()
+
+  if (sessionError || !session) return { error: 'Erro ao iniciar sessão.' }
+
+  // Vincular cursos se restrito
+  if (payload.visibility === 'restricted' && payload.courseIds.length > 0) {
+    await adminClient
+      .from('live_session_courses')
+      .insert(payload.courseIds.map((courseId) => ({
+        live_session_id: session.id,
+        course_id: courseId,
+      })))
+  }
+
+  // Gerar token do professor (owner)
+  const tokenRes = await fetch('https://api.daily.co/v1/meeting-tokens', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer \${process.env.DAILY_API_KEY}`,
+    },
+    body: JSON.stringify({
+      properties: {
+        room_name: dailyRoom.name,
+        is_owner: true,
+        user_name: 'Professor',
+        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8,
+      },
+    }),
+  })
+
+  const tokenData = await tokenRes.json()
+
+  revalidatePath('/dashboard/ao-vivo')
+  return {
+    success: true,
+    sessionId: session.id,
+    roomUrl: dailyRoom.url,
+    token: tokenData.token,
+  }
+}
+
+export async function endNativeLive(sessionId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const adminClient = createAdminClient()
+
+  const { data: profile } = await adminClient
+    .from('users')
+    .select('school_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.school_id) return { error: 'Escola não encontrada' }
+
+  // Encerrar sessão
+  const { error } = await adminClient
+    .from('live_sessions')
+    .update({ status: 'ended', ended_at: new Date().toISOString() })
+    .eq('id', sessionId)
+    .eq('school_id', profile.school_id)
+
+  if (error) return { error: error.message }
+
+  // Deletar comentários temporários
+  await adminClient
+    .from('live_comments')
+    .delete()
+    .eq('live_session_id', sessionId)
+
+  revalidatePath('/dashboard/ao-vivo')
+  return { success: true }
+}
+
+export async function sendLiveComment(payload: {
+  sessionId: string
+  message: string
+  userName: string
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  if (!payload.message.trim() || payload.message.length > 500) {
+    return { error: 'Mensagem inválida' }
+  }
+
+  const adminClient = createAdminClient()
+
+  const { error } = await adminClient
+    .from('live_comments')
+    .insert({
+      live_session_id: payload.sessionId,
+      user_id: user.id,
+      user_name: payload.userName,
+      message: payload.message.trim(),
+    })
+
+  if (error) return { error: error.message }
+  return { success: true }
+}
+
+export async function getActiveLiveSession(schoolId: string) {
+  const adminClient = createAdminClient()
+
+  const { data: session } = await adminClient
+    .from('live_sessions')
+    .select('id, daily_room_url, daily_room_name, status, live_type, visibility')
+    .eq('school_id', schoolId)
+    .eq('status', 'live')
+    .single()
+
+  return session ?? null
+}
+
+export async function generateViewerToken(roomName: string, userName: string) {
+  const tokenRes = await fetch('https://api.daily.co/v1/meeting-tokens', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer \${process.env.DAILY_API_KEY}`,
+    },
+    body: JSON.stringify({
+      properties: {
+        room_name: roomName,
+        is_owner: false,
+        user_name: userName,
+        start_video_off: true,
+        start_audio_off: true,
+        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8,
+      },
+    }),
+  })
+
+  const tokenData = await tokenRes.json()
+  return tokenData.token as string
+}
