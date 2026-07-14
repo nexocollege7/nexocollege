@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { getLiveStatus } from '@/app/actions/vitrine-actions'
-import { generateViewerToken, sendLiveComment } from '@/app/actions/school-actions'
+import { sendLiveComment } from '@/app/actions/school-actions'
 import { getEmbedUrl } from '@/lib/video-embed'
 import { createClient } from '@/lib/supabase/client'
 import BannerRotativo, { type Slide } from './banner-rotativo'
@@ -121,10 +121,8 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
     const existing = (window as any).__dailyViewerObj
     if (existing) { try { existing.leave(); existing.destroy() } catch {} }
 
-    let token: string | undefined
-    try { token = await generateViewerToken(roomName, viewerName || 'Visitante') } catch { token = undefined }
-
-    const call = Daily.createCallObject(token ? { url: roomUrl, token } : { url: roomUrl })
+    // Sala pública — entrar direto sem token
+    const call = Daily.createCallObject({ url: roomUrl })
 
     function processParticipant(p: any) {
       if (p.local) return
