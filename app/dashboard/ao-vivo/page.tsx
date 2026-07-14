@@ -300,7 +300,7 @@ export default function AoVivoPage() {
                 </div>
 
                 {/* Container Daily.co */}
-                <div ref={dailyContainerRef} style={{ width: '100%', minHeight: nativeSession ? '480px' : '0px', borderRadius: '8px', overflow: 'hidden' }} />
+                <div ref={dailyContainerRef} style={{ width: '100%', aspectRatio: nativeSession ? '16/9' : undefined, minHeight: nativeSession ? '360px' : '0px', borderRadius: '8px', overflow: 'hidden', backgroundColor: nativeSession ? '#000' : 'transparent' }} />
 
                 {/* Configurações (só quando offline) */}
                 {!nativeSession && (

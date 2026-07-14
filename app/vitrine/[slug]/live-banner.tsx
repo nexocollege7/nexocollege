@@ -96,10 +96,16 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
       url: roomUrl,
       token,
       showLeaveButton: false,
-      showFullscreenButton: true,
-      iframeStyle: { width: '100%', height: '480px', border: 'none', borderRadius: '0' },
+      showFullscreenButton: false,
+      showLocalVideo: false,
+      showParticipantsBar: false,
+      iframeStyle: { width: '100%', height: '100%', border: 'none', borderRadius: '0', minHeight: '480px' },
     })
-    await callObject.join()
+    const iframe = dailyContainerRef.current.querySelector('iframe')
+    if (iframe) {
+      iframe.setAttribute('allow', 'autoplay; picture-in-picture')
+    }
+    await callObject.join({ startVideoOff: true, startAudioOff: true })
     ;(window as any).__dailyViewerObject = callObject
   }
 
