@@ -103,7 +103,15 @@ export default function AoVivoPage() {
       token,
       showLeaveButton: false,
       showFullscreenButton: true,
+      showLocalVideo: true,
+      showParticipantsBar: false,
       iframeStyle: { width: '100%', height: '480px', border: 'none', borderRadius: '8px' },
+    })
+
+    callObject.on('participant-counts-updated', (e: any) => {
+      const count = e?.participantCounts?.present ?? 0
+      const el = document.getElementById('live-viewer-count')
+      if (el) el.textContent = count > 1 ? String(count - 1) : '0'
     })
     const iframe = dailyContainerRef.current.querySelector('iframe')
     if (iframe) {
@@ -291,11 +299,18 @@ export default function AoVivoPage() {
                     <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 4px' }}>Câmera ao vivo</h2>
                     <p style={{ color: '#666', fontSize: '13px', margin: 0 }}>Transmita diretamente pelo browser, sem instalar nada.</p>
                   </div>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 14px', borderRadius: '20px', background: nativeSession ? 'rgba(255,68,68,0.1)' : '#1a1a1a', border: `1px solid ${nativeSession ? '#FF4444' : '#2a2a2a'}` }}>
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: nativeSession ? '#FF4444' : '#555' }} />
-                    <span style={{ fontSize: '13px', fontWeight: '700', color: nativeSession ? '#FF4444' : '#666' }}>
-                      {nativeSession ? 'Ao vivo agora' : 'Offline'}
-                    </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 14px', borderRadius: '20px', background: nativeSession ? 'rgba(255,68,68,0.1)' : '#1a1a1a', border: `1px solid ${nativeSession ? '#FF4444' : '#2a2a2a'}` }}>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: nativeSession ? '#FF4444' : '#555' }} />
+                      <span style={{ fontSize: '13px', fontWeight: '700', color: nativeSession ? '#FF4444' : '#666' }}>
+                        {nativeSession ? 'Ao vivo agora' : 'Offline'}
+                      </span>
+                    </div>
+                    {nativeSession && (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', borderRadius: '20px', background: '#1a1a1a', border: '1px solid #2a2a2a' }}>
+                        <span style={{ fontSize: '13px', color: '#aaa' }}>👁 <span id="live-viewer-count">0</span> assistindo</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 

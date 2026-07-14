@@ -30,11 +30,13 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [dailyRoomUrl, setDailyRoomUrl] = useState<string | null>(null)
   const [dailyRoomName, setDailyRoomName] = useState<string | null>(null)
-  const [iframeSrc, setIframeSrc] = useState<string | null>(null)
+  const [initialized, setInitialized] = useState(false)
   const [comments, setComments] = useState<Comment[]>([])
   const [commentMsg, setCommentMsg] = useState('')
   const [sendingComment, setSendingComment] = useState(false)
   const [userName, setUserName] = useState('Aluno')
+  const [viewerCount, setViewerCount] = useState(0)
+  const playerContainerRef = useRef<HTMLDivElement>(null)
   const commentsEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -48,9 +50,7 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
       setSessionId(status.sessionId)
       setDailyRoomUrl(status.dailyRoomUrl)
       setDailyRoomName(status.dailyRoomName ?? null)
-      if (status.liveType === 'native' && status.dailyRoomUrl && status.dailyRoomName) {
-        buildIframeSrc(status.dailyRoomUrl, status.dailyRoomName)
-      }
+      setInitialized(true)
     })
   }, [])
 
@@ -74,6 +74,16 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
   }, [schoolId])
 
   useEffect(() => {
+    if (initialized && liveType === 'native' && dailyRoomUrl && dailyRoomName && playerContainerRef.current) {
+      initViewer(dailyRoomUrl, dailyRoomName)
+    }
+    return () => {
+      const existing = (window as any).__dailyViewerFrame
+      if (existing) { existing.destroy(); (window as any).__dailyViewerFrame = null }
+    }
+  }, [initialized, liveType, dailyRoomUrl, dailyRoomName])
+
+  useEffect(() => {
     if (liveType === 'native' && sessionId) {
       const channel = supabase
         .channel('live-comments-vitrine-' + sessionId)
@@ -90,17 +100,40 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
     }
   }, [liveType, sessionId])
 
-  async function buildIframeSrc(roomUrl: string, roomName: string) {
+  async function initViewer(roomUrl: string, roomName: string) {
+    if (!playerContainerRef.current) return
+    const DailyIframe = (await import('@daily-co/daily-js')).default
+
+    const existing = (window as any).__dailyViewerFrame
+    if (existing) { existing.destroy(); (window as any).__dailyViewerFrame = null }
+
     let token: string | undefined
-    try {
-      token = await generateViewerToken(roomName, userName)
-    } catch {
-      token = undefined
-    }
-    const src = token
-      ? `${roomUrl}?t=${token}&startVideoOff=true&startAudioOff=true&showLeaveButton=false&showFullscreenButton=false&showLocalVideo=false&showParticipantsBar=false`
-      : `${roomUrl}?startVideoOff=true&startAudioOff=true&showLeaveButton=false&showFullscreenButton=false&showLocalVideo=false&showParticipantsBar=false`
-    setIframeSrc(src)
+    try { token = await generateViewerToken(roomName, userName) } catch { token = undefined }
+
+    const frame = DailyIframe.createFrame(playerContainerRef.current, {
+      url: roomUrl,
+      token,
+      showLeaveButton: false,
+      showFullscreenButton: false,
+      showLocalVideo: false,
+      showParticipantsBar: false,
+      iframeStyle: {
+        width: '100%',
+        height: '100%',
+        border: 'none',
+        position: 'absolute',
+        inset: '0',
+      },
+    })
+
+    frame.on('participant-counts-updated', (e: any) => {
+      if (e?.participantCounts?.present) {
+        setViewerCount(Math.max(0, e.participantCounts.present - 1))
+      }
+    })
+
+    await frame.join({ startVideoOff: true, startAudioOff: true })
+    ;(window as any).__dailyViewerFrame = frame
   }
 
   async function handleSendComment() {
@@ -120,27 +153,35 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
           .live-badge-dot { animation: live-pulse 1.4s ease-in-out infinite; }
         `}</style>
 
-        {/* Player iframe */}
+        {/* Player */}
         <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', backgroundColor: '#000', overflow: 'hidden' }}>
+          {/* Badge AO VIVO */}
           <div style={{
-            position: 'absolute', top: '16px', left: '24px', zIndex: 10,
+            position: 'absolute', top: '16px', left: '16px', zIndex: 10,
             display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '8px 16px', borderRadius: '20px',
+            padding: '6px 14px', borderRadius: '20px',
             backgroundColor: 'rgba(255,68,68,0.9)',
           }}>
             <span className="live-badge-dot" style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#fff' }} />
             <span style={{ color: '#fff', fontWeight: '800', fontSize: '13px', letterSpacing: '0.04em' }}>🔴 AO VIVO</span>
           </div>
-          {iframeSrc ? (
-            <iframe
-              src={iframeSrc}
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
-              allow="camera; microphone; autoplay; display-capture; picture-in-picture"
-              allowFullScreen
-            />
-          ) : (
+          {/* Contador de espectadores */}
+          {viewerCount > 0 && (
+            <div style={{
+              position: 'absolute', top: '16px', right: '16px', zIndex: 10,
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '6px 14px', borderRadius: '20px',
+              backgroundColor: 'rgba(0,0,0,0.6)',
+            }}>
+              <span style={{ color: '#fff', fontSize: '13px' }}>👁 {viewerCount}</span>
+            </div>
+          )}
+          {/* Container do player Daily.co */}
+          <div ref={playerContainerRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+          {/* Loading state */}
+          {!initialized && (
             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <p style={{ color: '#666', fontSize: '14px' }}>Conectando à transmissão...</p>
+              <p style={{ color: '#666', fontSize: '14px' }}>Conectando...</p>
             </div>
           )}
         </div>
@@ -161,14 +202,11 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
             <div ref={commentsEndRef} />
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <input
-              value={commentMsg}
-              onChange={e => setCommentMsg(e.target.value)}
+            <input value={commentMsg} onChange={e => setCommentMsg(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !sendingComment && handleSendComment()}
               placeholder="Digite um comentário..."
               style={{ flex: 1, background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '8px', padding: '12px 16px', color: '#fff', fontSize: '14px', outline: 'none', fontFamily: 'inherit' }}
-              maxLength={500}
-            />
+              maxLength={500} />
             <button onClick={handleSendComment} disabled={sendingComment || !commentMsg.trim()}
               style={{ background: cor, color: '#000', border: 'none', borderRadius: '8px', padding: '12px 24px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', opacity: sendingComment || !commentMsg.trim() ? 0.6 : 1 }}>
               Enviar
@@ -187,18 +225,11 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
           @keyframes live-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
           .live-badge-dot { animation: live-pulse 1.4s ease-in-out infinite; }
         `}</style>
-        <iframe
-          src={getEmbedUrl(liveUrl)}
+        <iframe src={getEmbedUrl(liveUrl)}
           style={{ position: 'absolute', top: '90px', left: 0, right: 0, bottom: 0, width: '100%', height: 'calc(100% - 90px)', border: 'none' }}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
-        <div style={{
-          position: 'absolute', top: '90px', left: '24px', zIndex: 10,
-          display: 'flex', alignItems: 'center', gap: '8px',
-          padding: '8px 16px', borderRadius: '20px',
-          backgroundColor: 'rgba(255,68,68,0.9)',
-        }}>
+          allowFullScreen />
+        <div style={{ position: 'absolute', top: '90px', left: '24px', zIndex: 10, display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '20px', backgroundColor: 'rgba(255,68,68,0.9)' }}>
           <span className="live-badge-dot" style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#fff' }} />
           <span style={{ color: '#fff', fontWeight: '800', fontSize: '13px', letterSpacing: '0.04em' }}>🔴 AO VIVO</span>
         </div>
