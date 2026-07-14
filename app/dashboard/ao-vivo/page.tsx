@@ -93,18 +93,18 @@ export default function AoVivoPage() {
     setLoading(false)
   }
 
-  async function initDailyRoom(roomUrl: string) {
+  async function initDailyRoom(roomUrl: string, token?: string) {
     if (!dailyContainerRef.current) return
     const DailyIframe = (await import('@daily-co/daily-js')).default
     const existing = (window as any).__dailyCallObject
     if (existing) { existing.destroy(); (window as any).__dailyCallObject = null }
     const callObject = DailyIframe.createFrame(dailyContainerRef.current, {
       url: roomUrl,
+      token,
       showLeaveButton: false,
       showFullscreenButton: true,
       iframeStyle: { width: '100%', height: '480px', border: 'none', borderRadius: '8px' },
     })
-    // Adicionar permissões de câmera/microfone no iframe gerado pelo Daily.co
     const iframe = dailyContainerRef.current.querySelector('iframe')
     if (iframe) {
       iframe.setAttribute('allow', 'camera; microphone; autoplay; display-capture; picture-in-picture')
@@ -154,10 +154,9 @@ export default function AoVivoPage() {
       setNativeLoading(false)
       return
     }
-    const { sessionId, roomUrl } = result as any
-    const session = await getActiveLiveSession('')
+    const { sessionId, roomUrl, token } = result as any
     setNativeSession({ id: sessionId, daily_room_url: roomUrl, daily_room_name: '', status: 'live', live_type: 'native', visibility })
-    await initDailyRoom(roomUrl)
+    await initDailyRoom(roomUrl, token)
     subscribeComments(sessionId)
     setNativeLoading(false)
     showMsg('🔴 Transmissão ao vivo iniciada!')
