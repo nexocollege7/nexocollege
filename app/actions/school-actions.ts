@@ -533,7 +533,7 @@ export async function startNativeLive(payload: {
       Authorization: `Bearer ${process.env.DAILY_API_KEY}`,
     },
     body: JSON.stringify({
-      privacy: 'private',
+      privacy: 'public',
       properties: {
         enable_chat: false,
         enable_screenshare: false,

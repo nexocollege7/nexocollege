@@ -109,10 +109,16 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
     const existing = (window as any).__dailyViewerObject
     if (existing) { existing.destroy(); (window as any).__dailyViewerObject = null }
 
-    const token = await generateViewerToken(roomName, userName)
+    // Tentar gerar token — se falhar (visitante anônimo), entrar sem token
+    let token: string | undefined
+    try {
+      token = await generateViewerToken(roomName, userName)
+    } catch {
+      token = undefined
+    }
 
     // Modo headless — sem iframe, sem UI do Daily.co
-    const callObject = Daily.createCallObject({ url: roomUrl, token })
+    const callObject = Daily.createCallObject(token ? { url: roomUrl, token } : { url: roomUrl })
 
     function attachVideoTrack(track: MediaStreamTrack) {
       const videoEl = document.getElementById('live-viewer-video') as HTMLVideoElement | null
