@@ -87,24 +87,28 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
   }, [liveType, sessionId])
 
   async function initDailyViewer(roomUrl: string, roomName: string) {
-    if (!dailyContainerRef.current) return
-    const DailyIframe = (await import('@daily-co/daily-js')).default
+    const Daily = (await import('@daily-co/daily-js')).default
     const existing = (window as any).__dailyViewerObject
     if (existing) { existing.destroy(); (window as any).__dailyViewerObject = null }
+
     const token = await generateViewerToken(roomName, userName)
-    const callObject = DailyIframe.createFrame(dailyContainerRef.current, {
-      url: roomUrl,
-      token,
-      showLeaveButton: false,
-      showFullscreenButton: false,
-      showLocalVideo: false,
-      showParticipantsBar: false,
-      iframeStyle: { width: '100%', height: '100%', border: 'none', borderRadius: '0', minHeight: '480px' },
+
+    // Modo headless — sem iframe, sem UI do Daily.co
+    const callObject = Daily.createCallObject({ url: roomUrl, token })
+
+    // Quando um participante publicar vídeo, exibir no elemento <video>
+    callObject.on('track-started', (event: any) => {
+      if (!event || !event.track || event.track.kind !== 'video') return
+      const participant = event.participant
+      if (!participant || participant.local) return // ignorar o próprio aluno
+      const videoEl = document.getElementById('live-viewer-video') as HTMLVideoElement | null
+      if (videoEl) {
+        const stream = new MediaStream([event.track])
+        videoEl.srcObject = stream
+        videoEl.play().catch(() => {})
+      }
     })
-    const iframe = dailyContainerRef.current.querySelector('iframe')
-    if (iframe) {
-      iframe.setAttribute('allow', 'autoplay; picture-in-picture')
-    }
+
     await callObject.join({ startVideoOff: true, startAudioOff: true })
     ;(window as any).__dailyViewerObject = callObject
   }
