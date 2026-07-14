@@ -82,6 +82,12 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
   }, [initialized, liveType, dailyRoomUrl, dailyRoomName])
 
   useEffect(() => {
+    const handler = () => setViewerReady(true)
+    window.addEventListener('nexolive-ready', handler)
+    return () => window.removeEventListener('nexolive-ready', handler)
+  }, [])
+
+  useEffect(() => {
     if (liveType === 'native' && sessionId) {
       const channel = supabase
         .channel('live-comments-vitrine-' + sessionId)
@@ -148,7 +154,8 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
     }, 2000)
 
     ;(window as any).__dailyViewerObject = callObject
-    setViewerReady(true)
+    // Disparar evento para o React saber que está pronto
+    window.dispatchEvent(new CustomEvent('nexolive-ready'))
   }
 
   async function handleSendComment() {
