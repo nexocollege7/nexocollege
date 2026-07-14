@@ -240,7 +240,7 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
           @keyframes live-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
           .live-badge-dot { animation: live-pulse 1.4s ease-in-out infinite; }
         `}</style>
-        <iframe src={getEmbedUrl(liveUrl)}
+        <iframe src={getEmbedUrl(liveUrl, { autoplay: true, mute: true })}
           style={{ position: 'absolute', top: '90px', left: 0, right: 0, bottom: 0, width: '100%', height: 'calc(100% - 90px)', border: 'none' }}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen />
