@@ -79,9 +79,6 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
     if (!initialized) return
     if (liveType !== 'native') return
     if (!dailyRoomUrl || !dailyRoomName) return
-    // Só inicializa se não há viewer ativo para essa room
-    const existing = (window as any).__dailyViewerObj
-    if (existing) return
     initViewer(dailyRoomUrl, dailyRoomName, userName)
     return () => {
       const obj = (window as any).__dailyViewerObj
