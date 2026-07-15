@@ -118,8 +118,16 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
 
   async function initViewer(roomUrl: string, roomName: string, viewerName: string) {
     const Daily = (await import('@daily-co/daily-js')).default
+
+    // Destruir TODAS as instâncias existentes do Daily antes de criar nova
     const existing = (window as any).__dailyViewerObj
-    if (existing) { try { existing.leave(); existing.destroy() } catch {} }
+    if (existing) {
+      try { await existing.leave() } catch {}
+      try { existing.destroy() } catch {}
+      ;(window as any).__dailyViewerObj = null
+    }
+    // Garantir que não há instâncias órfãs
+    try { Daily.getCallInstance()?.destroy() } catch {}
 
     // Sala pública — entrar direto sem token
     const call = Daily.createCallObject({ url: roomUrl })
