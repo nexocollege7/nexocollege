@@ -115,6 +115,7 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
     }
     videoRef.current.srcObject = streamRef.current
     setHasVideo(true)
+    setShowPlayButton(false)
   }
 
   async function initViewer(roomUrl: string, roomName: string, viewerName: string) {
@@ -169,7 +170,10 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
     }
     setTimeout(checkParticipants, 1500)
     setTimeout(checkParticipants, 3000)
-    setTimeout(checkParticipants, 5000)
+    // Se após 5s ainda não há vídeo, mostrar botão de interação
+    setTimeout(() => {
+      setShowPlayButton(true)
+    }, 5000)
   }
 
   async function handleSendComment() {
