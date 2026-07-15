@@ -41,7 +41,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next()
     }
     // Permitir RSC requests (Next.js Server Components) sem redirect
-    if (url.search.includes('rsc=')) {
+    if (url.search.includes('rsc=') || url.search.includes('_rsc=') || request.headers.get('rsc') === '1' || request.headers.get('next-router-prefetch') === '1') {
       return NextResponse.next()
     }
     const subdomain = host.replace('.nexocollege.com.br', '')
