@@ -32,6 +32,7 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
   const [dailyRoomName, setDailyRoomName] = useState<string | null>(null)
   const [initialized, setInitialized] = useState(false)
   const [hasVideo, setHasVideo] = useState(false)
+  const [showPlayButton, setShowPlayButton] = useState(false)
   const [viewerCount, setViewerCount] = useState(0)
   const [comments, setComments] = useState<Comment[]>([])
   const [commentMsg, setCommentMsg] = useState('')
