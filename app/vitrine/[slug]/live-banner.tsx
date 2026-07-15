@@ -76,14 +76,18 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
   }, [schoolId])
 
   useEffect(() => {
-    if (initialized && liveType === 'native' && dailyRoomUrl && dailyRoomName) {
-      initViewer(dailyRoomUrl, dailyRoomName, userName)
-    }
+    if (!initialized) return
+    if (liveType !== 'native') return
+    if (!dailyRoomUrl || !dailyRoomName) return
+    // Só inicializa se não há viewer ativo para essa room
+    const existing = (window as any).__dailyViewerObj
+    if (existing) return
+    initViewer(dailyRoomUrl, dailyRoomName, userName)
     return () => {
-      const existing = (window as any).__dailyViewerObj
-      if (existing) { try { existing.leave(); existing.destroy() } catch {} ; (window as any).__dailyViewerObj = null }
+      const obj = (window as any).__dailyViewerObj
+      if (obj) { try { obj.leave(); obj.destroy() } catch {} ; (window as any).__dailyViewerObj = null }
     }
-  }, [initialized, liveType, dailyRoomUrl, dailyRoomName])
+  }, [initialized, liveType, dailyRoomUrl, dailyRoomName, userName])
 
   useEffect(() => {
     if (liveType === 'native' && sessionId) {
