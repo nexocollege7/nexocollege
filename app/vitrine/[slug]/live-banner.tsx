@@ -63,6 +63,10 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
   }, [comments])
 
   useEffect(() => {
+    if (hasVideo) setShowPlayButton(false)
+  }, [hasVideo])
+
+  useEffect(() => {
     const interval = setInterval(async () => {
       const status = await getLiveStatus(schoolId)
       setLiveActive(status.liveActive)
@@ -115,7 +119,6 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
     }
     videoRef.current.srcObject = streamRef.current
     setHasVideo(true)
-    setShowPlayButton(false)
   }
 
   async function initViewer(roomUrl: string, roomName: string, viewerName: string) {
