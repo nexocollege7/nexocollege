@@ -41,12 +41,13 @@ const nextConfig: NextConfig = {
               // Imagens: self, data URIs (base64 splash), Supabase Storage
               "img-src 'self' data: blob: https://abplqkfthrytgqfwpnqx.supabase.co",
               // API e WebSocket do Supabase + Mercado Pago API
-              "connect-src 'self' https://abplqkfthrytgqfwpnqx.supabase.co wss://abplqkfthrytgqfwpnqx.supabase.co https://api.mercadopago.com https://*.daily.co wss://*.daily.co https://*.dailywebrtc.com wss://*.dailywebrtc.com https://*.daily.co https://c.daily.co",
+              "connect-src 'self' blob: https://abplqkfthrytgqfwpnqx.supabase.co wss://abplqkfthrytgqfwpnqx.supabase.co https://api.mercadopago.com https://*.daily.co wss://*.daily.co https://*.dailywebrtc.com wss://*.dailywebrtc.com https://c.daily.co https://*.pluot.blue wss://*.pluot.blue https://nexocollege.com.br",
               // Iframes: YouTube, Vimeo, Panda Video
               "frame-src 'self' https://www.youtube.com https://player.vimeo.com https://*.pandavideo.com.br https://*.daily.co",
               // Fontes e workers
               "font-src 'self' data:",
               "worker-src 'self' blob:",
+              "media-src 'self' blob: https://*.daily.co https://*.dailywebrtc.com https://*.pluot.blue",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
