@@ -40,6 +40,10 @@ export async function middleware(request: NextRequest) {
     if (request.method === 'OPTIONS') {
       return NextResponse.next()
     }
+    // Permitir RSC requests (Next.js Server Components) sem redirect
+    if (url.search.includes('rsc=')) {
+      return NextResponse.next()
+    }
     const subdomain = host.replace('.nexocollege.com.br', '')
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://nexocollege.com.br'
     // Login no subdomínio → vitrine login no domínio principal (evita problema de cookie cross-domain)
