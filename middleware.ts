@@ -36,6 +36,10 @@ export async function middleware(request: NextRequest) {
     if (url.pathname.startsWith('/api/')) {
       return NextResponse.next()
     }
+    // Permitir requisições OPTIONS (preflight CORS) sem redirect
+    if (request.method === 'OPTIONS') {
+      return NextResponse.next()
+    }
     const subdomain = host.replace('.nexocollege.com.br', '')
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://nexocollege.com.br'
     // Login no subdomínio → vitrine login no domínio principal (evita problema de cookie cross-domain)
