@@ -196,12 +196,12 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
               <p style={{ color: '#555', fontSize: '14px' }}>Conectando à transmissão...</p>
             </div>
           )}
-          <div style={{ position: 'absolute', top: '16px', left: '16px', zIndex: 10, display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px', borderRadius: '20px', backgroundColor: 'rgba(255,68,68,0.9)' }}>
+          <div style={{ position: 'absolute', top: '60px', left: '16px', zIndex: 10, display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px', borderRadius: '20px', backgroundColor: 'rgba(255,68,68,0.9)' }}>
             <span className="live-badge-dot" style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#fff' }} />
             <span style={{ color: '#fff', fontWeight: '800', fontSize: '13px' }}>🔴 AO VIVO</span>
           </div>
           {viewerCount > 0 && (
-            <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10, padding: '6px 14px', borderRadius: '20px', backgroundColor: 'rgba(0,0,0,0.6)' }}>
+            <div style={{ position: 'absolute', top: '60px', right: '16px', zIndex: 10, padding: '6px 14px', borderRadius: '20px', backgroundColor: 'rgba(0,0,0,0.6)' }}>
               <span style={{ color: '#fff', fontSize: '13px' }}>👁 {viewerCount}</span>
             </div>
           )}

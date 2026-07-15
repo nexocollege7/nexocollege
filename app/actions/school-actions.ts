@@ -536,7 +536,7 @@ export async function startNativeLive(payload: {
       privacy: 'public',
       properties: {
         enable_chat: false,
-        enable_screenshare: false,
+        enable_screenshare: true,
         start_video_off: false,
         start_audio_off: false,
         exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8, // 8 horas
@@ -626,6 +626,13 @@ export async function endNativeLive(sessionId: string) {
 
   if (!profile?.school_id) return { error: 'Escola não encontrada' }
 
+  // Buscar room name antes de encerrar
+  const { data: session } = await adminClient
+    .from('live_sessions')
+    .select('daily_room_name')
+    .eq('id', sessionId)
+    .single()
+
   // Encerrar sessão
   const { error } = await adminClient
     .from('live_sessions')
@@ -634,6 +641,16 @@ export async function endNativeLive(sessionId: string) {
     .eq('school_id', profile.school_id)
 
   if (error) return { error: error.message }
+
+  // Deletar room no Daily.co para zerar participantes
+  if (session?.daily_room_name) {
+    try {
+      await fetch(`https://api.daily.co/v1/rooms/${session.daily_room_name}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${process.env.DAILY_API_KEY}` },
+      })
+    } catch {}
+  }
 
   // Deletar comentários temporários
   await adminClient
