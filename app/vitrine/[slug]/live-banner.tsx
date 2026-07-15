@@ -136,9 +136,10 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
     function processParticipant(p: any) {
       if (p.local) return
       const vState = p.tracks?.video?.state
-      const vTrack = p.tracks?.video?.persistentTrack
-      const aTrack = p.tracks?.audio?.persistentTrack
-      if (vTrack && (vState === 'playable' || vState === 'loading')) {
+      const vTrack = p.tracks?.video?.persistentTrack ?? p.tracks?.video?.track
+      const aTrack = p.tracks?.audio?.persistentTrack ?? p.tracks?.audio?.track
+      // Aceitar qualquer estado exceto off/blocked
+      if (vTrack && vState !== 'off' && vState !== 'blocked' && vState !== undefined) {
         attachTrack(vTrack, aTrack)
       }
     }
@@ -161,10 +162,14 @@ export function LiveBanner({ schoolId, liveUrlInitial, liveActiveInitial, course
     ;(window as any).__dailyViewerObj = call
 
     // Verificar participants já presentes
-    setTimeout(() => {
+    // Verificar múltiplas vezes para garantir que as tracks chegaram
+    const checkParticipants = () => {
       const participants = call.participants()
       Object.values(participants).forEach((p: any) => processParticipant(p))
-    }, 1500)
+    }
+    setTimeout(checkParticipants, 1500)
+    setTimeout(checkParticipants, 3000)
+    setTimeout(checkParticipants, 5000)
   }
 
   async function handleSendComment() {
