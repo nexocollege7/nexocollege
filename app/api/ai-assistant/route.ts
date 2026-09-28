@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
 
     const groq = new Groq({ apiKey })
     const completion = await groq.chat.completions.create({
-      model: 'groq/compound',
+      model: 'openai/gpt-oss-120b',
       messages: [
         { role: 'system', content: buildSystemPrompt(profile, schoolName, school?.plan ?? 'pro') },
         { role: 'user', content: message },
