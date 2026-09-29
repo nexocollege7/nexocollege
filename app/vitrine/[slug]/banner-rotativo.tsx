@@ -75,7 +75,7 @@ export default function BannerRotativo({ slides, slug, cor, basePath }: Props) {
   const badgeSecundario = ehCurso ? `${destaque.total_lessons} aulas` : 'Inscrições abertas'
 
   return (
-    <div style={{
+    <div className="banner-root" style={{
       position: 'relative', height: '85vh', minHeight: '500px',
       display: 'flex', alignItems: 'flex-end',
       backgroundColor: '#111111',
@@ -134,7 +134,7 @@ export default function BannerRotativo({ slides, slug, cor, basePath }: Props) {
           {destaque.title}
         </h1>
         {destaque.description && (
-          <p style={{
+          <p className="banner-desc" style={{
             fontSize: '16px', color: '#BBBBBB', lineHeight: '1.6',
             margin: '0 0 32px', maxWidth: '480px',
           }}>
@@ -147,21 +147,21 @@ export default function BannerRotativo({ slides, slug, cor, basePath }: Props) {
             backgroundColor: accent, color: '#0D0D0D',
             fontWeight: '800', fontSize: '15px',
             textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px',
-          }}>
+          }} className="banner-btn-primary">
             {ctaLabel}
           </Link>
           <div style={{
             padding: '14px 24px', borderRadius: '8px',
             backgroundColor: 'rgba(255,255,255,0.15)',
             color: '#F0F0F0', fontWeight: '700', fontSize: '15px',
-          }}>
+          }} className="banner-btn-secondary">
             {gratis ? '🎁 Gratuito' : `R$ ${Number(destaque.price).toFixed(2)}`}
           </div>
           <div style={{
             padding: '14px 24px', borderRadius: '8px',
             backgroundColor: 'rgba(255,255,255,0.1)',
             color: '#BBBBBB', fontSize: '14px',
-          }}>
+          }} className="banner-badge">
             {badgeSecundario}
           </div>
         </div>
