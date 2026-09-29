@@ -153,8 +153,9 @@ export function AprenderClient({ planoEscola }: { planoEscola: string }) {
             <iframe
               src={getEmbedUrl(aulaAtual.video_url)}
               style={{ width: '100%', height: '100%', border: 'none' }}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin"
             />
           ) : (
             <div style={{

@@ -57,7 +57,7 @@ export default function LoginEscolaPage() {
   const slug = params.slug as string
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirectTo = searchParams.get('redirect') || '/dashboard/meus-cursos'
+  const redirectTo = searchParams.get('redirect') || `/vitrine/${params.slug as string}`
   const supabase = createClient()
 
   const [school, setSchool] = useState<any>(null)
