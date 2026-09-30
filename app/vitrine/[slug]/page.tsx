@@ -48,6 +48,9 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
     <div style={{ minHeight: '100vh', backgroundColor: '#0D0D0D', fontFamily: 'sans-serif' }}>
 
       <style>{`
+        @media (max-width: 768px) {
+          .curso-card-img { height: 220px !important; }
+        }
         .curso-card {
           background-color: #1A1A1A;
           border-radius: 12px;
@@ -103,12 +106,12 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
           }}>
             {courses.map((course) => (
               <Link key={course.id} href={`${basePath}/${course.slug}`} className="curso-card" style={{ display: "flex", flexDirection: "column" }}>
-                <div style={{
+                <div className="curso-card-img" style={{
                   height: '160px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   backgroundImage: course.thumbnail_url ? `url(${course.thumbnail_url})` : undefined,
                   backgroundSize: 'cover',
-                  backgroundPosition: 'center',
+                  backgroundPosition: 'top center',
                   background: course.thumbnail_url
                     ? undefined
                     : `linear-gradient(135deg, ${cor}33, ${cor}11)`,
