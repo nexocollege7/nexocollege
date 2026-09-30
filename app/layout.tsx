@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://nexocollege.com.br'),
   title: {
     default: 'NexoCollege — Crie sua escola online gratuitamente',
-    template: '%s | NexoCollege',
+    template: '%s',
   },
   description: 'Plataforma simples para criar escolas online. Crie cursos, gerencie alunos, emita certificados e receba pagamentos via Mercado Pago. Comece gratuitamente.',
   keywords: ['plataforma de cursos online', 'criar escola online', 'EAD brasileiro', 'vender cursos online', 'plataforma EAD', 'certificado online', 'Mercado Pago cursos', 'escola virtual'],
