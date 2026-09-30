@@ -10,7 +10,7 @@ export async function generateMetadata() {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { title: { absolute: 'NexoCollege' } }
+    if (!user) return {}
     const adminClient = createAdminClient()
     const { data: profile } = await adminClient
       .from('users')
@@ -18,20 +18,16 @@ export async function generateMetadata() {
       .eq('id', user.id)
       .single()
     if (!profile?.school_id || profile.role !== 'student') {
-      return { title: { absolute: 'NexoCollege' } }
+      return {}
     }
     const { data: school } = await adminClient
       .from('schools')
       .select('name, logo_url')
       .eq('id', profile.school_id)
       .single()
-    if (!school) return { title: { absolute: 'NexoCollege' } }
+    if (!school) return {}
     return {
       title: { absolute: school.name },
-      icons: {
-        icon: '/api/school-favicon',
-        apple: '/api/school-favicon',
-      },
     }
   } catch {
     return { title: { absolute: 'NexoCollege' } }
@@ -109,6 +105,13 @@ export default async function DashboardLayout({
 
   return (
     <>
+      {profile?.role === 'student' && (
+        <>
+          <link rel="icon" href="/api/school-favicon" />
+          <link rel="shortcut icon" href="/api/school-favicon" />
+          <link rel="apple-touch-icon" href="/api/school-favicon" />
+        </>
+      )}
       <SchoolBranding schoolName={schoolName} schoolLogoUrl={schoolLogoUrl} role={profile?.role ?? null} />
       <AdminLayout
       user={{
