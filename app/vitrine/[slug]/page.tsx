@@ -6,7 +6,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const school = await getSchoolBySlug(slug)
   return {
-    title: school?.name ?? 'NexoCollege',
+    title: {
+      absolute: school?.name ?? 'NexoCollege',
+    },
     icons: {
       icon: '/favicon-32x32.png',
       shortcut: '/favicon.ico',
