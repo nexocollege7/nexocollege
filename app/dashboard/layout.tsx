@@ -6,6 +6,10 @@ import { getPendingDocuments } from '@/app/actions/legal-actions'
 import { unstable_cache } from 'next/cache'
 import { SchoolBranding } from '@/components/school-branding'
 
+export const metadata = {
+  icons: { icon: '/api/school-favicon', apple: '/api/school-favicon' },
+}
+
 export async function generateMetadata() {
   try {
     const supabase = await createClient()
