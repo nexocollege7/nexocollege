@@ -5,6 +5,33 @@ import { AdminLayout } from '@/components/layout/admin-layout'
 import { getPendingDocuments } from '@/app/actions/legal-actions'
 import { unstable_cache } from 'next/cache'
 
+export async function generateMetadata() {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return {}
+    const adminClient = createAdminClient()
+    const { data: profile } = await adminClient
+      .from('users')
+      .select('school_id, role')
+      .eq('id', user.id)
+      .single()
+    if (!profile?.school_id || profile.role !== 'student') return {}
+    const { data: school } = await adminClient
+      .from('schools')
+      .select('name, logo_url')
+      .eq('id', profile.school_id)
+      .single()
+    if (!school) return {}
+    return {
+      title: { absolute: school.name },
+      icons: school.logo_url ? { icon: school.logo_url, apple: school.logo_url } : undefined,
+    }
+  } catch {
+    return {}
+  }
+}
+
 const getLayoutData = (userId: string) =>
   unstable_cache(
     async () => {
