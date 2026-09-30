@@ -9,26 +9,32 @@ export async function generateMetadata() {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return {}
+    if (!user) return { title: { absolute: 'NexoCollege' } }
     const adminClient = createAdminClient()
     const { data: profile } = await adminClient
       .from('users')
       .select('school_id, role')
       .eq('id', user.id)
       .single()
-    if (!profile?.school_id || profile.role !== 'student') return {}
+    if (!profile?.school_id || profile.role !== 'student') {
+      return { title: { absolute: 'NexoCollege' } }
+    }
     const { data: school } = await adminClient
       .from('schools')
       .select('name, logo_url')
       .eq('id', profile.school_id)
       .single()
-    if (!school) return {}
+    if (!school) return { title: { absolute: 'NexoCollege' } }
     return {
       title: { absolute: school.name },
-      icons: school.logo_url ? { icon: school.logo_url, apple: school.logo_url } : undefined,
+      icons: school.logo_url ? {
+        icon: [{ url: school.logo_url, type: 'image/png' }],
+        apple: [{ url: school.logo_url }],
+        shortcut: school.logo_url,
+      } : undefined,
     }
   } catch {
-    return {}
+    return { title: { absolute: 'NexoCollege' } }
   }
 }
 
