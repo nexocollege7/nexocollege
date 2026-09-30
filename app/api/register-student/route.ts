@@ -36,6 +36,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 })
     }
 
+    // Bloquear se o email já está cadastrado como admin ou owner de outra escola
+    const { data: existingUser } = await adminClient
+      .from('users')
+      .select('role, school_id')
+      .eq('id', userId)
+      .single()
+
+    if (existingUser?.role === 'admin' || existingUser?.role === 'owner') {
+      return NextResponse.json({
+        error: 'Este e-mail já está cadastrado como administrador de uma escola. Use um e-mail diferente para se cadastrar como aluno.',
+      }, { status: 409 })
+    }
+
     // Valida que a escola existe antes de associar
     const { data: school } = await adminClient
       .from('schools')

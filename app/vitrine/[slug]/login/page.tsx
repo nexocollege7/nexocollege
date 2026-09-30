@@ -160,7 +160,7 @@ export default function LoginEscolaPage() {
 
     if (data.user) {
       // Aguarda registro do aluno e aceites LGPD antes de redirecionar
-      await Promise.all([
+      const [registerRes] = await Promise.all([
         fetch('/api/register-student', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -168,6 +168,15 @@ export default function LoginEscolaPage() {
         }),
         recordAcceptances(studentDocs.map(d => d.id)),
       ])
+
+      if (!registerRes.ok) {
+        const registerData = await registerRes.json()
+        // Deletar usuário criado pois o cadastro não pode ser concluído
+        await supabase.auth.signOut()
+        setError(registerData.error || 'Não foi possível concluir o cadastro. Tente novamente.')
+        setLoading(false)
+        return
+      }
 
       // Pequeno delay para garantir que a sessão foi estabelecida
       await new Promise(resolve => setTimeout(resolve, 800))
