@@ -2,6 +2,22 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { matriculaValida } from '@/lib/enrollment'
 import { AprenderClient } from './aprender-client'
+import { createAdminClient } from '@/lib/supabase/admin'
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id: courseId } = await params
+  const adminClient = createAdminClient()
+  const { data: course } = await adminClient
+    .from('courses')
+    .select('title, school_id, schools(name, logo_url)')
+    .eq('id', courseId)
+    .single()
+  const school = course?.schools as any
+  return {
+    title: { absolute: school?.name ?? 'NexoCollege' },
+    icons: school?.logo_url ? { icon: school.logo_url, apple: school.logo_url } : undefined,
+  }
+}
 
 export default async function AprenderPage({
   params,
