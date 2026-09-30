@@ -105,7 +105,7 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
         cursor: escola ? 'pointer' : 'default',
         position: 'relative',
       }}
-        onClick={() => escola && window.open(`https://${escola.slug}.nexocollege.com.br`, '_blank')}
+        onClick={() => escola && (window.location.href = `https://${escola.slug}.nexocollege.com.br`)}
         title={escola ? 'Ver vitrine da escola' : ''}
       >
         {!collapsed && (
@@ -203,7 +203,7 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
 
         {/* Botao Vitrine */}
         {escola && (
-          <a href={`https://www.nexocollege.com.br/vitrine/${escola.slug}`} target="_blank" rel="noreferrer" title={collapsed ? 'Ver Vitrine' : undefined} style={{
+          <a href={`https://www.nexocollege.com.br/vitrine/${escola.slug}`} target="_self" title={collapsed ? 'Ver Vitrine' : undefined} style={{
             display: 'flex', alignItems: 'center', gap: '10px',
             padding: collapsed ? '10px' : '10px 12px',
             justifyContent: collapsed ? 'center' : 'flex-start',
