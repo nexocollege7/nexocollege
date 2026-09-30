@@ -7,6 +7,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title: {
       absolute: school?.name ?? 'NexoCollege',
     },
+    icons: school?.logo_url ? {
+      icon: school.logo_url,
+      apple: school.logo_url,
+    } : {
+      icon: '/favicon-32x32.png',
+      shortcut: '/favicon.ico',
+      apple: '/apple-touch-icon.png',
+    },
   }
 }
 
