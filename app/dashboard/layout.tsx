@@ -6,10 +6,6 @@ import { getPendingDocuments } from '@/app/actions/legal-actions'
 import { unstable_cache } from 'next/cache'
 import { SchoolBranding } from '@/components/school-branding'
 
-export const metadata = {
-  icons: { icon: '/api/school-favicon', apple: '/api/school-favicon' },
-}
-
 export async function generateMetadata() {
   try {
     const supabase = await createClient()
@@ -32,11 +28,10 @@ export async function generateMetadata() {
     if (!school) return { title: { absolute: 'NexoCollege' } }
     return {
       title: { absolute: school.name },
-      icons: school.logo_url ? {
-        icon: [{ url: school.logo_url, type: 'image/png' }],
-        apple: [{ url: school.logo_url }],
-        shortcut: school.logo_url,
-      } : undefined,
+      icons: {
+        icon: '/api/school-favicon',
+        apple: '/api/school-favicon',
+      },
     }
   } catch {
     return { title: { absolute: 'NexoCollege' } }
