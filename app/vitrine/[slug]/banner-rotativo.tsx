@@ -100,7 +100,7 @@ export default function BannerRotativo({ slides, slug, cor, basePath }: Props) {
           position: 'absolute', inset: 0, zIndex: 0,
           backgroundImage: `url(${imagem})`,
           backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundPosition: 'top center',
           opacity: animando ? 0 : 1,
           transition: 'opacity 0.8s ease',
         }} />

@@ -102,7 +102,7 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
             gap: '20px',
           }}>
             {courses.map((course) => (
-              <Link key={course.id} href={`${basePath}/${course.slug}`} className="curso-card">
+              <Link key={course.id} href={`${basePath}/${course.slug}`} className="curso-card" style={{ display: "flex", flexDirection: "column" }}>
                 <div style={{
                   height: '160px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -117,7 +117,7 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
                   {!course.thumbnail_url && <span style={{ fontSize: '48px' }}>📖</span>}
                 </div>
 
-                <div style={{ padding: '16px' }}>
+                <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
                   <h3 style={{
                     color: '#F0F0F0', fontWeight: '600', fontSize: '15px',
                     margin: '0 0 8px', lineHeight: '1.3',
@@ -127,7 +127,7 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
                   {course.description && (
                     <p style={{
                       color: '#888888', fontSize: '13px', margin: '0 0 16px',
-                      lineHeight: '1.5', overflow: 'hidden',
+                      lineHeight: '1.5', overflow: 'hidden', flexGrow: 1,
                       display: '-webkit-box', WebkitLineClamp: 2,
                       WebkitBoxOrient: 'vertical',
                     }}>
@@ -136,7 +136,7 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
                   )}
                   <div style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    paddingTop: '12px', borderTop: '1px solid #2A2A2A',
+                    paddingTop: '12px', borderTop: '1px solid #2A2A2A', marginTop: 'auto',
                   }}>
                     <span style={{ color: '#555555', fontSize: '12px' }}>
                       {course.total_lessons} aulas
