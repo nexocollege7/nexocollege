@@ -83,14 +83,15 @@ export default function BannerRotativo({ slides, slug, cor, basePath }: Props) {
     }}>
       <style>{`
         @media (max-width: 768px) {
-          .banner-conteudo { padding: 0 24px 60px !important; }
-          .banner-titulo { font-size: 36px !important; }
-          .banner-dots { right: 24px !important; bottom: 24px !important; }
-        }
-        @media (max-width: 480px) {
-          .banner-conteudo { padding: 0 16px 48px !important; }
-          .banner-titulo { font-size: 28px !important; }
-          .banner-btns { flex-direction: column !important; align-items: flex-start !important; }
+          .banner-root { height: 75vh !important; min-height: 400px !important; }
+          .banner-conteudo { padding: 0 20px 40px !important; max-width: 100% !important; }
+          .banner-titulo { font-size: 26px !important; margin-bottom: 8px !important; }
+          .banner-desc { font-size: 13px !important; margin-bottom: 16px !important; display: -webkit-box !important; -webkit-line-clamp: 2 !important; -webkit-box-orient: vertical !important; overflow: hidden !important; }
+          .banner-dots { right: 16px !important; bottom: 16px !important; }
+          .banner-btns { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
+          .banner-btn-primary { padding: 10px 20px !important; font-size: 13px !important; }
+          .banner-btn-secondary { padding: 10px 16px !important; font-size: 12px !important; }
+          .banner-badge { display: none !important; }
         }
       `}</style>
       {/* Imagem de fundo */}
