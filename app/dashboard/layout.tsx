@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { AdminLayout } from '@/components/layout/admin-layout'
 import { getPendingDocuments } from '@/app/actions/legal-actions'
 import { unstable_cache } from 'next/cache'
+import { SchoolBranding } from '@/components/school-branding'
 
 export async function generateMetadata() {
   try {
@@ -108,7 +109,9 @@ export default async function DashboardLayout({
   }
 
   return (
-    <AdminLayout
+    <>
+      <SchoolBranding schoolName={schoolName} schoolLogoUrl={schoolLogoUrl} role={profile?.role ?? null} />
+      <AdminLayout
       user={{
         email: user.email ?? '',
         role: role,
@@ -122,5 +125,6 @@ export default async function DashboardLayout({
     >
       {children}
     </AdminLayout>
+    </>
   )
 }
