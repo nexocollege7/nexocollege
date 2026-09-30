@@ -59,18 +59,6 @@ export async function middleware(request: NextRequest) {
   }
 
 
-  // Redirecionar /vitrine/[slug] para subdomínio
-  if (url.pathname.startsWith('/vitrine/')) {
-    const parts = url.pathname.split('/')
-    const slug = parts[2]
-    if (slug && parts.length >= 3 && !url.pathname.includes('/login')) {
-      const subdomainUrl = new URL(request.url)
-      subdomainUrl.host = `${slug}.nexocollege.com.br`
-      subdomainUrl.pathname = '/' + parts.slice(3).join('/')
-      return NextResponse.redirect(subdomainUrl, 301)
-    }
-  }
-
   // Dominio customizado (ex: cursos.suaigreja.com.br)
   const isNexoCollegeMain = host === 'nexocollege.com.br' || host === 'www.nexocollege.com.br'
   if (!isNexoCollegeDomain && !isNexoCollegeMain) {
