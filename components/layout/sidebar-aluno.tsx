@@ -105,7 +105,7 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
         cursor: escola ? 'pointer' : 'default',
         position: 'relative',
       }}
-        onClick={() => escola && (window.location.href = `https://${escola.slug}.nexocollege.com.br`)}
+        onClick={() => escola && (window.location.href = `/vitrine/${escola.slug}`)}
         title={escola ? 'Ver vitrine da escola' : ''}
       >
         {!collapsed && (
