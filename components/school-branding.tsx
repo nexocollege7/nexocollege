@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import React, { useEffect } from 'react'
 
 type Props = {
   schoolName: string | null
@@ -8,7 +8,7 @@ type Props = {
   role: string | null
 }
 
-export function SchoolBranding({ schoolName, schoolLogoUrl, role }: Props) {
+export function SchoolBranding({ schoolName, schoolLogoUrl, role }: Props): React.JSX.Element | null {
   useEffect(() => {
     if (role !== 'student' || !schoolName) return
 
