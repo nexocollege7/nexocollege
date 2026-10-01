@@ -5,9 +5,27 @@ export const revalidate = 300 // 5 minutos
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const school = await getSchoolBySlug(slug)
+  const schoolName = school?.name ?? 'NexoCollege'
+  const description = `Conheça os cursos da ${schoolName}. Acesse a vitrine e comece a estudar.`
+  const ogImages = school?.logo_url ? [{ url: school.logo_url, alt: schoolName }] : []
   return {
     title: {
-      absolute: school?.name ?? 'NexoCollege',
+      absolute: schoolName,
+    },
+    description,
+    openGraph: {
+      title: schoolName,
+      description,
+      siteName: schoolName,
+      type: 'website',
+      locale: 'pt_BR',
+      images: ogImages,
+    },
+    twitter: {
+      card: 'summary',
+      title: schoolName,
+      description,
+      images: school?.logo_url ? [school.logo_url] : [],
     },
     icons: school?.logo_url ? {
       icon: school.logo_url,
