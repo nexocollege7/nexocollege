@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     title: 'NexoCollege',
   },
 
-  metadataBase: new URL('https://nexocollege.com.br'),
+  metadataBase: new URL('https://www.nexocollege.com.br'),
   title: {
     default: 'NexoCollege — Crie sua escola online gratuitamente',
     template: '%s',
