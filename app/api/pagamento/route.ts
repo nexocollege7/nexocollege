@@ -58,11 +58,11 @@ export async function POST(request: NextRequest) {
     // Busca o token da escola
     const { data: school, error: schoolError } = await adminClient
       .from('schools')
-      .select('mp_access_token')
+      .select('mp_access_token, payment_mp_enabled')
       .eq('id', course.school_id)
       .single()
 
-    if (schoolError || !school?.mp_access_token) {
+    if (schoolError || !school?.mp_access_token || school.payment_mp_enabled === false) {
       return NextResponse.json(
         { error: 'Esta escola ainda não configurou o gateway de pagamento.' },
         { status: 400 }

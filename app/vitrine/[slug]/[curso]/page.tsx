@@ -123,8 +123,8 @@ export default async function CursoDetalhePage({
                 courseSlug={course.slug}
                 primaryColor={school.primary_color || '#22c55e'}
                 hasCoupon={!!(course as any).coupon_code}
-                hasPix={!!school.pix_key}
-                hasToken={hasMpToken}
+                hasPix={!!school.pix_key && school.payment_pix_enabled !== false}
+                hasToken={hasMpToken && school.payment_mp_enabled !== false}
                 escolaSuspensa={!!school.suspended_at}
               />
 

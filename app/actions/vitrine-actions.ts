@@ -6,7 +6,7 @@ export async function getSchoolBySlug(slug: string) {
   const adminClient = createAdminClient()
   const { data, error } = await adminClient
     .from('schools')
-    .select('id, name, slug, logo_url, description, primary_color, is_active, featured_course_id, featured_course_ids, live_url, live_active, pix_key, pix_holder_name, whatsapp_contact, suspended_at')
+    .select('id, name, slug, logo_url, description, primary_color, is_active, featured_course_id, featured_course_ids, live_url, live_active, pix_key, pix_holder_name, whatsapp_contact, suspended_at, payment_mp_enabled, payment_pix_enabled')
     .eq('slug', slug)
     .single()
   if (error) console.error('[vitrine] getSchoolBySlug error for slug=' + slug + ':', error.message, error.code)

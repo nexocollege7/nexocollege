@@ -14,7 +14,7 @@ export default async function PixCheckoutPage({
   const course = await getCourseBySlug(curso, school.id)
   if (!course) notFound()
 
-  if (!school.pix_key || course.is_free) {
+  if (!school.pix_key || school.payment_pix_enabled === false || course.is_free) {
     redirect(`/vitrine/${slug}/${curso}`)
   }
 
