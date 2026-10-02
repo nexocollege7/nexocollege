@@ -42,6 +42,19 @@ import HeaderVitrine from './header-vitrine'
 import { DepoimentosVitrine } from './depoimentos-vitrine'
 import { LiveBanner } from './live-banner'
 
+// Cursos exibidos no banner rotativo: os destaques escolhidos pela escola (na ordem marcada)
+// ou, se nenhum destaque válido, os 5 cursos mais recentes.
+function selecionarCursosBanner<T extends { id: string }>(cursos: T[], destaques: string | null | undefined): T[] {
+  const ids = (destaques ?? '').split(',').map((s) => s.trim()).filter(Boolean)
+  if (ids.length > 0) {
+    const escolhidos = ids
+      .map((id) => cursos.find((curso) => curso.id === id))
+      .filter((curso): curso is T => Boolean(curso))
+    if (escolhidos.length > 0) return escolhidos
+  }
+  return cursos.slice(0, 5)
+}
+
 export default async function VitrinePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const school = await getSchoolBySlug(slug)
@@ -97,7 +110,7 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
         schoolId={school.id}
         liveUrlInitial={school.live_url ?? null}
         liveActiveInitial={school.live_active ?? false}
-        courses={courses}
+        courses={selecionarCursosBanner(courses, school.featured_course_ids)}
         mentorias={mentoriasAbertas}
         slug={slug}
         cor={cor}

@@ -78,7 +78,7 @@ export default function VitrinePage() {
       <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '24px' }}>
         <h2 style={{ color: '#F0F0F0', fontSize: '16px', fontWeight: '600', margin: '0 0 8px' }}>Curso em destaque no banner</h2>
         <p style={{ color: '#666666', fontSize: '13px', margin: '0 0 20px' }}>
-          O curso selecionado aparece primeiro no banner rotativo da vitrine.
+          Só os cursos marcados passam no banner, na ordem em que foram marcados. Sem nenhum marcado, aparecem os 5 mais recentes.
         </p>
 
         {cursos.length === 0 ? (
@@ -95,7 +95,7 @@ export default function VitrinePage() {
               <input type="checkbox" checked={featuredIds.length === 0} onChange={() => setFeaturedIds([])} style={{ accentColor: '#AEEA00' }} />
               <div>
                 <p style={{ color: '#F0F0F0', fontSize: '14px', fontWeight: '500', margin: 0 }}>Ordem automatica</p>
-                <p style={{ color: '#666666', fontSize: '12px', margin: 0 }}>Cursos aparecem do mais recente para o mais antigo</p>
+                <p style={{ color: '#666666', fontSize: '12px', margin: 0 }}>Mostra os 5 cursos mais recentes</p>
               </div>
             </label>
 
