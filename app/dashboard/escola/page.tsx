@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getMySchool, updateSchool, savePixSettings, saveMpToken, getMpTokenStatus, saveOwnerContact, updateSchoolLogoUrl, ensureSchoolLogosBucket, updateMyName, verificarPermissaoFeature } from '@/app/actions/school-actions'
+import { savePaymentMethods } from '@/app/actions/payment-settings-actions'
 import { School, CreditCard, User, Users, Settings, Globe } from 'lucide-react'
 import { PlanLock } from '@/components/PlanLock'
 import type { PermissaoPlano } from '@/lib/plan-permissions'
@@ -37,6 +38,8 @@ export default function EscolaPage() {
   const logoInputRef = useRef<HTMLInputElement>(null)
 
   // Pagamentos
+  const [mpEnabled, setMpEnabled] = useState(true)
+  const [pixEnabled, setPixEnabled] = useState(true)
   const [emailConfirmado, setEmailConfirmado] = useState(true)
   const [mpToken, setMpToken] = useState('')
   const [mpPublicKey, setMpPublicKey] = useState('')
@@ -111,6 +114,8 @@ export default function EscolaPage() {
       setTelefone(schoolData.owner_phone || '')
       setPixKey(schoolData.pix_key || '')
       setPixHolderName(schoolData.pix_holder_name || '')
+      setMpEnabled(schoolData.payment_mp_enabled !== false)
+      setPixEnabled(schoolData.payment_pix_enabled !== false)
       setWhatsappContact(schoolData.whatsapp_contact || '')
       setPendingExpirationDays(schoolData.pending_expiration_days ?? 7)
     }
@@ -181,6 +186,17 @@ export default function EscolaPage() {
       setMpToken('')
       setMpPublicKey('')
     }
+  }
+
+  async function salvarFormas() {
+    setSaving(true)
+    const r = await savePaymentMethods({
+      mpEnabled: mpEnabled && hasToken,
+      pixEnabled: pixEnabled && pixKey.trim() !== '',
+    })
+    setSaving(false)
+    const erro = (r as { error?: string })?.error
+    showMsg(erro ? erro : '✅ Formas de pagamento salvas')
   }
 
   async function salvarPix() {
@@ -379,6 +395,31 @@ export default function EscolaPage() {
               <button onClick={reenviarEmail} style={{ background: 'rgba(255,170,0,0.15)', border: '1px solid rgba(255,170,0,0.35)', color: '#FFAA00', borderRadius: '6px', padding: '6px 14px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}>Reenviar email</button>
             </div>
           )}
+
+          {/* Formas de pagamento */}
+          <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '24px' }}>
+            <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 8px' }}>Formas de pagamento para os alunos</h2>
+            <p style={{ color: '#666', fontSize: '13px', margin: '0 0 16px' }}>Escolha quais opções aparecem para o aluno na hora de comprar um curso. Cursos gratuitos não são afetados.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: hasToken ? 'pointer' : 'not-allowed', opacity: hasToken ? 1 : 0.5 }}>
+                <input type="checkbox" checked={mpEnabled && hasToken} disabled={!hasToken} onChange={(e) => setMpEnabled(e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#AEEA00' }} />
+                <span style={{ color: '#fff', fontSize: '14px' }}>
+                  Mercado Pago{' '}
+                  <span style={{ color: '#666', fontSize: '12px' }}>{hasToken ? '(cartão e PIX automático)' : '— salve as credenciais abaixo para ativar'}</span>
+                </span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: pixKey.trim() ? 'pointer' : 'not-allowed', opacity: pixKey.trim() ? 1 : 0.5 }}>
+                <input type="checkbox" checked={pixEnabled && pixKey.trim() !== ''} disabled={!pixKey.trim()} onChange={(e) => setPixEnabled(e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#AEEA00' }} />
+                <span style={{ color: '#fff', fontSize: '14px' }}>
+                  PIX manual{' '}
+                  <span style={{ color: '#666', fontSize: '12px' }}>{pixKey.trim() ? '(aluno envia o comprovante e você libera)' : '— salve a chave PIX abaixo para ativar'}</span>
+                </span>
+              </label>
+            </div>
+            <div style={{ marginTop: '16px' }}>
+              <button onClick={salvarFormas} disabled={saving || (!(mpEnabled && hasToken) && !(pixEnabled && pixKey.trim() !== ''))} style={btnStyle}>Salvar formas de pagamento</button>
+            </div>
+          </div>
 
           {/* Status */}
           <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '24px' }}>
