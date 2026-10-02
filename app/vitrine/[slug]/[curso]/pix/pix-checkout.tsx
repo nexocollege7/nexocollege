@@ -142,7 +142,7 @@ export function PixCheckout({
 
       <main className="max-w-2xl mx-auto px-6 py-10">
         <h1 className="text-2xl font-bold text-white mb-1">Pagamento via PIX</h1>
-        <p className="text-gray-400 text-sm mb-8">{courseTitle} · R$ {fmt(coursePrice)}{couponCode && originalPrice && originalPrice > coursePrice ? (<span style={{ color: '#AEEA00' }}> · Cupom {couponCode} (−{discountPercent}%) — de R$ {fmt(originalPrice)}</span>) : null}</p>
+        <p className="text-gray-400 text-sm mb-8">{courseTitle}</p>
 
         {error && (
           <div className="bg-red-950 border border-red-800 rounded-xl p-4 text-red-300 text-sm">
@@ -155,6 +155,18 @@ export function PixCheckout({
 
             {pending.status === 'awaiting_payment' && (
               <>
+                <div className="rounded-xl p-6" style={{ background: 'rgba(174,234,0,0.08)', border: '1px solid rgba(174,234,0,0.35)' }}>
+                  <p className="text-gray-400 text-sm mb-1">💰 Valor a pagar</p>
+                  <p className="text-white text-3xl font-bold mb-1">R$ {fmt(coursePrice)}</p>
+                  {couponCode && originalPrice && originalPrice > coursePrice ? (
+                    <p className="text-sm mb-2" style={{ color: '#AEEA00' }}>
+                      Cupom {couponCode} aplicado (−{discountPercent}%) · de{' '}
+                      <span style={{ textDecoration: 'line-through' }}>R$ {fmt(originalPrice)}</span>
+                    </p>
+                  ) : null}
+                  <p className="text-gray-400 text-sm">Faça o PIX exatamente neste valor e depois envie o comprovante abaixo.</p>
+                </div>
+
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
                   <p className="text-gray-400 text-sm mb-2">Chave PIX</p>
                   <div className="flex items-center gap-2">
