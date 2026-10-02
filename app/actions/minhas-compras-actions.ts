@@ -10,6 +10,8 @@ export type CompraPendente = {
   valor: number | null
   cupom: string | null
   link: string
+  thumbnailUrl: string | null
+  schoolName: string
 }
 
 type LinhaPedido = {
@@ -19,7 +21,7 @@ type LinhaPedido = {
   course_id: string
   coupon_code: string | null
   expected_amount: number | string | null
-  course: { title: string; slug: string; price: number | string | null } | null
+  course: { title: string; slug: string; price: number | string | null; thumbnail_url: string | null } | null
 }
 
 // Pedidos de PIX manual em aberto do aluno logado (para a seção "Compras em andamento").
@@ -33,7 +35,7 @@ export async function getMinhasComprasPendentes(): Promise<CompraPendente[]> {
 
   const { data: pedidos } = await admin
     .from('pending_enrollments')
-    .select('id, status, school_id, course_id, coupon_code, expected_amount, course:courses ( title, slug, price )')
+    .select('id, status, school_id, course_id, coupon_code, expected_amount, course:courses ( title, slug, price, thumbnail_url )')
     .eq('student_id', user.id)
     .in('status', ['awaiting_payment', 'awaiting_release', 'refused'])
     .gt('expires_at', agora)
@@ -55,8 +57,9 @@ export async function getMinhasComprasPendentes(): Promise<CompraPendente[]> {
   )
 
   const schoolIds = Array.from(new Set(pedidos.map((p) => p.school_id)))
-  const { data: escolas } = await admin.from('schools').select('id, slug').in('id', schoolIds)
+  const { data: escolas } = await admin.from('schools').select('id, slug, name').in('id', schoolIds)
   const slugPorEscola = new Map((escolas ?? []).map((e) => [e.id, e.slug as string]))
+  const nomePorEscola = new Map((escolas ?? []).map((e) => [e.id, (e.name as string) ?? '']))
 
   return pedidos
     .filter((p) => p.course && !liberados.has(p.course_id) && slugPorEscola.get(p.school_id))
@@ -66,6 +69,10 @@ export async function getMinhasComprasPendentes(): Promise<CompraPendente[]> {
       const cupom = p.coupon_code ?? null
       const link = `/vitrine/${slugPorEscola.get(p.school_id)}/${p.course!.slug}/pix` +
         (cupom ? `?cupom=${encodeURIComponent(cupom)}` : '')
-      return { id: p.id, status: p.status, courseTitle: p.course!.title, valor, cupom, link }
+      return {
+        id: p.id, status: p.status, courseTitle: p.course!.title, valor, cupom, link,
+        thumbnailUrl: p.course!.thumbnail_url ?? null,
+        schoolName: nomePorEscola.get(p.school_id) ?? '',
+      }
     })
 }

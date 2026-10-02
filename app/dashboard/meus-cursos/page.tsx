@@ -99,32 +99,52 @@ export default function MeusCursosPage() {
       {compras.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <p style={{ color: '#F0F0F0', fontWeight: 700, fontSize: '16px', margin: 0 }}>🕒 Compras em andamento</p>
-          {compras.map((compra) => {
-            const info = compra.status === 'awaiting_release'
-              ? { cor: '#AEEA00', texto: '🟢 Comprovante enviado — aguardando liberação da escola', botao: '' }
-              : compra.status === 'refused'
-              ? { cor: '#FF5555', texto: '🔴 Pagamento não confirmado pela escola', botao: 'Enviar novo comprovante' }
-              : { cor: '#FFB800', texto: '🟡 Aguardando pagamento', botao: 'Pagar e enviar comprovante' }
-            return (
-              <div key={compra.id} style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
-                  <p style={{ color: '#F0F0F0', fontWeight: 600, fontSize: '15px', margin: 0 }}>{compra.courseTitle}</p>
-                  <p style={{ color: info.cor, fontSize: '13px', margin: 0 }}>{info.texto}</p>
-                  {compra.valor != null && (
-                    <p style={{ color: '#888888', fontSize: '13px', margin: 0 }}>
-                      Valor: R$ {compra.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      {compra.cupom ? ` · cupom ${compra.cupom}` : ''}
-                    </p>
-                  )}
+          <div className="meus-cursos-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+            {compras.map((compra) => {
+              const info = compra.status === 'awaiting_release'
+                ? { cor: '#AEEA00', selo: '🟢 Comprovante enviado', texto: 'Aguardando liberação da escola', botao: '' }
+                : compra.status === 'refused'
+                ? { cor: '#FF5555', selo: '🔴 Não confirmado', texto: 'Pagamento não confirmado pela escola', botao: 'Enviar novo comprovante' }
+                : { cor: '#FFB800', selo: '🟡 Aguardando pagamento', texto: 'Finalize o pagamento para liberar o curso', botao: 'Pagar e enviar comprovante' }
+              return (
+                <div key={compra.id} style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', backgroundColor: '#111111' }}>
+                    {compra.thumbnailUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={compra.thumbnailUrl} alt={compra.courseTitle} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '32px' }}>📚</div>
+                    )}
+                    <span style={{ position: 'absolute', top: '12px', left: '12px', backgroundColor: 'rgba(13,13,13,0.85)', color: info.cor, fontSize: '12px', fontWeight: 700, padding: '5px 10px', borderRadius: '999px' }}>
+                      {info.selo}
+                    </span>
+                  </div>
+                  <div style={{ padding: '16px 20px 20px', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+                    {compra.schoolName && (
+                      <p style={{ color: '#666666', fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 }}>{compra.schoolName}</p>
+                    )}
+                    <p style={{ color: '#F0F0F0', fontWeight: 700, fontSize: '16px', margin: 0 }}>{compra.courseTitle}</p>
+                    <p style={{ color: info.cor, fontSize: '13px', margin: 0 }}>{info.texto}</p>
+                    {compra.valor != null && (
+                      <p style={{ color: '#888888', fontSize: '13px', margin: 0 }}>
+                        Valor: R$ {compra.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {compra.cupom ? ` · cupom ${compra.cupom}` : ''}
+                      </p>
+                    )}
+                    <div style={{ marginTop: 'auto', paddingTop: '8px' }}>
+                      {info.botao ? (
+                        <Link href={compra.link} style={{ display: 'block', textAlign: 'center', backgroundColor: '#AEEA00', color: '#0D0D0D', fontWeight: 700, fontSize: '14px', padding: '10px 16px', borderRadius: '10px', textDecoration: 'none' }}>
+                          {info.botao} →
+                        </Link>
+                      ) : (
+                        <p style={{ color: '#666666', fontSize: '13px', margin: 0 }}>A escola vai conferir e liberar seu acesso.</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                {info.botao && (
-                  <Link href={compra.link} style={{ backgroundColor: '#AEEA00', color: '#0D0D0D', fontWeight: 700, fontSize: '14px', padding: '10px 16px', borderRadius: '10px', textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                    {info.botao} →
-                  </Link>
-                )}
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
       )}
 
