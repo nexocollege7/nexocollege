@@ -19,6 +19,8 @@ export type PendingEnrollment = {
   expires_at: string
   created_at: string
   updated_at: string
+  coupon_code?: string | null
+  expected_amount?: number | string | null
 }
 
 export type PendingEnrollmentStudent = {
@@ -30,6 +32,7 @@ export type PendingEnrollmentCourse = {
   id: string
   title: string
   thumbnail_url: string | null
+  price?: number | string | null
 }
 
 export type PendingEnrollmentWithDetails = PendingEnrollment & {
@@ -42,8 +45,9 @@ const ACTIVE_STATUSES: PendingEnrollmentStatus[] = ['awaiting_payment', 'awaitin
 const WITH_DETAILS_SELECT = `
   id, school_id, student_id, course_id, payment_method, status,
   receipt_url, admin_note, expires_at, created_at, updated_at,
+  coupon_code, expected_amount,
   student:users ( id, full_name ),
-  course:courses ( id, title, thumbnail_url )
+  course:courses ( id, title, thumbnail_url, price )
 `
 
 export async function getPendingEnrollmentsBySchool(

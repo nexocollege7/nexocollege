@@ -44,6 +44,20 @@ function PendenciaCard({
     }
   }
 
+  async function handleConfirmarPagamento() {
+    const nome = pendencia.student.full_name || 'este aluno'
+    if (!window.confirm(`Confirmar o pagamento de ${nome} e liberar o acesso ao curso "${pendencia.course.title}"?`)) return
+    setLoading(true)
+    setErro('')
+    const result = await releasePendingEnrollment(pendencia.id, 'Pagamento confirmado pela escola (sem comprovante)')
+    if (result.error) {
+      setErro(result.error)
+      setLoading(false)
+    } else {
+      onRemover(pendencia.id)
+    }
+  }
+
   async function handleRecusar() {
     const note = prompt('Motivo da recusa (visível para o aluno):')
     if (!note) return
@@ -77,6 +91,10 @@ function PendenciaCard({
   }
 
   const isAwaitingRelease = pendencia.status === 'awaiting_release'
+  const valorRegistrado = pendencia.expected_amount != null ? Number(pendencia.expected_amount) : null
+  const valorCurso = pendencia.course.price != null ? Number(pendencia.course.price) : null
+  const valorExibido = valorRegistrado ?? valorCurso
+  const fmtValor = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
   return (
     <Card style={{ backgroundColor: '#111111', border: '1px solid #2A2A2A' }}>
@@ -97,6 +115,13 @@ function PendenciaCard({
       <CardContent style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px' }}>
           <p style={{ color: '#CCCCCC', margin: 0 }}>{pendencia.course.title}</p>
+          {valorExibido != null && (
+            <p style={{ color: '#AEEA00', margin: 0, fontWeight: 600 }}>
+              Valor: R$ {fmtValor(valorExibido)}
+              {pendencia.coupon_code ? ` · cupom ${pendencia.coupon_code}` : ''}
+              {valorRegistrado == null ? ' (preço atual do curso)' : ''}
+            </p>
+          )}
           <p style={{ color: '#555555', margin: 0 }}>
             Inscrito em {formatarData(pendencia.created_at)} · Expira em {formatarData(pendencia.expires_at)}
           </p>
@@ -134,6 +159,15 @@ function PendenciaCard({
               </Button>
             </>
           ) : (
+            <>
+            <Button
+              size="sm"
+              disabled={loading}
+              onClick={handleConfirmarPagamento}
+              style={{ backgroundColor: '#AEEA00', color: '#0D0D0D', fontWeight: 700 }}
+            >
+              {loading ? '...' : '✅ Confirmar pagamento e liberar'}
+            </Button>
             <Button
               size="sm"
               disabled={!whatsappContact}
@@ -142,6 +176,7 @@ function PendenciaCard({
             >
               Falar no WhatsApp
             </Button>
+            </>
           )}
         </div>
       </CardContent>
