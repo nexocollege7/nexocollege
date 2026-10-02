@@ -75,7 +75,9 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
 
   async function handleSair() {
     await supabase.auth.signOut()
-    window.location.href = escola?.slug ? `/vitrine/${escola.slug}/login` : '/login'
+    window.location.href = escola?.slug
+      ? `https://${escola.slug}.nexocollege.com.br/`
+      : '/login'
   }
 
   const corEscola = escola?.primary_color || '#AEEA00'
