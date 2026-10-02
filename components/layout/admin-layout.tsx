@@ -162,7 +162,7 @@ export function AdminLayout({ children, user, title }: AdminLayoutProps) {
           main { padding: 12px !important; }
         }
         @media (min-width: 769px) {
-          .desktop-sidebar { display: block; }
+          .desktop-sidebar { display: block; position: sticky; top: 0; height: 100vh; align-self: flex-start; overflow-y: auto; }
           .mobile-topbar { display: none !important; }
           .mobile-sidebar { display: none !important; }
         }
