@@ -41,6 +41,7 @@ import { GraduationCap } from 'lucide-react'
 import HeaderVitrine from './header-vitrine'
 import { DepoimentosVitrine } from './depoimentos-vitrine'
 import { LiveBanner } from './live-banner'
+import { getSecoesDaVitrine, montarGruposVitrine } from '@/lib/vitrine-sections'
 
 // Cursos exibidos no banner rotativo: os destaques escolhidos pela escola (na ordem marcada)
 // ou, se nenhum destaque válido, os 5 cursos mais recentes.
@@ -65,6 +66,8 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
     getPublishedMentorships(school.id),
     getActiveReviews(school.id),
   ])
+  const secoesVitrine = await getSecoesDaVitrine(school.id)
+  const { usarFileiras, grupos: gruposVitrine } = montarGruposVitrine(courses, secoesVitrine)
   const cor = school.primary_color || '#AEEA00'
   const mentoriasAbertas = mentorias.filter((m) => m.has_open_cohort)
 
@@ -118,22 +121,25 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
       />
 
       {/* Grid de Cursos */}
-      {courses.length > 0 && (
-        <div className="vitrine-grid-section" style={{ padding: '48px 48px 80px' }}>
-          <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#F0F0F0', margin: '0 0 24px' }}>
-            Todos os cursos
+      {gruposVitrine.map((grupo, idxGrupo) => grupo.cursos.length > 0 && (
+        <div key={grupo.id} className="vitrine-grid-section" style={{ padding: usarFileiras ? `${idxGrupo === 0 ? 48 : 8}px 48px ${idxGrupo === gruposVitrine.length - 1 ? 80 : 24}px` : '48px 48px 80px' }}>
+          <h2 style={{ fontSize: usarFileiras ? '20px' : '22px', fontWeight: '700', color: '#F0F0F0', margin: usarFileiras ? '0 0 16px' : '0 0 24px' }}>
+            {grupo.titulo}
             <span style={{ color: '#555555', fontSize: '15px', fontWeight: '400', marginLeft: '12px' }}>
-              {courses.length} disponível{courses.length !== 1 ? 'is' : ''}
+              {grupo.cursos.length} disponível{grupo.cursos.length !== 1 ? 'is' : ''}
             </span>
           </h2>
 
-          <div className="vitrine-cursos-grid" style={{
+          <div className={usarFileiras ? 'vitrine-fileira' : 'vitrine-cursos-grid'} style={usarFileiras ? {
+            display: 'flex', gap: '20px', overflowX: 'auto', paddingBottom: '12px',
+            scrollSnapType: 'x mandatory',
+          } : {
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
             gap: '20px',
           }}>
-            {courses.map((course) => (
-              <Link key={course.id} href={`${basePath}/${course.slug}`} className="curso-card" style={{ display: "flex", flexDirection: "column" }}>
+            {grupo.cursos.map((course) => (
+              <Link key={course.id} href={`${basePath}/${course.slug}`} className="curso-card" style={{ display: "flex", flexDirection: "column", ...(usarFileiras ? { flex: "0 0 260px", scrollSnapAlign: "start" } : {}) }}>
                 <div className="curso-card-img" style={{
                   height: '160px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -184,7 +190,7 @@ export default async function VitrinePage({ params }: { params: Promise<{ slug: 
             ))}
           </div>
         </div>
-      )}
+      ))}
 
       {/* Grid de Mentorias */}
       {mentoriasAbertas.length > 0 && (
