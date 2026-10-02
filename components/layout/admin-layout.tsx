@@ -10,6 +10,7 @@ import { SessionProvider } from '@/components/auth/session-provider'
 import { ProfessorOnlineBanner } from '@/components/ProfessorOnlineBanner'
 import { SplashScreen } from '@/components/SplashScreen'
 import { AiAssistant } from '@/components/ui/ai-assistant'
+import { STUDENT_AI_ASSISTANT_ENABLED } from '@/lib/plan-features'
 
 
 interface AdminLayoutProps {
@@ -143,7 +144,7 @@ export function AdminLayout({ children, user, title }: AdminLayoutProps) {
         </main>
       </div>
 
-      {!isMentorGuest && (
+      {!isMentorGuest && (!isAluno || STUDENT_AI_ASSISTANT_ENABLED) && (
         <AiAssistant
           profile={isAluno ? 'student' : 'school'}
           schoolName={user.school_name ?? 'sua escola'}
