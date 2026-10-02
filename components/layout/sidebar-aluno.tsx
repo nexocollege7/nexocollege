@@ -74,6 +74,8 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
   }, [])
 
   async function handleSair() {
+    // Avisa o SessionProvider para não redirecionar ao /login (evita o flash)
+    ;(window as unknown as { __nexoManualLogout?: boolean }).__nexoManualLogout = true
     await supabase.auth.signOut()
     window.location.href = escola?.slug
       ? `https://${escola.slug}.nexocollege.com.br/`

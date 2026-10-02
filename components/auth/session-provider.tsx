@@ -15,6 +15,8 @@ export function SessionProvider() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
+        // Quem iniciou o logout (ex.: Sair do aluno) cuida do próprio redirecionamento
+        if ((window as unknown as { __nexoManualLogout?: boolean }).__nexoManualLogout) return
         router.push('/login')
       }
     })
