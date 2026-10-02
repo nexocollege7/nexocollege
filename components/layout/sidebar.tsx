@@ -104,7 +104,7 @@ export function Sidebar({ schoolSlug, onClose, role }: { schoolSlug?: string | n
 
   async function handleSair() {
     await supabase.auth.signOut()
-    window.location.href = schoolSlug ? `/vitrine/${schoolSlug}/login` : '/login'
+    window.location.href = '/login'
   }
 
   return (
