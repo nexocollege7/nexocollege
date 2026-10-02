@@ -104,7 +104,7 @@ export function PayButton({
           setLoading(false)
           return
         }
-        window.location.href = 'https://nexocollege.com.br/dashboard/meus-cursos'
+        window.location.href = 'https://www.nexocollege.com.br/dashboard/meus-cursos'
         return
       } catch {
         alert('Erro ao processar matrícula. Tente novamente.')

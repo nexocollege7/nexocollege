@@ -38,7 +38,7 @@ export function MentoriaPayButton({ cohortId, isFree, schoolSlug, mentorshipSlug
         setLoading(false)
         return
       }
-      window.location.href = 'https://nexocollege.com.br/dashboard/minhas-mentorias'
+      window.location.href = 'https://www.nexocollege.com.br/dashboard/minhas-mentorias'
       return
     }
 

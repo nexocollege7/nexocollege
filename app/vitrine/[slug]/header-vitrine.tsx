@@ -119,9 +119,9 @@ export default function HeaderVitrine({ slug, cor, nomeEscola, basePath, logoUrl
               boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
             }}>
               {[
-                { label: '📚 Meus Cursos', href: 'https://nexocollege.com.br/dashboard/meus-cursos' },
-                { label: '💬 Mensagens', href: 'https://nexocollege.com.br/dashboard/mensagens' },
-                { label: '🏆 Certificados', href: 'https://nexocollege.com.br/dashboard/certificados' },
+                { label: '📚 Meus Cursos', href: 'https://www.nexocollege.com.br/dashboard/meus-cursos' },
+                { label: '💬 Mensagens', href: 'https://www.nexocollege.com.br/dashboard/mensagens' },
+                { label: '🏆 Certificados', href: 'https://www.nexocollege.com.br/dashboard/certificados' },
               ].map((item) => (
                 <Link
                   key={item.href}
