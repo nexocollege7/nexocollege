@@ -6,6 +6,7 @@ import { getMySchool } from '@/app/actions/school-actions'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { SkeletonGrid, SkeletonCard } from '@/components/ui/skeleton'
+import { VitrineSectionsManager } from '@/components/dashboard/vitrine-sections-manager'
 
 export default function VitrinePage() {
   const [school, setSchool] = useState<any>(null)
@@ -123,6 +124,10 @@ export default function VitrinePage() {
         <button onClick={handleSave} disabled={saving} style={{ marginTop: '20px', width: '100%', backgroundColor: saving ? '#333333' : '#AEEA00', color: '#0D0D0D', fontWeight: '700', fontSize: '14px', border: 'none', borderRadius: '8px', padding: '12px', cursor: saving ? 'not-allowed' : 'pointer' }}>
           {saving ? 'Salvando...' : 'Salvar configuracoes da vitrine'}
         </button>
+      </div>
+
+      <div style={{ marginTop: '24px' }}>
+        <VitrineSectionsManager />
       </div>
 
     </div>
