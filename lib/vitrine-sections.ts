@@ -46,7 +46,7 @@ export function montarGruposVitrine<T extends { id: string }>(cursos: T[], secoe
     .filter((grupo) => grupo.cursos.length > 0)
 
   const outros = cursos.filter((curso) => !usados.has(curso.id))
-  if (outros.length > 0) grupos.push({ id: 'outros', titulo: 'Outros cursos', cursos: outros })
+  if (outros.length > 0) grupos.push({ id: 'outros', titulo: 'Conheça também', cursos: outros })
 
   if (grupos.length === 0) return todos
   return { usarFileiras: true, grupos }

@@ -87,7 +87,7 @@ export function VitrineSectionsManager() {
       <h2 style={{ color: '#fff', fontSize: '16px', fontWeight: 600, margin: '0 0 8px' }}>Seções da vitrine</h2>
       <p style={{ color: '#666', fontSize: '13px', margin: '0 0 16px' }}>
         Organize seus cursos em seções (ex.: Palestras, Cursos Ministeriais). Na vitrine, cada seção aparece como uma fileira.
-        Cursos que não estiverem em nenhuma seção aparecem no final, em &quot;Outros cursos&quot;.
+        Cursos que não estiverem em nenhuma seção aparecem no final, em &quot;Conheça também&quot;.
       </p>
 
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
