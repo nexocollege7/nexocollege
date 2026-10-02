@@ -67,7 +67,7 @@ export async function getMinhasComprasPendentes(): Promise<CompraPendente[]> {
       const valor = p.expected_amount != null ? Number(p.expected_amount)
         : p.course?.price != null ? Number(p.course.price) : null
       const cupom = p.coupon_code ?? null
-      const link = `/vitrine/${slugPorEscola.get(p.school_id)}/${p.course!.slug}/pix` +
+      const link = `https://${slugPorEscola.get(p.school_id)}.nexocollege.com.br/vitrine/${slugPorEscola.get(p.school_id)}/${p.course!.slug}/pix` +
         (cupom ? `?cupom=${encodeURIComponent(cupom)}` : '')
       return {
         id: p.id, status: p.status, courseTitle: p.course!.title, valor, cupom, link,
