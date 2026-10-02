@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { getMeuscursos, getLessonProgress, getEscolasAoVivo } from '@/app/actions/aluno-actions'
 import Link from 'next/link'
 import { diasRestantes, corDiasRestantes } from '@/lib/enrollment'
+import { getMinhasComprasPendentes, type CompraPendente } from '@/app/actions/minhas-compras-actions'
 
 export default function MeusCursosPage() {
   const [cursos, setCursos] = useState<any[]>([])
@@ -12,17 +13,20 @@ export default function MeusCursosPage() {
   const [myId, setMyId] = useState('')
   const [loading, setLoading] = useState(true)
   const [escolasAoVivo, setEscolasAoVivo] = useState<{ slug: string; name: string }[]>([])
+  const [compras, setCompras] = useState<CompraPendente[]>([])
 
   useEffect(() => {
     async function load() {
-      const [data, me, aoVivo] = await Promise.all([
+      const [data, me, aoVivo, comprasPendentes] = await Promise.all([
         getMeuscursos(),
         fetch('/api/me').then(r => r.json()),
         getEscolasAoVivo(),
+        getMinhasComprasPendentes().catch(() => [] as CompraPendente[]),
       ])
       setCursos(data || [])
       setMyId(me.id || '')
       setEscolasAoVivo(aoVivo || [])
+      setCompras(comprasPendentes || [])
 
       // Busca progresso de cada curso em paralelo
       const cursosData = (data || []) as unknown as { courses: { id: string } | null }[]
@@ -92,7 +96,39 @@ export default function MeusCursosPage() {
         </p>
       </div>
 
-      {cursos.length === 0 ? (
+      {compras.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <p style={{ color: '#F0F0F0', fontWeight: 700, fontSize: '16px', margin: 0 }}>🕒 Compras em andamento</p>
+          {compras.map((compra) => {
+            const info = compra.status === 'awaiting_release'
+              ? { cor: '#AEEA00', texto: '🟢 Comprovante enviado — aguardando liberação da escola', botao: '' }
+              : compra.status === 'refused'
+              ? { cor: '#FF5555', texto: '🔴 Pagamento não confirmado pela escola', botao: 'Enviar novo comprovante' }
+              : { cor: '#FFB800', texto: '🟡 Aguardando pagamento', botao: 'Pagar e enviar comprovante' }
+            return (
+              <div key={compra.id} style={{ backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+                  <p style={{ color: '#F0F0F0', fontWeight: 600, fontSize: '15px', margin: 0 }}>{compra.courseTitle}</p>
+                  <p style={{ color: info.cor, fontSize: '13px', margin: 0 }}>{info.texto}</p>
+                  {compra.valor != null && (
+                    <p style={{ color: '#888888', fontSize: '13px', margin: 0 }}>
+                      Valor: R$ {compra.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {compra.cupom ? ` · cupom ${compra.cupom}` : ''}
+                    </p>
+                  )}
+                </div>
+                {info.botao && (
+                  <Link href={compra.link} style={{ backgroundColor: '#AEEA00', color: '#0D0D0D', fontWeight: 700, fontSize: '14px', padding: '10px 16px', borderRadius: '10px', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                    {info.botao} →
+                  </Link>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {cursos.length === 0 && compras.length > 0 ? null : cursos.length === 0 ? (
         <div style={{
           backgroundColor: '#1A1A1A',
           border: '1px solid #2A2A2A',
