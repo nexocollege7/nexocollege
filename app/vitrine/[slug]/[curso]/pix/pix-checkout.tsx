@@ -10,6 +10,9 @@ type Props = {
   courseId: string
   courseTitle: string
   coursePrice: number
+  originalPrice?: number
+  couponCode?: string | null
+  discountPercent?: number
   schoolId: string
   schoolSlug: string
   courseSlug: string
@@ -29,6 +32,9 @@ export function PixCheckout({
   courseId,
   courseTitle,
   coursePrice,
+  originalPrice,
+  couponCode,
+  discountPercent,
   schoolId,
   schoolSlug,
   courseSlug,
@@ -60,7 +66,7 @@ export function PixCheckout({
         return
       }
 
-      const result = await getOrCreatePendingEnrollment(courseId, schoolId)
+      const result = await getOrCreatePendingEnrollment(courseId, schoolId, couponCode ?? null)
       if (!result.success || !result.id) {
         setError(result.error || 'Não foi possível iniciar o pagamento via PIX')
         setLoading(false)
@@ -136,7 +142,7 @@ export function PixCheckout({
 
       <main className="max-w-2xl mx-auto px-6 py-10">
         <h1 className="text-2xl font-bold text-white mb-1">Pagamento via PIX</h1>
-        <p className="text-gray-400 text-sm mb-8">{courseTitle} · R$ {fmt(coursePrice)}</p>
+        <p className="text-gray-400 text-sm mb-8">{courseTitle} · R$ {fmt(coursePrice)}{couponCode && originalPrice && originalPrice > coursePrice ? (<span style={{ color: '#AEEA00' }}> · Cupom {couponCode} (−{discountPercent}%) — de R$ {fmt(originalPrice)}</span>) : null}</p>
 
         {error && (
           <div className="bg-red-950 border border-red-800 rounded-xl p-4 text-red-300 text-sm">

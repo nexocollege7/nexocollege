@@ -1,11 +1,14 @@
 import { getSchoolBySlug, getCourseBySlug } from '@/app/actions/vitrine-actions'
 import { notFound, redirect } from 'next/navigation'
 import { PixCheckout } from './pix-checkout'
+import { calcularValorComCupom } from '@/lib/coupon'
 
 export default async function PixCheckoutPage({
-  params
+  params,
+  searchParams,
 }: {
   params: Promise<{ slug: string; curso: string }>
+  searchParams: Promise<{ cupom?: string }>
 }) {
   const { slug, curso } = await params
   const school = await getSchoolBySlug(slug)
@@ -18,11 +21,21 @@ export default async function PixCheckoutPage({
     redirect(`/vitrine/${slug}/${curso}`)
   }
 
+  const { cupom } = await searchParams
+  const valor = await calcularValorComCupom(course.id, cupom)
+  // Cupom de 100% é tratado na página do curso (liberação direta)
+  if (valor?.couponCode && valor.finalPrice <= 0) {
+    redirect(`/vitrine/${slug}/${curso}`)
+  }
+
   return (
     <PixCheckout
       courseId={course.id}
       courseTitle={course.title}
-      coursePrice={Number(course.price)}
+      coursePrice={valor?.finalPrice ?? Number(course.price)}
+      originalPrice={valor?.originalPrice ?? Number(course.price)}
+      couponCode={valor?.couponCode ?? null}
+      discountPercent={valor?.discountPercent ?? 0}
       schoolId={school.id}
       schoolSlug={slug}
       courseSlug={course.slug}

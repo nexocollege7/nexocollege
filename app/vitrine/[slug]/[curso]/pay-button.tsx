@@ -271,7 +271,7 @@ export function PayButton({
         </button>
       ) : !isFree && !hasToken && hasPix ? (
         <Link
-          href={`/vitrine/${schoolSlug}/${courseSlug}/pix`}
+          href={`/vitrine/${schoolSlug}/${courseSlug}/pix${couponResult ? `?cupom=${encodeURIComponent(couponResult.couponCode)}` : ''}`}
           style={{
             display: 'block', textAlign: 'center', width: '100%', padding: '14px',
             borderRadius: '12px', border: 'none', backgroundColor: primaryColor,
@@ -309,7 +309,7 @@ export function PayButton({
 
       {!isFree && !isFullDiscount && hasToken && hasPix && (
         <Link
-          href={`/vitrine/${schoolSlug}/${courseSlug}/pix`}
+          href={`/vitrine/${schoolSlug}/${courseSlug}/pix${couponResult ? `?cupom=${encodeURIComponent(couponResult.couponCode)}` : ''}`}
           style={{
             display: 'block', textAlign: 'center', width: '100%', padding: '12px',
             borderRadius: '12px', border: '1px solid #2A2A2A', backgroundColor: 'transparent',

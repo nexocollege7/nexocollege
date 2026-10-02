@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { countActivePendingBySchool } from '@/lib/pending-enrollments'
+import { calcularValorComCupom } from '@/lib/coupon'
 
 type ActionResult = { success: boolean; error?: string }
 
@@ -221,7 +222,8 @@ export async function getActivePendingCount(): Promise<number> {
 
 export async function getOrCreatePendingEnrollment(
   courseId: string,
-  schoolId: string
+  schoolId: string,
+  couponCode?: string | null
 ): Promise<{
   success: boolean
   error?: string
@@ -232,6 +234,17 @@ export async function getOrCreatePendingEnrollment(
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Não autenticado' }
+
+  // Valor esperado do PIX (cupom validado no servidor, se houver)
+  const valorPix = await calcularValorComCupom(courseId, couponCode)
+  const gravarValor = async (pendingId: string) => {
+    if (!valorPix) return
+    const { error } = await createAdminClient()
+      .from('pending_enrollments')
+      .update({ coupon_code: valorPix.couponCode, expected_amount: valorPix.finalPrice })
+      .eq('id', pendingId)
+    if (error) console.error('[pix] erro ao gravar valor esperado:', error.message)
+  }
 
   const { data: existing } = await supabase
     .from('pending_enrollments')
@@ -275,8 +288,11 @@ export async function getOrCreatePendingEnrollment(
 
       if (updateError) return { success: false, error: updateError.message }
 
+      await gravarValor(existing.id)
       return { success: true, id: existing.id, status: 'awaiting_payment', receiptUrl: null }
     }
+
+    if (existing.status === 'awaiting_payment') await gravarValor(existing.id)
 
     return {
       success: true,
@@ -288,6 +304,7 @@ export async function getOrCreatePendingEnrollment(
 
   const created = await createPendingEnrollment(courseId, schoolId)
   if (!created.success) return created
+  if (created.id) await gravarValor(created.id)
 
   return {
     success: true,
