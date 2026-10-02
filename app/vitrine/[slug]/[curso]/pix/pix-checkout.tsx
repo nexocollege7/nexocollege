@@ -6,6 +6,40 @@ import { createClient } from '@/lib/supabase/client'
 import { ArrowLeft, Copy, Check } from 'lucide-react'
 import { getOrCreatePendingEnrollment, uploadReceipt } from '@/app/actions/pending-enrollments-actions'
 
+// Comprime a imagem do comprovante no aparelho do aluno antes do envio
+// (máx. 1600px, JPEG). Se algo falhar, devolve o arquivo original.
+async function comprimirImagem(arquivo: File): Promise<File> {
+  try {
+    if (!arquivo.type.startsWith('image/')) return arquivo
+    const url = URL.createObjectURL(arquivo)
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = document.createElement('img')
+      el.onload = () => resolve(el)
+      el.onerror = reject
+      el.src = url
+    })
+    const escala = Math.min(1, 1600 / Math.max(img.width, img.height))
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.max(1, Math.round(img.width * escala))
+    canvas.height = Math.max(1, Math.round(img.height * escala))
+    const ctx = canvas.getContext('2d')
+    if (!ctx) { URL.revokeObjectURL(url); return arquivo }
+    ctx.fillStyle = '#FFFFFF'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+    URL.revokeObjectURL(url)
+    for (const qualidade of [0.8, 0.65, 0.5]) {
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', qualidade))
+      if (blob && blob.size < 900 * 1024) {
+        return new File([blob], 'comprovante.jpg', { type: 'image/jpeg' })
+      }
+    }
+    return arquivo
+  } catch {
+    return arquivo
+  }
+}
+
 type Props = {
   courseId: string
   courseTitle: string
@@ -101,10 +135,15 @@ export function PixCheckout({
     setUploading(true)
     setUploadError('')
 
-    const formData = new FormData()
-    formData.append('receipt', file)
-
-    const result = await uploadReceipt(pending.id, formData)
+    let result: { success: boolean; error?: string }
+    try {
+      const arquivo = await comprimirImagem(file)
+      const formData = new FormData()
+      formData.append('receipt', arquivo)
+      result = await uploadReceipt(pending.id, formData)
+    } catch {
+      result = { success: false, error: 'Não foi possível enviar o comprovante. Tente uma imagem menor ou fale com a escola pelo WhatsApp.' }
+    }
     setUploading(false)
 
     if (!result.success) {
