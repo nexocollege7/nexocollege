@@ -128,7 +128,7 @@ export default function BannerRotativo({ slides, slug, cor, basePath }: Props) {
           EM DESTAQUE
         </div>
         <h1 className="banner-titulo" style={{
-          fontSize: '52px', fontWeight: '900', color: '#F0F0F0', WebkitTextStroke: '1px #F0F0F0',
+          fontSize: '52px', fontWeight: '800', color: '#F0F0F0',
           lineHeight: '1.1', margin: '0 0 16px',
           textShadow: '0 2px 20px rgba(0,0,0,0.8)',
         }}>
