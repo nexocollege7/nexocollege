@@ -173,12 +173,29 @@ export function PixCheckout({
                   <p className="text-gray-400 text-sm mb-4">
                     Depois de fazer o PIX, envie o comprovante (JPEG, PNG ou WEBP, até 2MB) para liberarmos seu acesso.
                   </p>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                    className="block w-full text-sm text-gray-300 mb-4"
-                  />
+                  <label
+                    style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                      gap: '8px', width: '100%', padding: '24px 16px', marginBottom: '12px', borderRadius: '12px',
+                      border: file ? '2px solid #AEEA00' : '2px dashed #4a5568',
+                      background: file ? 'rgba(174,234,0,0.08)' : 'rgba(255,255,255,0.03)',
+                      cursor: 'pointer', textAlign: 'center',
+                    }}
+                  >
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                      style={{ display: 'none' }}
+                    />
+                    <span style={{ fontSize: '32px', lineHeight: 1 }}>{file ? '✅' : '📎'}</span>
+                    <span style={{ color: file ? '#AEEA00' : '#FFFFFF', fontWeight: 600, fontSize: '15px' }}>
+                      {file ? 'Comprovante selecionado' : 'Toque ou clique aqui para anexar o comprovante'}
+                    </span>
+                    <span style={{ color: '#9ca3af', fontSize: '13px', wordBreak: 'break-all' }}>
+                      {file ? `${file.name} — toque para trocar` : 'Foto ou print do comprovante (JPEG, PNG ou WEBP, até 2MB)'}
+                    </span>
+                  </label>
                   {uploadError && (
                     <p className="text-red-400 text-sm mb-3">{uploadError}</p>
                   )}
