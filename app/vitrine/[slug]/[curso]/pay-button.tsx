@@ -136,6 +136,35 @@ export function PayButton({
   }
 
   const displayPrice = couponResult ? couponResult.finalPrice : price
+  const isFullDiscount = !!couponResult && couponResult.finalPrice <= 0
+
+  async function handleCupomGratis() {
+    if (!couponResult) return
+    setLoading(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      const redirect = encodeURIComponent(`/vitrine/${schoolSlug}/${courseSlug}`)
+      router.push(`/vitrine/${schoolSlug}/login?redirect=${redirect}`)
+      return
+    }
+    try {
+      const response = await fetch('/api/matricula-cupom', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ courseId, couponCode: couponResult.couponCode }),
+      })
+      const data = await response.json()
+      if (data.error) {
+        alert(`Erro: ${data.error}`)
+        setLoading(false)
+        return
+      }
+      window.location.href = 'https://www.nexocollege.com.br/dashboard/meus-cursos'
+    } catch {
+      alert('Erro ao liberar acesso. Tente novamente.')
+      setLoading(false)
+    }
+  }
 
   if (escolaSuspensa) {
     return (
@@ -226,7 +255,21 @@ export function PayButton({
       )}
 
       {/* Botão principal */}
-      {!isFree && !hasToken && hasPix ? (
+      {!isFree && isFullDiscount ? (
+        <button
+          onClick={handleCupomGratis}
+          disabled={loading}
+          style={{
+            width: '100%', padding: '14px', borderRadius: '12px', border: 'none',
+            backgroundColor: loading ? '#555' : primaryColor,
+            color: '#0D0D0D', fontWeight: '700', fontSize: '16px',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            opacity: loading ? 0.6 : 1, fontFamily: 'inherit',
+          }}
+        >
+          {loading ? 'Liberando acesso...' : '🎁 Liberar meu acesso gratuito'}
+        </button>
+      ) : !isFree && !hasToken && hasPix ? (
         <Link
           href={`/vitrine/${schoolSlug}/${courseSlug}/pix`}
           style={{
@@ -264,7 +307,7 @@ export function PayButton({
         </button>
       )}
 
-      {!isFree && hasToken && hasPix && (
+      {!isFree && !isFullDiscount && hasToken && hasPix && (
         <Link
           href={`/vitrine/${schoolSlug}/${courseSlug}/pix`}
           style={{
