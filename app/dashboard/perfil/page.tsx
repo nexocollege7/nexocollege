@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { updateAvatarUrl, ensureAvatarBucket, getMyProfileFull } from '@/app/actions/profile-actions'
+import { updateAvatarUrl, ensureAvatarBucket, getMyProfileFull, updateMyFullName } from '@/app/actions/profile-actions'
 import { useRouter } from 'next/navigation'
 
 function getInitials(name: string | null | undefined, email: string | null | undefined): string {
@@ -25,11 +25,29 @@ export default function PerfilPage() {
   const [uploading, setUploading] = useState(false)
   const [msg, setMsg] = useState('')
   const [preview, setPreview] = useState<string | null>(null)
+  const [nomeEdit, setNomeEdit] = useState('')
+  const [salvandoNome, setSalvandoNome] = useState(false)
+  const [msgNome, setMsgNome] = useState('')
 
   useEffect(() => {
     ensureAvatarBucket()
     getMyProfileFull().then(setProfile)
   }, [])
+
+  useEffect(() => {
+    if (profile?.full_name) setNomeEdit(profile.full_name)
+  }, [profile?.full_name])
+
+  async function salvarNome() {
+    setSalvandoNome(true)
+    setMsgNome('')
+    const r = await updateMyFullName(nomeEdit) as { error?: string; fullName?: string }
+    setSalvandoNome(false)
+    if (r.error) { setMsgNome(r.error); return }
+    setProfile((prev: any) => ({ ...prev, full_name: r.fullName ?? nomeEdit.trim() }))
+    setMsgNome('✅ Nome atualizado')
+    router.refresh()
+  }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -109,6 +127,27 @@ export default function PerfilPage() {
           <p style={{ color: '#555555', fontSize: '13px', margin: '4px 0 0' }}>
             {profile?.email || ''}
           </p>
+
+          <div style={{ width: '100%', maxWidth: '360px', display: 'flex', flexDirection: 'column', gap: '8px', margin: '20px auto 4px', textAlign: 'left' }}>
+            <label style={{ color: '#888888', fontSize: '13px' }}>Nome completo</label>
+            <input
+              type="text"
+              value={nomeEdit}
+              onChange={(e) => { setNomeEdit(e.target.value); setMsgNome('') }}
+              maxLength={100}
+              placeholder="Seu nome completo"
+              style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #2A2A2A', backgroundColor: '#0D0D0D', color: '#F0F0F0', fontSize: '14px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+            />
+            <p style={{ color: '#555555', fontSize: '12px', margin: 0 }}>Este nome aparece nos seus certificados. O e-mail não pode ser alterado.</p>
+            <button
+              onClick={salvarNome}
+              disabled={salvandoNome || nomeEdit.trim().length < 2 || nomeEdit.replace(/\s+/g, ' ').trim() === (profile?.full_name ?? '')}
+              style={{ padding: '10px 16px', borderRadius: '10px', border: '1px solid #AEEA00', backgroundColor: 'transparent', color: '#AEEA00', fontWeight: 700, fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit', opacity: (salvandoNome || nomeEdit.trim().length < 2 || nomeEdit.replace(/\s+/g, ' ').trim() === (profile?.full_name ?? '')) ? 0.4 : 1 }}
+            >
+              {salvandoNome ? 'Salvando...' : 'Salvar nome'}
+            </button>
+            {msgNome && <p style={{ color: msgNome.startsWith('✅') ? '#AEEA00' : '#FF5555', fontSize: '13px', margin: 0 }}>{msgNome}</p>}
+          </div>
         </div>
 
         {/* Upload */}
