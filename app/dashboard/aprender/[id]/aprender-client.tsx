@@ -55,7 +55,10 @@ export function AprenderClient({ planoEscola }: { planoEscola: string }) {
       setModulos(data)
       const aulaParam = searchParams.get('aula')
       const todas = data.flatMap((m: any) => m.lessons || [])
-      const aulaEscolhida = (aulaParam && todas.find((l: any) => l.id === aulaParam)) || data?.[0]?.lessons?.[0]
+      // Continuar de onde parou: primeira aula ainda não concluída, na ordem da trilha
+      const ordenadas = data.flatMap((m: any) => [...(m.lessons || [])].sort((a: any, b: any) => a.position - b.position))
+      const proxima = ordenadas.find((l: any) => !l.completed)
+      const aulaEscolhida = (aulaParam && todas.find((l: any) => l.id === aulaParam)) || proxima || ordenadas[0] || data?.[0]?.lessons?.[0]
       if (aulaEscolhida) setAulaAtual(aulaEscolhida)
       setLoading(false)
     }
