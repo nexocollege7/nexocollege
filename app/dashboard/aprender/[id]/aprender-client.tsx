@@ -415,6 +415,7 @@ export function AprenderClient({ planoEscola }: { planoEscola: string }) {
                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ color: '#AEEA00', display: 'flex' }}><IconeStatus tipo="feita" tamanho={13} /></span>concluída</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ color: '#AEEA00', display: 'flex' }}><IconeStatus tipo="atual" tamanho={13} /></span>atual</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ color: '#666666', display: 'flex' }}><IconeStatus tipo="afazer" tamanho={13} /></span>a fazer</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ color: '#555555', display: 'flex' }}><IconeStatus tipo="bloqueada" tamanho={13} /></span>bloqueada</span>
                 </div>
               </>
             )
