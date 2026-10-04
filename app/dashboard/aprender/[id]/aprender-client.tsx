@@ -202,6 +202,8 @@ export function AprenderClient({ planoEscola }: { planoEscola: string }) {
         </div>
 
         {/* Info da aula */}
+        {aulaAtual && <LessonPulse key={`pulso-${aulaAtual.id}`} lessonId={aulaAtual.id} />}
+
         {aulaAtual && (
           <div className="player-info" style={{ flexShrink: 0, padding: '20px 24px', borderBottom: '1px solid #2A2A2A' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -254,8 +256,6 @@ export function AprenderClient({ planoEscola }: { planoEscola: string }) {
         )}
 
         {aulaAtual && <LessonNotes key={`notas-${aulaAtual.id}`} lessonId={aulaAtual.id} />}
-
-        {aulaAtual && <LessonPulse key={`pulso-${aulaAtual.id}`} lessonId={aulaAtual.id} />}
 
         {convite && !reviewExistente && (
           <ReviewInviteCard

@@ -111,19 +111,19 @@ export function LessonPulse({ lessonId }: { lessonId: string }) {
   const botao = { flex: 1, padding: '7px 0', borderRadius: '8px', border: '1px solid #2A2A2A', background: 'transparent', color: '#F0F0F0', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' } as const
 
   return (
-    <div style={{ position: 'fixed', right: '16px', bottom: '16px', zIndex: 30, width: 'min(290px, calc(100vw - 32px))', backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '12px', padding: '12px 14px' }}>
+    <div style={{ flexShrink: 0, margin: '12px 24px 0', backgroundColor: 'rgba(174,234,0,0.06)', border: '1px solid rgba(174,234,0,0.35)', borderRadius: '12px', padding: '12px 16px' }}>
       {agradecido ? (
         <p style={{ color: '#AEEA00', fontSize: '13px', fontWeight: 600, margin: 0, textAlign: 'center' }}>Obrigado pelo retorno! 💚</p>
       ) : (
         <>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <p style={{ color: '#F0F0F0', fontSize: '13px', fontWeight: 600, margin: 0 }}>Como está a aula até aqui?</p>
-            <button onClick={fechar} aria-label="Fechar" style={{ background: 'none', border: 'none', color: '#666666', fontSize: '16px', cursor: 'pointer', lineHeight: 1 }}>×</button>
-          </div>
-          <div style={{ display: 'flex', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <p style={{ color: '#F0F0F0', fontSize: '14px', fontWeight: 600, margin: 0, flex: '1 1 200px' }}>💬 Como está a aula até aqui?</p>
+            <div style={{ display: 'flex', gap: '6px', flex: '1 1 260px', maxWidth: '360px' }}>
             <button onClick={() => responder('confusa')} style={botao}>Confusa</button>
             <button onClick={() => responder('boa')} style={botao}>Boa</button>
             <button onClick={() => responder('otima')} style={botao}>Ótima</button>
+            </div>
+            <button onClick={fechar} aria-label="Fechar" style={{ background: 'none', border: 'none', color: '#666666', fontSize: '18px', cursor: 'pointer', lineHeight: 1 }}>×</button>
           </div>
         </>
       )}
