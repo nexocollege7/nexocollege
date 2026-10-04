@@ -156,3 +156,42 @@ export async function checkReviewInvite(
 
   return { show: true, stage }
 }
+
+// Anotação pessoal do aluno nesta aula.
+export async function getLessonNote(lessonId: string): Promise<{ content: string }> {
+  const ctx = await contextoDaAula(lessonId)
+  if ('error' in ctx) return { content: '' }
+
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from('lesson_notes')
+    .select('content')
+    .eq('lesson_id', lessonId)
+    .eq('student_id', ctx.userId)
+    .maybeSingle()
+
+  return { content: (data?.content as string | undefined) ?? '' }
+}
+
+// Salva (ou atualiza) a anotação pessoal do aluno nesta aula.
+export async function saveLessonNote(lessonId: string, content: string): Promise<Resultado> {
+  if (typeof content !== 'string' || content.length > 5000) return { error: 'Anotação muito longa (máximo de 5.000 caracteres)' }
+
+  const ctx = await contextoDaAula(lessonId)
+  if ('error' in ctx) return { error: ctx.error }
+
+  const admin = createAdminClient()
+  const { error } = await admin.from('lesson_notes').upsert(
+    {
+      lesson_id: lessonId,
+      student_id: ctx.userId,
+      course_id: ctx.courseId,
+      content,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'lesson_id,student_id' }
+  )
+
+  if (error) return { error: 'Erro ao salvar anotação' }
+  return { success: true }
+}

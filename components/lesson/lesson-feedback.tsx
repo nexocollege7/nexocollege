@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { getLessonFeedback, rateLesson, answerLessonPulse } from '@/app/actions/lesson-feedback-actions'
+import { useEffect, useRef, useState } from 'react'
+import { getLessonFeedback, rateLesson, answerLessonPulse, getLessonNote, saveLessonNote } from '@/app/actions/lesson-feedback-actions'
 
 // ── Estrelas de avaliação da aula ────────────────────────────────────────
 export function LessonStars({ lessonId, onRated }: { lessonId: string; onRated?: (nota: number) => void }) {
@@ -148,6 +148,76 @@ export function ReviewInviteCard({ stage, onDeixar, onFechar }: { stage: string;
         <button onClick={onDeixar} style={{ padding: '8px 14px', borderRadius: '8px', border: 'none', backgroundColor: '#AEEA00', color: '#0D0D0D', fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Deixar depoimento</button>
         <button onClick={onFechar} style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #2A2A2A', backgroundColor: 'transparent', color: '#888888', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Agora não</button>
       </div>
+    </div>
+  )
+}
+
+// ── Minhas anotações desta aula (salva sozinho) ─────────────────────────
+export function LessonNotes({ lessonId }: { lessonId: string }) {
+  const [texto, setTexto] = useState('')
+  const [status, setStatus] = useState<'' | 'salvando' | 'salvo' | 'erro'>('')
+  const [carregado, setCarregado] = useState(false)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const ultimo = useRef('')
+  const pendente = useRef(false)
+
+  useEffect(() => {
+    let ativo = true
+    getLessonNote(lessonId)
+      .then((r) => { if (ativo) { setTexto(r.content); ultimo.current = r.content; setCarregado(true) } })
+      .catch(() => { if (ativo) setCarregado(true) })
+    return () => {
+      ativo = false
+      if (timer.current) clearTimeout(timer.current)
+      if (pendente.current) saveLessonNote(lessonId, ultimo.current).catch(() => {})
+    }
+  }, [lessonId])
+
+  async function salvar(valor: string) {
+    pendente.current = false
+    const r = await saveLessonNote(lessonId, valor).catch(() => ({ error: 'erro' }))
+    setStatus(r.error ? 'erro' : 'salvo')
+  }
+
+  function aoDigitar(valor: string) {
+    setTexto(valor)
+    ultimo.current = valor
+    pendente.current = true
+    setStatus('salvando')
+    if (timer.current) clearTimeout(timer.current)
+    timer.current = setTimeout(() => salvar(valor), 1200)
+  }
+
+  function aoSair() {
+    if (!pendente.current) return
+    if (timer.current) clearTimeout(timer.current)
+    salvar(ultimo.current)
+  }
+
+  return (
+    <div style={{ flexShrink: 0, padding: '16px 24px', borderBottom: '1px solid #2A2A2A' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <p style={{ color: '#888888', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0 }}>
+          📝 Minhas anotações desta aula
+        </p>
+        <span style={{ fontSize: '12px', color: status === 'erro' ? '#FF5555' : status === 'salvo' ? '#AEEA00' : '#666666' }}>
+          {status === 'salvando' ? 'Salvando…' : status === 'salvo' ? '✓ Salvo' : status === 'erro' ? 'Não foi possível salvar' : ''}
+        </span>
+      </div>
+      <textarea
+        value={texto}
+        onChange={(e) => aoDigitar(e.target.value)}
+        onBlur={aoSair}
+        disabled={!carregado}
+        maxLength={5000}
+        rows={3}
+        placeholder={carregado ? 'Escreva aqui enquanto assiste. O vídeo não para e tudo fica salvo só para você.' : 'Carregando…'}
+        style={{
+          width: '100%', backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '8px',
+          padding: '10px 12px', color: '#F0F0F0', fontSize: '13px', lineHeight: '1.6', resize: 'vertical',
+          outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
+        }}
+      />
     </div>
   )
 }

@@ -6,7 +6,7 @@ import { getAulasDoAluno, marcarAulaConcluida } from '@/app/actions/aula-actions
 import { getLessonInteractions, toggleLessonLike, toggleLessonFavorite } from '@/app/actions/lesson-interactions-actions'
 import { getStudentReview, submitCourseReview } from '@/app/actions/review-actions'
 import { checkReviewInvite } from '@/app/actions/lesson-feedback-actions'
-import { LessonStars, LessonPulse, ReviewInviteCard } from '@/components/lesson/lesson-feedback'
+import { LessonStars, LessonPulse, ReviewInviteCard, LessonNotes } from '@/components/lesson/lesson-feedback'
 import { LessonComments } from '@/components/lesson/lesson-comments'
 import { getEmbedUrl } from '@/lib/video-embed'
 
@@ -19,6 +19,17 @@ type Aula = {
   type: string | null
   completed: boolean
   material_links?: string | null
+}
+
+function IconeStatus({ tipo, tamanho = 16 }: { tipo: 'feita' | 'atual' | 'afazer' | 'bloqueada'; tamanho?: number }) {
+  const p = {
+    width: tamanho, height: tamanho, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',
+    strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true,
+  }
+  if (tipo === 'feita') return <svg {...p}><circle cx="12" cy="12" r="9" /><path d="M8 12.5l2.5 2.5L16 9.5" /></svg>
+  if (tipo === 'atual') return <svg {...p}><path d="M8 5.5v13l10-6.5z" /></svg>
+  if (tipo === 'bloqueada') return <svg {...p}><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
+  return <svg {...p}><circle cx="12" cy="12" r="9" /></svg>
 }
 
 export function AprenderClient({ planoEscola }: { planoEscola: string }) {
@@ -239,6 +250,8 @@ export function AprenderClient({ planoEscola }: { planoEscola: string }) {
           </div>
         )}
 
+        {aulaAtual && <LessonNotes key={aulaAtual.id} lessonId={aulaAtual.id} />}
+
         {aulaAtual && <LessonPulse key={aulaAtual.id} lessonId={aulaAtual.id} />}
 
         {convite && !reviewExistente && (
@@ -398,7 +411,11 @@ export function AprenderClient({ planoEscola }: { planoEscola: string }) {
                 <div style={{ height: '4px', borderRadius: '2px', backgroundColor: '#2A2A2A' }}>
                   <div style={{ height: '4px', borderRadius: '2px', backgroundColor: '#AEEA00', width: `${pct}%`, transition: 'width 0.3s ease' }} />
                 </div>
-                <p style={{ color: '#555555', fontSize: '11px', margin: '8px 0 0' }}>✓ concluída · ▶ atual · ○ a fazer</p>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', margin: '10px 0 0', fontSize: '11px', color: '#666666' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ color: '#AEEA00', display: 'flex' }}><IconeStatus tipo="feita" tamanho={13} /></span>concluída</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ color: '#AEEA00', display: 'flex' }}><IconeStatus tipo="atual" tamanho={13} /></span>atual</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ color: '#666666', display: 'flex' }}><IconeStatus tipo="afazer" tamanho={13} /></span>a fazer</span>
+                </div>
               </>
             )
           })()}
@@ -448,10 +465,10 @@ export function AprenderClient({ planoEscola }: { planoEscola: string }) {
                       }}
                     >
                       <span style={{
-                        fontSize: '14px', width: '16px', textAlign: 'center', flexShrink: 0,
+                        display: 'flex', width: '16px', flexShrink: 0,
                         color: isAtiva || aula.completed ? '#AEEA00' : liberada ? '#666666' : '#555555',
                       }}>
-                        {isAtiva ? '▶' : aula.completed ? '✓' : liberada ? '○' : '🔒'}
+                        <IconeStatus tipo={isAtiva ? 'atual' : aula.completed ? 'feita' : liberada ? 'afazer' : 'bloqueada'} />
                       </span>
                       <span style={{
                         fontSize: '13px',
