@@ -186,6 +186,8 @@ export default function MeusCursosPage() {
                 border: '1px solid #2A2A2A',
                 borderRadius: '12px',
                 overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
               }}>
                 {/* Capa */}
                 <div style={{
@@ -204,14 +206,14 @@ export default function MeusCursosPage() {
                 </div>
 
                 {/* Conteúdo */}
-                <div style={{ padding: '16px' }}>
+                <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flex: 1 }}>
                   <p style={{ fontSize: '11px', color: '#555555', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     {escola?.name || 'NexoCollege'}
                   </p>
                   <p style={{ fontSize: '16px', fontWeight: '600', color: '#F0F0F0', margin: '0 0 4px' }}>
                     {curso?.title}
                   </p>
-                  <p style={{ fontSize: '13px', color: '#888888', margin: '0 0 16px', lineHeight: '1.4' }}>
+                  <p style={{ fontSize: '13px', color: '#888888', margin: '0 0 16px', lineHeight: '1.4', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                     {curso?.description}
                   </p>
 
@@ -221,6 +223,7 @@ export default function MeusCursosPage() {
                     backgroundColor: '#2A2A2A',
                     borderRadius: '2px',
                     marginBottom: '8px',
+                    marginTop: 'auto',
                   }}>
                     <div style={{
                       height: '4px',
