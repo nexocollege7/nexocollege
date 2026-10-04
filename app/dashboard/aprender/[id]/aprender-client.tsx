@@ -250,9 +250,9 @@ export function AprenderClient({ planoEscola }: { planoEscola: string }) {
           </div>
         )}
 
-        {aulaAtual && <LessonNotes key={aulaAtual.id} lessonId={aulaAtual.id} />}
+        {aulaAtual && <LessonNotes key={`notas-${aulaAtual.id}`} lessonId={aulaAtual.id} />}
 
-        {aulaAtual && <LessonPulse key={aulaAtual.id} lessonId={aulaAtual.id} />}
+        {aulaAtual && <LessonPulse key={`pulso-${aulaAtual.id}`} lessonId={aulaAtual.id} />}
 
         {convite && !reviewExistente && (
           <ReviewInviteCard
