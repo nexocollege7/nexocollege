@@ -98,9 +98,11 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
     }}>
       {/* Logo da escola */}
       <div style={{
-        height: '64px',
+        height: collapsed ? 'auto' : '64px',
+        minHeight: '64px',
+        flexDirection: collapsed ? 'column' as const : 'row' as const,
         boxSizing: 'border-box' as const,
-        padding: '0 12px',
+        padding: collapsed ? '10px 0 8px' : '0 12px',
         borderBottom: '1px solid #2A2A2A',
         display: 'flex',
         alignItems: 'center',
@@ -145,16 +147,10 @@ export function SidebarAluno({ onClose }: { onClose?: () => void } = {}) {
           onClick={(e) => { e.stopPropagation(); setCollapsed(!collapsed) }}
           style={{
             background: 'none', border: 'none', cursor: 'pointer',
-            color: '#555555', fontSize: '18px', padding: '4px', flexShrink: 0,
-            ...(collapsed ? {
-              position: 'absolute' as const,
-              bottom: '6px',
-              right: '8px',
-              fontSize: '14px',
-            } : {}),
+            color: '#888888', fontSize: '18px', padding: '4px', flexShrink: 0,
           }}
         >
-          {collapsed ? '>' : '☰'}
+          <span title={collapsed ? 'Expandir menu' : 'Recolher menu'} aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}>☰</span>
         </button>
       </div>
 
