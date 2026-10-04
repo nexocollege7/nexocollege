@@ -5,6 +5,8 @@ import { useParams, useSearchParams } from 'next/navigation'
 import { getAulasDoAluno, marcarAulaConcluida } from '@/app/actions/aula-actions'
 import { getLessonInteractions, toggleLessonLike, toggleLessonFavorite } from '@/app/actions/lesson-interactions-actions'
 import { getStudentReview, submitCourseReview } from '@/app/actions/review-actions'
+import { checkReviewInvite } from '@/app/actions/lesson-feedback-actions'
+import { LessonStars, LessonPulse, ReviewInviteCard } from '@/components/lesson/lesson-feedback'
 import { LessonComments } from '@/components/lesson/lesson-comments'
 import { getEmbedUrl } from '@/lib/video-embed'
 
@@ -33,6 +35,8 @@ export function AprenderClient({ planoEscola }: { planoEscola: string }) {
   const [reviewTexto, setReviewTexto] = useState('')
   const [reviewEnviando, setReviewEnviando] = useState(false)
   const [reviewMsg, setReviewMsg] = useState('')
+  const [convite, setConvite] = useState<string | null>(null)
+  const [mostrarDepoimento, setMostrarDepoimento] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -91,6 +95,16 @@ export function AprenderClient({ planoEscola }: { planoEscola: string }) {
     setAulaAtual(aula)
   }
 
+  async function verificarConvite(gatilho: 'concluiu' | 'estrelas') {
+    if (!aulaAtual || reviewExistente) return
+    const todas = modulos.flatMap((m: any) => m.lessons || [])
+    const concluidas = todas.filter((l: any) => l.completed || (gatilho === 'concluiu' && l.id === aulaAtual.id)).length
+    try {
+      const r = await checkReviewInvite(id, gatilho, concluidas, todas.length)
+      if (r.show && r.stage) setConvite(r.stage)
+    } catch {}
+  }
+
   async function handleConcluirAula() {
     if (!aulaAtual) return
     await marcarAulaConcluida(aulaAtual.id, id)
@@ -103,6 +117,7 @@ export function AprenderClient({ planoEscola }: { planoEscola: string }) {
       }))
     )
     setAulaAtual({ ...aulaAtual, completed: true })
+    verificarConvite('concluiu')
   }
 
   async function handleEnviarReview() {
@@ -194,7 +209,7 @@ export function AprenderClient({ planoEscola }: { planoEscola: string }) {
                 {aulaAtual.completed ? '✓ Concluída' : 'Marcar como concluída'}
               </button>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px', flexWrap: 'wrap' }}>
               <button
                 onClick={handleToggleLike}
                 style={{
@@ -219,13 +234,28 @@ export function AprenderClient({ planoEscola }: { planoEscola: string }) {
               >
                 {interacoes.favorited ? '⭐ Favoritado' : '☆ Favoritar'}
               </button>
+              <LessonStars key={aulaAtual.id} lessonId={aulaAtual.id} onRated={(n) => { if (n >= 4) verificarConvite('estrelas') }} />
             </div>
           </div>
         )}
 
-        {/* Depoimento opcional — aparece após concluir a aula */}
-        {aulaAtual?.completed && reviewCarregado && (
-          <div style={{ flexShrink: 0, padding: '16px 24px', borderBottom: '1px solid #2A2A2A' }}>
+        {aulaAtual && <LessonPulse key={aulaAtual.id} lessonId={aulaAtual.id} />}
+
+        {convite && !reviewExistente && (
+          <ReviewInviteCard
+            stage={convite}
+            onFechar={() => setConvite(null)}
+            onDeixar={() => {
+              setConvite(null)
+              setMostrarDepoimento(true)
+              setTimeout(() => document.getElementById('bloco-depoimento')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150)
+            }}
+          />
+        )}
+
+        {/* Depoimento opcional — aparece após concluir a aula ou pelo convite */}
+        {(aulaAtual?.completed || mostrarDepoimento) && reviewCarregado && (
+          <div id="bloco-depoimento" style={{ flexShrink: 0, padding: '16px 24px', borderBottom: '1px solid #2A2A2A' }}>
             {reviewExistente ? (
               <div>
                 <p style={{ color: '#888888', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>
@@ -238,7 +268,7 @@ export function AprenderClient({ planoEscola }: { planoEscola: string }) {
             ) : (
               <div>
                 <p style={{ color: '#888888', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>
-                  Deixe seu depoimento sobre esta aula
+                  Deixe seu depoimento sobre este curso
                 </p>
                 <textarea
                   value={reviewTexto}
