@@ -15,6 +15,7 @@ const menuItems = [
   { href: '/dashboard/alunos', label: 'Alunos', icon: '👥' },
   { href: '/dashboard/pendencias', label: 'Pendências de Liberação', icon: '🧾' },
   { href: '/dashboard/comentarios', label: 'Comentários de Aulas', icon: '💬' },
+  { href: '/dashboard/avaliacoes', label: 'Avaliações das Aulas', icon: '📊' },
   { href: '/dashboard/vitrine', label: 'Vitrine', icon: '🌐' },
   { href: '/dashboard/upgrade', label: 'Upgrade', icon: '⚡' },
   { href: '/dashboard/suporte', label: 'Suporte', icon: '🆘' },
