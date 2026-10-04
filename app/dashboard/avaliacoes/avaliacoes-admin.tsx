@@ -88,7 +88,7 @@ export function AvaliacoesAdmin() {
                     {a.modulo && <p style={{ color: '#555555', fontSize: '11px', margin: 0, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{a.modulo}</p>}
                     <p style={{ color: '#F0F0F0', fontSize: '14px', margin: '2px 0 0' }}>{a.titulo}</p>
                   </div>
-                  <div style={{ width: '120px', flexShrink: 0 }}>
+                  <div style={{ width: '160px', flexShrink: 0 }}>
                     {a.media != null ? (
                       <p style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: a.media < 4 ? '#FF5555' : '#FFB800' }}>
                         {fmt(a.media)} ★ <span style={{ color: '#666666', fontWeight: 400, fontSize: '12px' }}>({a.totalNotas})</span>

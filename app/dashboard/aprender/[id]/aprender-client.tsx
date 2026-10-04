@@ -386,9 +386,22 @@ export function AprenderClient({ planoEscola }: { planoEscola: string }) {
           <p style={{ color: '#F0F0F0', fontWeight: '600', fontSize: '14px', margin: 0 }}>
             Conteúdo do curso
           </p>
-          <p style={{ color: '#888888', fontSize: '12px', margin: '2px 0 0' }}>
-            {totalAulas} aula{totalAulas !== 1 ? 's' : ''}
-          </p>
+          {(() => {
+            const feitas = modulos.flatMap((m: any) => m.lessons || []).filter((l: any) => l.completed).length
+            const pct = totalAulas > 0 ? Math.round((feitas / totalAulas) * 100) : 0
+            return (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '6px 0' }}>
+                  <span style={{ color: '#888888', fontSize: '12px' }}>{feitas} de {totalAulas} concluída{feitas !== 1 ? 's' : ''}</span>
+                  <span style={{ color: '#AEEA00', fontSize: '12px', fontWeight: 600 }}>{pct}%</span>
+                </div>
+                <div style={{ height: '4px', borderRadius: '2px', backgroundColor: '#2A2A2A' }}>
+                  <div style={{ height: '4px', borderRadius: '2px', backgroundColor: '#AEEA00', width: `${pct}%`, transition: 'width 0.3s ease' }} />
+                </div>
+                <p style={{ color: '#555555', fontSize: '11px', margin: '8px 0 0' }}>✓ concluída · ▶ atual · ○ a fazer</p>
+              </>
+            )
+          })()}
         </div>
 
         {modulos.length === 0 ? (
@@ -435,10 +448,10 @@ export function AprenderClient({ planoEscola }: { planoEscola: string }) {
                       }}
                     >
                       <span style={{
-                        fontSize: '14px',
-                        color: aula.completed ? '#AEEA00' : liberada ? '#888888' : '#555555',
+                        fontSize: '14px', width: '16px', textAlign: 'center', flexShrink: 0,
+                        color: isAtiva || aula.completed ? '#AEEA00' : liberada ? '#666666' : '#555555',
                       }}>
-                        {aula.completed ? '✓' : liberada ? '▶' : '🔒'}
+                        {isAtiva ? '▶' : aula.completed ? '✓' : liberada ? '○' : '🔒'}
                       </span>
                       <span style={{
                         fontSize: '13px',
