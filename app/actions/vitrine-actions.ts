@@ -163,7 +163,7 @@ export async function getActiveReviews(schoolId: string) {
   const adminClient = createAdminClient()
   const { data: reviews } = await adminClient
     .from('course_reviews')
-    .select('id, content, student_name, student_avatar_url, course_id, created_at')
+    .select('id, content, student_name, student_avatar_url, course_id, created_at, student_id')
     .eq('school_id', schoolId)
     .eq('is_active', true)
     .order('created_at', { ascending: false })
@@ -175,11 +175,20 @@ export async function getActiveReviews(schoolId: string) {
   const { data: courses } = await adminClient.from('courses').select('id, title').in('id', courseIds)
   const courseMap = new Map((courses || []).map((c) => [c.id, c.title]))
 
+  // Foto e nome atuais do aluno (o depoimento guarda só uma cópia do momento em que foi criado)
+  const studentIds = [...new Set(reviews.map((r) => r.student_id as string | null).filter((id): id is string => Boolean(id)))]
+  let alunos: { id: string; full_name: string | null; avatar_url: string | null }[] = []
+  if (studentIds.length > 0) {
+    const { data } = await adminClient.from('users').select('id, full_name, avatar_url').in('id', studentIds)
+    alunos = (data ?? []) as typeof alunos
+  }
+  const alunoMap = new Map(alunos.map((a) => [a.id, a]))
+
   return reviews.map((r) => ({
     id: r.id as string,
     content: r.content as string,
-    studentName: r.student_name as string,
-    studentAvatarUrl: r.student_avatar_url as string | null,
+    studentName: (alunoMap.get(r.student_id as string)?.full_name || r.student_name) as string,
+    studentAvatarUrl: (alunoMap.get(r.student_id as string)?.avatar_url || r.student_avatar_url || null) as string | null,
     courseTitle: courseMap.get(r.course_id) ?? '',
   }))
 }
